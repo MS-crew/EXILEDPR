@@ -34,6 +34,7 @@ namespace Exiled.Events.Patches.Events.Player
 
             Label returnLabel = generator.DefineLabel();
 
+            LocalBuilder hub = generator.DeclareLocal(typeof(ReferenceHub));
             LocalBuilder oldRoom = generator.DeclareLocal(typeof(RoomIdentifier));
             LocalBuilder newRoom = generator.DeclareLocal(typeof(RoomIdentifier));
 
@@ -69,6 +70,8 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache._roleManager))),
                 new(OpCodes.Call, Method(typeof(Component), nameof(Component.GetComponent)).MakeGenericMethod(typeof(ReferenceHub))),
+                new(OpCodes.Dup),
+                new(OpCodes.Stloc_S, hub),
 
                 // oldRoom
                 new(OpCodes.Ldloc_S, oldRoom),
@@ -92,10 +95,8 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ceq),
                 new(OpCodes.Brtrue_S, returnLabel),
 
-                // ReferenceHub hub = this._roleManager.gameObject.GetComponent<ReferenceHub>();
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Ldfld, Field(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache._roleManager))),
-                new(OpCodes.Call, Method(typeof(Component), nameof(Component.GetComponent)).MakeGenericMethod(typeof(ReferenceHub))),
+                // hub
+                new(OpCodes.Ldloc_S, hub),
 
                 // oldRoom
                 new(OpCodes.Ldloc_S, oldRoom),
