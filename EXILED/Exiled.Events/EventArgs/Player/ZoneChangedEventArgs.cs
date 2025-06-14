@@ -28,22 +28,10 @@ namespace Exiled.Events.EventArgs.Player
             Player = Player.Get(player);
             OldRoom = Room.Get(oldRoom);
             NewRoom = Room.Get(newRoom);
-            OldZone = OldRoom.Zone;
-            NewZone = NewRoom.Zone;
         }
 
         /// <inheritdoc/>
         public Player Player { get; }
-
-        /// <summary>
-        /// Gets the previous zone the player was in.
-        /// </summary>
-        public ZoneType OldZone { get; }
-
-        /// <summary>
-        /// Gets the new zone the player entered.
-        /// </summary>
-        public ZoneType NewZone { get; }
 
         /// <summary>
         /// Gets the previous room the player was in.
@@ -54,5 +42,15 @@ namespace Exiled.Events.EventArgs.Player
         /// Gets the new room the player entered.
         /// </summary>
         public Room NewRoom { get; }
+
+        /// <summary>
+        /// Gets the previous zone the player was in.
+        /// </summary>
+        public ZoneType OldZone => OldRoom.Zone;
+
+        /// <summary>
+        /// Gets the new zone the player entered.
+        /// </summary>
+        public ZoneType NewZone => NewRoom.Zone;
     }
 }
