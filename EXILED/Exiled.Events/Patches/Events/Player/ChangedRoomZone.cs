@@ -82,31 +82,6 @@ namespace Exiled.Events.Patches.Events.Player
                 // Handlers.Player.OnRoomChanged(new RoomChangedEventArgs(hub, oldRoom, newRoom));
                 new(OpCodes.Newobj, GetDeclaredConstructors(typeof(RoomChangedEventArgs))[0]),
                 new(OpCodes.Call, Method(typeof(Player), nameof(Player.OnRoomChanged))),
-
-                // oldRoom.Zone
-                new(OpCodes.Ldloc_S, oldRoom),
-                new(OpCodes.Ldfld, Field(typeof(RoomIdentifier), nameof(RoomIdentifier.Zone))),
-
-                // newRoom.Zone
-                new(OpCodes.Ldloc_S, newRoom),
-                new(OpCodes.Ldfld, Field(typeof(RoomIdentifier), nameof(RoomIdentifier.Zone))),
-
-                // if (oldRoom.Zone == newRoom.Zone) return;
-                new(OpCodes.Ceq),
-                new(OpCodes.Brtrue_S, returnLabel),
-
-                // hub
-                new(OpCodes.Ldloc_S, hub),
-
-                // oldRoom
-                new(OpCodes.Ldloc_S, oldRoom),
-
-                // newRoom
-                new(OpCodes.Ldloc_S, newRoom),
-
-                // Handlers.Player.OnZoneChanged(new ZoneChangedEventArgs(hub, oldRoom, newRoom));
-                new(OpCodes.Newobj, GetDeclaredConstructors(typeof(ZoneChangedEventArgs))[0]),
-                new(OpCodes.Call, Method(typeof(Player), nameof(Player.OnZoneChanged))),
             });
 
             for (int i = 0; i < newInstructions.Count; i++)
