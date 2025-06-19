@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------
-// <copyright file="ChangedRoomZone.cs" company="ExMod Team">
+// <copyright file="ChangedRoom.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
@@ -21,12 +21,11 @@ namespace Exiled.Events.Patches.Events.Player
     using static HarmonyLib.AccessTools;
 
     /// <summary>
-    /// Patches <see cref="CurrentRoomPlayerCache.ValidateCache"/> to add the <see cref="Player.RoomChanged"/> and <see cref="Player.ZoneChanged"/> events.
+    /// Patches <see cref="CurrentRoomPlayerCache.ValidateCache"/> to add the <see cref="Player.RoomChanged"/> event.
     /// </summary>
     [EventPatch(typeof(Player), nameof(Player.RoomChanged))]
-    [EventPatch(typeof(Player), nameof(Player.ZoneChanged))]
     [HarmonyPatch(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache.ValidateCache))]
-    internal class ChangedRoomZone
+    internal class ChangedRoom
     {
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
@@ -34,7 +33,6 @@ namespace Exiled.Events.Patches.Events.Player
 
             Label returnLabel = generator.DefineLabel();
 
-            LocalBuilder hub = generator.DeclareLocal(typeof(ReferenceHub));
             LocalBuilder oldRoom = generator.DeclareLocal(typeof(RoomIdentifier));
             LocalBuilder newRoom = generator.DeclareLocal(typeof(RoomIdentifier));
 
@@ -66,12 +64,10 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Call, Method(typeof(object), nameof(object.Equals), new[] { typeof(object), typeof(object) })),
                 new(OpCodes.Brtrue_S, returnLabel),
 
-                // ReferenceHub hub = this._roleManager.gameObject.GetComponent<ReferenceHub>();
+                // this._roleManager.gameObject.GetComponent<ReferenceHub>();
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache._roleManager))),
                 new(OpCodes.Call, Method(typeof(Component), nameof(Component.GetComponent)).MakeGenericMethod(typeof(ReferenceHub))),
-                new(OpCodes.Dup),
-                new(OpCodes.Stloc_S, hub),
 
                 // oldRoom
                 new(OpCodes.Ldloc_S, oldRoom),
