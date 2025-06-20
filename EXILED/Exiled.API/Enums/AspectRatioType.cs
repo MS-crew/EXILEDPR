@@ -18,7 +18,12 @@ namespace Exiled.API.Enums
         Unknown,
 
         /// <summary>
-        /// 3:2 aspect ratio (common in classic cameras and some tablets).
+        /// 1:1 aspect ratio (square screen).
+        /// </summary>
+        Ratio1_1,
+
+        /// <summary>
+        /// 3:2 aspect ratio.
         /// </summary>
         Ratio3_2,
 
