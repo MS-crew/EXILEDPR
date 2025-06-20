@@ -40,7 +40,7 @@ namespace Exiled.Events.Patches.Events.Player
 
             newInstructions.InsertRange(index, new CodeInstruction[]
             {
-                // oldRoom = this._lastDetected
+                // RoomIdentifier oldRoom = this._lastDetected
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache._lastDetected))),
                 new(OpCodes.Stloc_S, oldRoom),
@@ -58,6 +58,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Dup),
                 new(OpCodes.Stloc_S, newRoom),
 
+                // oldRoom
                 new(OpCodes.Ldloc_S, oldRoom),
 
                 // if (oldRoom == newRoom) return;
@@ -75,8 +76,10 @@ namespace Exiled.Events.Patches.Events.Player
                 // newRoom
                 new(OpCodes.Ldloc_S, newRoom),
 
-                // Handlers.Player.OnRoomChanged(new RoomChangedEventArgs(hub, oldRoom, newRoom));
+                // RoomChangedEventArgs ev = new RoomChangedEventArgs(hub, oldRoom, newRoom);
                 new(OpCodes.Newobj, GetDeclaredConstructors(typeof(RoomChangedEventArgs))[0]),
+
+                // Handlers.Player.OnRoomChanged(ev);
                 new(OpCodes.Call, Method(typeof(Player), nameof(Player.OnRoomChanged))),
             });
 
