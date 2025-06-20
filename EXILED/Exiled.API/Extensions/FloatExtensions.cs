@@ -19,6 +19,8 @@ namespace Exiled.API.Extensions
     {
         private static readonly Dictionary<AspectRatioType, float> AspectRatioReferences = new()
         {
+            { AspectRatioType.Unknown, 0f },
+            { AspectRatioType.Ratio1_1, 1f },
             { AspectRatioType.Ratio3_2, 3f / 2f },
             { AspectRatioType.Ratio4_3, 4f / 3f },
             { AspectRatioType.Ratio5_4, 5f / 4f },
