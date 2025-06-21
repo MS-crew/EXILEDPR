@@ -867,7 +867,6 @@ namespace Exiled.CustomRoles.API.Features
             Log.Debug($"{Name}: Loading events.");
             Exiled.Events.Handlers.Player.ChangingNickname += OnInternalChangingNickname;
             Exiled.Events.Handlers.Player.ChangingRole += OnInternalChangingRole;
-            Exiled.Events.Handlers.Player.Spawned += OnInternalSpawned;
             Exiled.Events.Handlers.Player.SpawningRagdoll += OnSpawningRagdoll;
             Exiled.Events.Handlers.Player.Destroying += OnDestroying;
         }
@@ -877,13 +876,11 @@ namespace Exiled.CustomRoles.API.Features
         /// </summary>
         protected virtual void UnsubscribeEvents()
         {
-            foreach (Player player in TrackedPlayers)
-                RemoveRole(player);
+            TrackedPlayers.Clear();
 
             Log.Debug($"{Name}: Unloading events.");
             Exiled.Events.Handlers.Player.ChangingNickname -= OnInternalChangingNickname;
             Exiled.Events.Handlers.Player.ChangingRole -= OnInternalChangingRole;
-            Exiled.Events.Handlers.Player.Spawned -= OnInternalSpawned;
             Exiled.Events.Handlers.Player.SpawningRagdoll -= OnSpawningRagdoll;
             Exiled.Events.Handlers.Player.Destroying -= OnDestroying;
         }
@@ -920,12 +917,6 @@ namespace Exiled.CustomRoles.API.Features
         {
             if (Check(ev.Player))
                 ev.Player.CustomInfo = $"{ev.NewName}\n{CustomInfo}";
-        }
-
-        private void OnInternalSpawned(SpawnedEventArgs ev)
-        {
-            if (!IgnoreSpawnSystem && SpawnChance > 0 && !Check(ev.Player) && ev.Player.Role.Type == Role && Loader.Random.NextDouble() * 100 <= SpawnChance)
-                AddRole(ev.Player);
         }
 
         private void OnInternalChangingRole(ChangingRoleEventArgs ev)
