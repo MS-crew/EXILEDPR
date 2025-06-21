@@ -19,7 +19,7 @@ namespace Exiled.CustomRoles.Events
     public class PlayerHandlers
     {
         private static readonly object SpawnLock = new();
-        private readonly HashSet<int> playersBeingProcessed = new HashSet<int>();
+        private readonly HashSet<int> playersBeingProcessed = new HashSet<int>(64);
         private readonly CustomRoles plugin;
 
         /// <summary>
@@ -67,8 +67,8 @@ namespace Exiled.CustomRoles.Events
                         return;
                     }
 
-                    List<CustomRole> eligibleRoles = new();
                     float totalChance = 0f;
+                    List<CustomRole> eligibleRoles = new List<CustomRole>(8);
 
                     foreach (CustomRole role in CustomRole.Registered)
                     {
