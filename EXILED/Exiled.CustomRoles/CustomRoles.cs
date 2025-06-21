@@ -77,7 +77,7 @@ namespace Exiled.CustomRoles
             Exiled.Events.Handlers.Player.SpawningRagdoll -= playerHandlers!.OnSpawningRagdoll;
 
             Exiled.Events.Handlers.Server.WaitingForPlayers -= playerHandlers!.OnWaitingForPlayers;
-            
+
             keypressActivator = null;
             base.OnDisabled();
         }
