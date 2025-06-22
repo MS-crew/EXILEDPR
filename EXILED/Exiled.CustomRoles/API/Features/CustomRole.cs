@@ -38,7 +38,7 @@ namespace Exiled.CustomRoles.API.Features
     public abstract class CustomRole
     {
         /// <summary>
-        /// Gets or sets the number of players spawned with this custom role.
+        /// Gets or sets the number of players that naturally spawned with this custom role.
         /// </summary>
         #pragma warning disable SA1401 // Fields should be private
         public int SpawnedPlayers = 0;
