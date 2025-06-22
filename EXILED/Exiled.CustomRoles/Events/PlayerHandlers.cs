@@ -105,7 +105,6 @@ namespace Exiled.CustomRoles.Events
                 if (candidateRole.SpawnProperties is null)
                 {
                     candidateRole.AddRole(ev.Player);
-                    Log.Warn($"Assigned {candidateRole.Name} to {ev.Player.Nickname} ({ev.Player.Id}) with a spawn chance of {candidateRole.SpawnChance}.");
                     break;
                 }
 
@@ -113,7 +112,6 @@ namespace Exiled.CustomRoles.Events
                 if (newSpawnCount <= candidateRole.SpawnProperties.Limit)
                 {
                     candidateRole.AddRole(ev.Player);
-                    Log.Warn($"Assigned {candidateRole.Name} to {ev.Player.Nickname} ({ev.Player.Id}) with a spawn chance of {candidateRole.SpawnChance} and a limit of {candidateRole.SpawnProperties.Limit}.");
                     break;
                 }
                 else
