@@ -127,6 +127,6 @@ namespace Exiled.CustomRoles.Events
             {
                 playersBeingProcessed.Remove(ev.Player.Id);
             }
-        } 
+        }
     }
 }
