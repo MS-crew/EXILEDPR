@@ -8,11 +8,11 @@
 namespace Exiled.CustomRoles.Events
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Threading;
 
     using Exiled.API.Enums;
+    using Exiled.API.Features;
     using Exiled.CustomRoles.API;
     using Exiled.CustomRoles.API.Features;
     using Exiled.Events.EventArgs.Player;
@@ -22,7 +22,6 @@ namespace Exiled.CustomRoles.Events
     /// </summary>
     public class PlayerHandlers
     {
-        private readonly ConcurrentDictionary<int, byte> playersBeingProcessed = new();
         private readonly CustomRoles plugin;
         private readonly HashSet<SpawnReason> validSpawnReasons = new()
         {
@@ -70,68 +69,58 @@ namespace Exiled.CustomRoles.Events
                 return;
             }
 
-            if (!playersBeingProcessed.TryAdd(ev.Player.Id, 0))
+            float totalChance = 0f;
+            List<CustomRole> eligibleRoles = new(8);
+
+            foreach (CustomRole role in CustomRole.Registered)
+            {
+                if (!role.IgnoreSpawnSystem && role.SpawnChance > 0 && role.Role == ev.Player.Role.Type && !role.Check(ev.Player) && (role.SpawnProperties is null || role.SpawnedPlayers < role.SpawnProperties.Limit))
+                {
+                    eligibleRoles.Add(role);
+                    totalChance += role.SpawnChance;
+                }
+            }
+
+            if (eligibleRoles.Count == 0)
             {
                 return;
             }
 
-            try
+            float lotterySize = Math.Max(100f, totalChance);
+            float randomRoll = (float)Loader.Loader.Random.NextDouble() * lotterySize;
+
+            if (randomRoll >= totalChance)
             {
-                float totalChance = 0f;
-                List<CustomRole> eligibleRoles = new(8);
-
-                foreach (CustomRole role in CustomRole.Registered)
-                {
-                    if (!role.IgnoreSpawnSystem && role.SpawnChance > 0 && role.Role == ev.Player.Role.Type && !role.Check(ev.Player) && (role.SpawnProperties is null || role.SpawnedPlayers < role.SpawnProperties.Limit))
-                    {
-                        eligibleRoles.Add(role);
-                        totalChance += role.SpawnChance;
-                    }
-                }
-
-                if (eligibleRoles.Count == 0)
-                {
-                    return;
-                }
-
-                float lotterySize = Math.Max(100f, totalChance);
-                float randomRoll = (float)Loader.Loader.Random.NextDouble() * lotterySize;
-
-                if (randomRoll >= totalChance)
-                {
-                    return;
-                }
-
-                foreach (CustomRole candidateRole in eligibleRoles)
-                {
-                    if (randomRoll >= candidateRole.SpawnChance)
-                    {
-                        randomRoll -= candidateRole.SpawnChance;
-                        continue;
-                    }
-
-                    if (candidateRole.SpawnProperties is null)
-                    {
-                        candidateRole.AddRole(ev.Player);
-                        break;
-                    }
-
-                    int newSpawnCount = Interlocked.Increment(ref candidateRole.SpawnedPlayers);
-                    if (newSpawnCount <= candidateRole.SpawnProperties.Limit)
-                    {
-                        candidateRole.AddRole(ev.Player);
-                        break;
-                    }
-                    else
-                    {
-                        Interlocked.Decrement(ref candidateRole.SpawnedPlayers);
-                        randomRoll -= candidateRole.SpawnChance;
-                    }
-                }
+                return;
             }
-            finally
+
+            foreach (CustomRole candidateRole in eligibleRoles)
             {
-                playersBeingProcessed.TryRemove(ev.Player.Id, out _);
+                if (randomRoll >= candidateRole.SpawnChance)
+                {
+                    randomRoll -= candidateRole.SpawnChance;
+                    continue;
+                }
+
+                if (candidateRole.SpawnProperties is null)
+                {
+                    candidateRole.AddRole(ev.Player);
+                    Log.Warn($"Assigned {candidateRole.Name} to {ev.Player.Nickname} ({ev.Player.Id}) with a spawn chance of {candidateRole.SpawnChance}.");
+                    break;
+                }
+
+                int newSpawnCount = Interlocked.Increment(ref candidateRole.SpawnedPlayers);
+                if (newSpawnCount <= candidateRole.SpawnProperties.Limit)
+                {
+                    candidateRole.AddRole(ev.Player);
+                    Log.Warn($"Assigned {candidateRole.Name} to {ev.Player.Nickname} ({ev.Player.Id}) with a spawn chance of {candidateRole.SpawnChance} and a limit of {candidateRole.SpawnProperties.Limit}.");
+                    break;
+                }
+                else
+                {
+                    Interlocked.Decrement(ref candidateRole.SpawnedPlayers);
+                    randomRoll -= candidateRole.SpawnChance;
+                }
             }
         }
     }
