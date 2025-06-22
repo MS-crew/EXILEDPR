@@ -10,6 +10,7 @@ namespace Exiled.CustomRoles.Events
     using System;
     using System.Collections.Generic;
 
+    using Exiled.API.Enums;
     using Exiled.CustomRoles.API.Features;
     using Exiled.Events.EventArgs.Player;
 
@@ -21,6 +22,14 @@ namespace Exiled.CustomRoles.Events
         private static readonly object SpawnLock = new();
         private readonly HashSet<int> playersBeingProcessed = new HashSet<int>(64);
         private readonly CustomRoles plugin;
+        private readonly HashSet<SpawnReason> validSpawnReasons = new()
+        {
+            SpawnReason.RoundStart,
+            SpawnReason.Respawn,
+            SpawnReason.LateJoin,
+            SpawnReason.Revived,
+            SpawnReason.Escaped,
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PlayerHandlers"/> class.
@@ -53,6 +62,11 @@ namespace Exiled.CustomRoles.Events
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.Spawning"/>
         internal void OnSpawned(SpawnedEventArgs ev)
         {
+            if (!validSpawnReasons.Contains(ev.Reason))
+            {
+                return;
+            }
+
             if (!playersBeingProcessed.Add(ev.Player.Id))
             {
                 return;
