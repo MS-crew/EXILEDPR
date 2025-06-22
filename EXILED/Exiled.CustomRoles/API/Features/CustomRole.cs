@@ -37,6 +37,13 @@ namespace Exiled.CustomRoles.API.Features
     /// </summary>
     public abstract class CustomRole
     {
+        /// <summary>
+        /// Gets or sets the number of players spawned with this custom role.
+        /// </summary>
+        #pragma warning disable SA1401 // Fields should be private
+        public int SpawnedPlayers = 0;
+        #pragma warning restore SA1401 // Fields should be private
+
         private const float AddRoleDelay = 0.25f;
 
         private static Dictionary<Type, CustomRole?> typeLookupTable = new();
@@ -74,12 +81,6 @@ namespace Exiled.CustomRoles.API.Features
         /// Gets or sets the CustomInfo of this role.
         /// </summary>
         public abstract string CustomInfo { get; set; }
-
-        /// <summary>
-        /// Gets or sets tracks the number of players spawned with custom roles.
-        /// </summary>
-        [YamlIgnore]
-        public int SpawnedPlayers { get; set; } = 0;
 
         /// <summary>
         /// Gets all of the players currently set to this role.
@@ -533,7 +534,6 @@ namespace Exiled.CustomRoles.API.Features
 
             player.UniqueRole = Name;
             TrackedPlayers.Add(player);
-            this.SpawnedPlayers++;
 
             Timing.CallDelayed(
                 AddRoleDelay,
