@@ -74,7 +74,7 @@ namespace Exiled.CustomRoles.Events
 
             foreach (CustomRole role in CustomRole.Registered)
             {
-                if (!role.IgnoreSpawnSystem && role.SpawnChance > 0 && role.Role == ev.Player.Role.Type && !role.Check(ev.Player) && (role.SpawnProperties is null || role.SpawnedPlayers < role.SpawnProperties.Limit))
+                if (role.Role == ev.Player.Role.Type && !role.IgnoreSpawnSystem && role.SpawnChance > 0 && !role.Check(ev.Player) && (role.SpawnProperties is null || role.SpawnedPlayers < role.SpawnProperties.Limit))
                 {
                     eligibleRoles.Add(role);
                     totalChance += role.SpawnChance;
