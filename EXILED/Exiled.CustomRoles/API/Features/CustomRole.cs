@@ -935,7 +935,7 @@ namespace Exiled.CustomRoles.API.Features
 
         private void OnSpawningRagdoll(SpawningRagdollEventArgs ev)
         {
-            if (Check(ev.Player))
+            if (Check(ev.Player) && Role.IsFpcRole())
                 ev.Role = Role;
         }
 
