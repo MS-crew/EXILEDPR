@@ -68,16 +68,15 @@ namespace Exiled.CustomRoles.Events
                 return;
             }
 
-            if (!playersBeingProcessed.Add(ev.Player.Id))
-            {
-                return;
-            }
-
             if (ev.Player.HasAnyCustomRole())
             {
                 return;
             }
 
+            if (!playersBeingProcessed.Add(ev.Player.Id))
+            {
+                return;
+            }
             try
             {
                 lock (SpawnLock)
