@@ -73,7 +73,7 @@ namespace Exiled.CustomRoles.Events
                 return;
             }
 
-            if (CustomRole.TryGet(ev.Player, out _))
+            if (ev.Player.HasAnyCustomRole())
             {
                 return;
             }
