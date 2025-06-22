@@ -29,6 +29,7 @@ namespace Exiled.CustomRoles.Events
             SpawnReason.LateJoin,
             SpawnReason.Revived,
             SpawnReason.Escaped,
+            SpawnReason.ItemUsage,
         };
 
         /// <summary>
