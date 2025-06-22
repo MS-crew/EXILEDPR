@@ -883,7 +883,8 @@ namespace Exiled.CustomRoles.API.Features
         /// </summary>
         protected virtual void UnsubscribeEvents()
         {
-            TrackedPlayers.Clear();
+            foreach (Player player in TrackedPlayers)
+                RemoveRole(player);
 
             Log.Debug($"{Name}: Unloading events.");
             Exiled.Events.Handlers.Player.ChangingNickname -= OnInternalChangingNickname;
