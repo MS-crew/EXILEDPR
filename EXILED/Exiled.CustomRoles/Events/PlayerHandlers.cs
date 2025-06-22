@@ -72,15 +72,15 @@ namespace Exiled.CustomRoles.Events
                 return;
             }
 
+            if (CustomRole.TryGet(ev.Player, out _))
+            {
+                return;
+            }
+
             try
             {
                 lock (SpawnLock)
                 {
-                    if (CustomRole.TryGet(ev.Player, out _))
-                    {
-                        return;
-                    }
-
                     float totalChance = 0f;
                     List<CustomRole> eligibleRoles = new List<CustomRole>(8);
 
