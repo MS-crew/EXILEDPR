@@ -77,12 +77,13 @@ namespace Exiled.CustomRoles.Events
             {
                 return;
             }
+
             try
             {
                 lock (SpawnLock)
                 {
+                    List<CustomRole> eligibleRoles = new(8);
                     float totalChance = 0f;
-                    List<CustomRole> eligibleRoles = new List<CustomRole>(8);
 
                     foreach (CustomRole role in CustomRole.Registered)
                     {
@@ -118,13 +119,19 @@ namespace Exiled.CustomRoles.Events
                         randomRoll -= role.SpawnChance;
                     }
 
-                    chosenRole?.AddRole(ev.Player);
+                    if (chosenRole == null)
+                    {
+                        return;
+                    }
+
+                    chosenRole.AddRole(ev.Player);
+                    chosenRole.SpawnedPlayers++;
                 }
             }
             finally
             {
                 playersBeingProcessed.Remove(ev.Player.Id);
             }
-        }
+        } 
     }
 }
