@@ -533,6 +533,7 @@ namespace Exiled.CustomRoles.API.Features
 
             player.UniqueRole = Name;
             TrackedPlayers.Add(player);
+            this.SpawnedPlayers++;
 
             Timing.CallDelayed(
                 AddRoleDelay,
