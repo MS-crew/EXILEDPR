@@ -40,6 +40,7 @@ namespace Exiled.CustomRoles.API.Features
         /// <summary>
         /// Gets or sets the number of players that naturally spawned with this custom role.
         /// </summary>
+        [YamlIgnore]
         #pragma warning disable SA1401 // Fields should be private
         public int SpawnedPlayers = 0;
         #pragma warning restore SA1401 // Fields should be private
