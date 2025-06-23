@@ -839,7 +839,7 @@ namespace Exiled.CustomRoles.API.Features
 
             if (!SpawnProperties.StaticSpawnPoints.IsEmpty())
             {
-                foreach (StaticSpawnPoint? sp in SpawnProperties.StaticSpawnPoints)
+                foreach (StaticSpawnPoint sp in SpawnProperties.StaticSpawnPoints)
                 {
                     Add(sp.Position, sp.Chance);
                 }
