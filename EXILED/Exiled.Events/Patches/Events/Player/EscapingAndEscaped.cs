@@ -41,8 +41,8 @@ namespace Exiled.Events.Patches.Events.Player
             LocalBuilder ev = generator.DeclareLocal(typeof(EscapingEventArgs));
             LocalBuilder role = generator.DeclareLocal(typeof(Role));
 
-            int offset = -3;
-            int index = newInstructions.FindIndex(instruction => instruction.opcode == OpCodes.Newobj) + offset;
+            int offset = -1;
+            int index = newInstructions.FindIndex(i => i.opcode == OpCodes.Callvirt && i.operand == (object)PropertyGetter(typeof(NetworkBehaviour), nameof(NetworkBehaviour.connectionToClient))) + offset;
 
             newInstructions.InsertRange(
                 index,
@@ -52,10 +52,12 @@ namespace Exiled.Events.Patches.Events.Player
                     new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
 
                     // roleTypeId
-                    new(OpCodes.Ldloc_1),
+                    new(OpCodes.Ldloc_S, 4),
+                    new(OpCodes.Callvirt, PropertyGetter(typeof(PlayerEscapingEventArgs), nameof(PlayerEscapingEventArgs.NewRole))),
 
                     // escapeScenario
-                    new(OpCodes.Ldloc_2),
+                    new(OpCodes.Ldloc_S, 4),
+                    new(OpCodes.Callvirt, PropertyGetter(typeof(PlayerEscapingEventArgs), nameof(PlayerEscapingEventArgs.EscapeScenario))),
 
                     // EscapingEventArgs ev = new(Player, RoleTypeId, EscapeScenario)
                     new(OpCodes.Newobj, GetDeclaredConstructors(typeof(EscapingEventArgs))[0]),
