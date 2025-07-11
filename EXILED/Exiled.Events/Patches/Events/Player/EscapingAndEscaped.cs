@@ -13,14 +13,13 @@ namespace Exiled.Events.Patches.Events.Player
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using API.Enums;
     using API.Features;
     using API.Features.Pools;
     using EventArgs.Player;
     using Exiled.API.Features.Roles;
     using Exiled.Events.Attributes;
     using HarmonyLib;
-    using PlayerRoles.FirstPersonControl;
+    using Mirror;
 
     using static HarmonyLib.AccessTools;
 
@@ -51,13 +50,11 @@ namespace Exiled.Events.Patches.Events.Player
                     // hub
                     new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
 
-                    // roleTypeId
-                    new(OpCodes.Ldloc_S, 4),
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(PlayerEscapingEventArgs), nameof(PlayerEscapingEventArgs.NewRole))),
+                   // roleTypeId
+                    new(OpCodes.Ldloc_1),
 
                     // escapeScenario
-                    new(OpCodes.Ldloc_S, 4),
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(PlayerEscapingEventArgs), nameof(PlayerEscapingEventArgs.EscapeScenario))),
+                    new(OpCodes.Ldloc_2),
 
                     // EscapingEventArgs ev = new(Player, RoleTypeId, EscapeScenario)
                     new(OpCodes.Newobj, GetDeclaredConstructors(typeof(EscapingEventArgs))[0]),
