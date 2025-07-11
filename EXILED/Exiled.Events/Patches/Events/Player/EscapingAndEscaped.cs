@@ -50,7 +50,7 @@ namespace Exiled.Events.Patches.Events.Player
                     // hub
                     new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
 
-                   // roleTypeId
+                    // roleTypeId
                     new(OpCodes.Ldloc_1),
 
                     // escapeScenario
