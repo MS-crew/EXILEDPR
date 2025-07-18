@@ -52,9 +52,8 @@ namespace Exiled.Events.Patches.Events.Player
 
             newInstructions.InsertRange(lastIndex, new CodeInstruction[]
             {
-                // newRoom = this._lastDetected
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Ldfld, Field(typeof(CurrentRoomPlayerCache), nameof(CurrentRoomPlayerCache._lastDetected))),
+                // newRoom = lastDetected
+                new(OpCodes.Ldloc_1),
                 new(OpCodes.Dup),
                 new(OpCodes.Stloc_S, newRoom),
 
