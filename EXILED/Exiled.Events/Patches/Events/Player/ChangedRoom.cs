@@ -62,7 +62,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldloc_S, oldRoom),
 
                 // if (oldRoom == newRoom) return;
-                new(OpCodes.Call, Method(typeof(object), nameof(object.Equals), new[] { typeof(object), typeof(object) })),
+                new(OpCodes.Call, Method(typeof(object), nameof(object.ReferenceEquals), new[] { typeof(object), typeof(object) })),
                 new(OpCodes.Brtrue_S, returnLabel),
 
                 // this._roleManager.gameObject.GetComponent<ReferenceHub>();
