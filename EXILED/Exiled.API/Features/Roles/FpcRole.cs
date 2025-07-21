@@ -68,6 +68,15 @@ namespace Exiled.API.Features.Roles
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="CharacterModel"/> associated with the player.
+        /// </summary>
+        public CharacterModel Model
+        {
+            get => FirstPersonController.FpcModule.CharacterModelInstance;
+            set => FirstPersonController.FpcModule.CharacterModelInstance = value;
+        }
+
+        /// <summary>
         /// Gets or sets the player's gravity.
         /// </summary>
         public Vector3 Gravity
