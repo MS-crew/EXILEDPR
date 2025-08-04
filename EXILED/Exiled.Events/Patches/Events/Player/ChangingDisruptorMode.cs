@@ -8,15 +8,13 @@
 namespace Exiled.Events.Patches.Events.Player
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Items;
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Player;
     using HarmonyLib;
-    using InventorySystem.Items;
+
     using InventorySystem.Items.Firearms.Modules;
     using Mirror;
 
@@ -37,11 +35,11 @@ namespace Exiled.Events.Patches.Events.Player
             LocalBuilder newMode = generator.DeclareLocal(typeof(bool));
 
             int offset = 2;
-            int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Call && (object)x.operand == Method(typeof(NetworkReaderExtensions), nameof(NetworkReaderExtensions.ReadBool)));
+            int index = newInstructions.FindIndex(x => x.Calls(Method(typeof(NetworkReaderExtensions), nameof(NetworkReaderExtensions.ReadBool))));
 
             newInstructions.InsertRange(index + offset, new CodeInstruction[]
             {
-                // Item.Get(this.Firearm);
+                // this.Firearm;
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Callvirt, PropertyGetter(typeof(DisruptorModeSelector), nameof(DisruptorModeSelector.Firearm))),
 
