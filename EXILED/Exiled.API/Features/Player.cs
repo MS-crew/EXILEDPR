@@ -3517,6 +3517,13 @@ namespace Exiled.API.Features
         /// <summary>
         /// Adds a new <see cref="RegenerationProcess"/> to the player.
         /// </summary>
+        /// <param name="rate">Health points regenerated per second.</param>
+        /// <param name="duration">Total duration of the regeneration (in seconds).</param>
+        public void AddRegeneration(float rate, float duration) => AddRegeneration(0, rate, duration, 1f, 1f);
+
+        /// <summary>
+        /// Adds a new <see cref="RegenerationProcess"/> to the player.
+        /// </summary>
         /// <param name="starttime">The delay before regeneration starts (in seconds).</param>
         /// <param name="rate">Health points regenerated per second.</param>
         /// <param name="duration">Total duration of the regeneration (in seconds).</param>
