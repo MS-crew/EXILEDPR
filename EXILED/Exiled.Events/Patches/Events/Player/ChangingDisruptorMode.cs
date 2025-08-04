@@ -37,7 +37,7 @@ namespace Exiled.Events.Patches.Events.Player
             LocalBuilder newMode = generator.DeclareLocal(typeof(bool));
 
             int offset = 1;
-            int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Stfld && (object)x.operand == Method(typeof(NetworkReaderExtensions), nameof(NetworkReaderExtensions.ReadBool)));
+            int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Call && (object)x.operand == Method(typeof(NetworkReaderExtensions), nameof(NetworkReaderExtensions.ReadBool)));
 
             newInstructions.InsertRange(index + offset, new CodeInstruction[]
             {
