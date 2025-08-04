@@ -313,5 +313,14 @@ namespace Exiled.API.Features.Roles
             StaminaUsageMultiplier = 1f;
             StaminaRegenMultiplier = 1f;
         }
+
+        /// <summary>
+        /// Makes the player jump with the specified strength.
+        /// </summary>
+        /// <param name="jumpStrength">The strength of the jump.</param>
+        public void Jump(float jumpStrength)
+        {
+            FirstPersonController.FpcModule.Motor.JumpController.ForceJump(jumpStrength);
+        }
     }
 }
