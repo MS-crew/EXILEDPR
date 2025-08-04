@@ -36,17 +36,8 @@ namespace Exiled.Events.Patches.Events.Player
 
             LocalBuilder newMode = generator.DeclareLocal(typeof(bool));
 
-            int offset = 1;
+            int offset = 2;
             int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Call && (object)x.operand == Method(typeof(NetworkReaderExtensions), nameof(NetworkReaderExtensions.ReadBool)));
-
-            newInstructions.InsertRange(index + offset, new CodeInstruction[]
-            {
-                // bool newMode = reader.ReadBool();
-                new(OpCodes.Dup),
-                new(OpCodes.Stloc, newMode),
-            });
-
-            offset = 2;
 
             newInstructions.InsertRange(index + offset, new CodeInstruction[]
             {
@@ -62,6 +53,14 @@ namespace Exiled.Events.Patches.Events.Player
 
                 // Handlers.Player.OnChangingDisruptorMode(ev);
                 new(OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnChangingDisruptorMode))),
+            });
+
+            offset = 1;
+            newInstructions.InsertRange(index + offset, new CodeInstruction[]
+            {
+                // bool newMode = reader.ReadBool();
+                new(OpCodes.Dup),
+                new(OpCodes.Stloc, newMode),
             });
 
             for (int z = 0; z < newInstructions.Count; z++)
