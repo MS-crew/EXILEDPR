@@ -315,12 +315,13 @@ namespace Exiled.API.Features.Roles
         }
 
         /// <summary>
-        /// Makes the player jump with the specified strength.
+        /// Makes the player jump using the default or a specified strength.
         /// </summary>
-        /// <param name="jumpStrength">The strength of the jump.</param>
-        public void Jump(float jumpStrength)
+        /// <param name="jumpStrength">Optional. The strength of the jump. If not provided, the default jump speed for Role is used.</param>
+        public void Jump(float? jumpStrength = null)
         {
-            FirstPersonController.FpcModule.Motor.JumpController.ForceJump(jumpStrength);
+            float strength = jumpStrength ?? FirstPersonController.FpcModule.JumpSpeed;
+            FirstPersonController.FpcModule.Motor.JumpController.ForceJump(strength);
         }
     }
 }
