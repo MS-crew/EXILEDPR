@@ -39,7 +39,7 @@ namespace Exiled.Events.Patches.Events.Player
                 // float OldRatio = this.AspectRatio;
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Callvirt, PropertyGetter(typeof(AspectRatioSync), nameof(AspectRatioSync.AspectRatio))),
-                new(OpCodes.Stloc_S, oldRatio),
+                new(OpCodes.Stloc, oldRatio),
             });
 
             int index = newInstructions.FindLastIndex(i => i.opcode == OpCodes.Ret);
@@ -51,7 +51,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Call, Method(typeof(Component), nameof(Component.GetComponent)).MakeGenericMethod(typeof(ReferenceHub))),
                 new(OpCodes.Dup),
-                new(OpCodes.Stloc_S, hub),
+                new(OpCodes.Stloc, hub),
 
                 // if (hub.authManager._targetInstanceMode != ClientInstanceMode.ReadyClient) return;
                 new(OpCodes.Ldfld, Field(typeof(ReferenceHub), nameof(ReferenceHub.authManager))),
