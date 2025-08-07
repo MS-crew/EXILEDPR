@@ -29,7 +29,7 @@ namespace Exiled.Events.Patches.Events.Player
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
-            LocalBuilder oldratio = generator.DeclareLocal(typeof(float));
+            LocalBuilder oldRatio = generator.DeclareLocal(typeof(float));
             LocalBuilder hub = generator.DeclareLocal(typeof(ReferenceHub));
 
             Label retLabel = generator.DefineLabel();
@@ -39,7 +39,7 @@ namespace Exiled.Events.Patches.Events.Player
                 // float OldRatio = this.AspectRatio;
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Callvirt, PropertyGetter(typeof(AspectRatioSync), nameof(AspectRatioSync.AspectRatio))),
-                new(OpCodes.Stloc_S, oldratio.LocalIndex),
+                new(OpCodes.Stloc_S, oldRatio),
             });
 
             int index = newInstructions.FindLastIndex(i => i.opcode == OpCodes.Ret);
@@ -51,7 +51,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Call, Method(typeof(Component), nameof(Component.GetComponent)).MakeGenericMethod(typeof(ReferenceHub))),
                 new(OpCodes.Dup),
-                new(OpCodes.Stloc_S, hub.LocalIndex),
+                new(OpCodes.Stloc_S, hub),
 
                 // if (hub.authManager._targetInstanceMode != ClientInstanceMode.ReadyClient) return;
                 new(OpCodes.Ldfld, Field(typeof(ReferenceHub), nameof(ReferenceHub.authManager))),
@@ -60,14 +60,13 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Bne_Un_S, retLabel),
 
                 // hub
-                new(OpCodes.Ldloc, hub.LocalIndex),
+                new(OpCodes.Ldloc, hub),
 
                 // OldRatio
-                new(OpCodes.Ldloc, oldratio.LocalIndex),
+                new(OpCodes.Ldloc, oldRatio),
 
                 // this.AspectRatio
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Call, PropertyGetter(typeof(AspectRatioSync), nameof(AspectRatioSync.AspectRatio))),
+                new(OpCodes.Ldarg_1),
 
                 // ChangedRatioEventArgs ev = new ChangedRatioEventArgs(ReferenceHub, float, float)
                 new(OpCodes.Newobj, GetDeclaredConstructors(typeof(ChangedRatioEventArgs))[0]),
