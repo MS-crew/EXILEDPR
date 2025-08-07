@@ -36,7 +36,7 @@ namespace Exiled.Events.Patches.Events.Player
 
             newInstructions.InsertRange(0, new CodeInstruction[]
             {
-                // float OldRatio = this.AspectRatio;
+                // oldRatio = this.AspectRatio;
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Callvirt, PropertyGetter(typeof(AspectRatioSync), nameof(AspectRatioSync.AspectRatio))),
                 new(OpCodes.Stloc, oldRatio),
