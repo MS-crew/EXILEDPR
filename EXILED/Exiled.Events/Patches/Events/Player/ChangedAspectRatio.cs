@@ -62,7 +62,7 @@ namespace Exiled.Events.Patches.Events.Player
                 // hub
                 new(OpCodes.Ldloc_S, hub.LocalIndex),
 
-                // OldRatio
+                // oldRatio
                 new(OpCodes.Ldloc_S, oldRatio.LocalIndex),
 
                 // aspectRatio
