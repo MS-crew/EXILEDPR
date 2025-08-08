@@ -7,13 +7,14 @@
 
 namespace Exiled.Events.Patches.Generic
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
 
     using Exiled.API.Features;
     using Exiled.API.Features.Pools;
-
     using HarmonyLib;
 
     using static HarmonyLib.AccessTools;
@@ -25,18 +26,20 @@ namespace Exiled.Events.Patches.Generic
     [HarmonyPatch]
     internal class RoundTargetCount
     {
+#pragma warning disable SA1600 // Elements should be documented
+        public static Type PrivateType { get; internal set; }
+
         private static MethodInfo TargetMethod()
         {
-            // For find '<UpdateTargetCount>b__51_0' method in '<>c' class.
-            MethodInfo updateTargetCount = Method(typeof(RoundSummary), nameof(RoundSummary.UpdateTargetCount));
+            PrivateType = typeof(RoundSummary).GetNestedTypes(all)
+                .FirstOrDefault(currentType => currentType.Name is "<>c");
+            if (PrivateType == null)
+                throw new Exception("State machine type for <>c not found.");
+            MethodInfo moveNextMethod = PrivateType.GetMethods(all).FirstOrDefault(x => x.Name.Contains("UpdateTargetCount"));
 
-            List<CodeInstruction> newInstructions = PatchProcessor.GetOriginalInstructions(updateTargetCount);
-
-            int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Ldftn && x.operand is MethodInfo mi && mi.GetParameters().Length == 1 && mi.GetParameters()[0].ParameterType == typeof(ReferenceHub) && mi.ReturnType == typeof(bool));
-
-            MethodInfo targetMethod = (MethodInfo)newInstructions[index].operand;
-
-            return targetMethod;
+            if (moveNextMethod == null)
+                throw new Exception("UpdateTargetCount method not found in the state machine type.");
+            return moveNextMethod;
         }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
