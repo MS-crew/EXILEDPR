@@ -12,6 +12,7 @@ namespace Exiled.Events.Patches.Events.Player
 
     using API.Features.Pools;
     using CentralAuth;
+    using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Player;
     using HarmonyLib;
     using UnityEngine;
@@ -22,6 +23,7 @@ namespace Exiled.Events.Patches.Events.Player
     /// Patches <see cref="AspectRatioSync.UserCode_CmdSetAspectRatio__Single" />.
     /// Adds the <see cref="Handlers.Player.ChangedRatio" /> event.
     /// </summary>
+    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.ChangedRatio))]
     [HarmonyPatch(typeof(AspectRatioSync), nameof(AspectRatioSync.UserCode_CmdSetAspectRatio__Single))]
     internal class ChangedAspectRatio
     {
