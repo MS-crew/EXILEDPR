@@ -43,6 +43,7 @@ namespace Exiled.API.Features
     using InventorySystem.Items.Usables;
     using InventorySystem.Items.Usables.Scp330;
     using MapGeneration.Distributors;
+    using MapGeneration.Rooms;
     using MEC;
     using Mirror;
     using Mirror.LiteNetLib4Mirror;
@@ -1013,6 +1014,12 @@ namespace Exiled.API.Features
         /// Gets the current zone the player is in.
         /// </summary>
         public ZoneType Zone => CurrentRoom?.Zone ?? ZoneType.Unspecified;
+
+        /// <summary>
+        /// Gets the current Level the player is in.
+        /// </summary>
+        /// <remarks>Will return null if CurrentRoom is not a <see cref="MultiLevelRoomIdentifier"/>.</remarks>
+        public RoomLevelName? LevelName => CurrentRoom?.LevelName;
 
         /// <summary>
         /// Gets the current <see cref="Features.Lift"/> the player is in. Can be <see langword="null"/>.
