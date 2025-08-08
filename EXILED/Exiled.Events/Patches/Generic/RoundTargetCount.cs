@@ -35,11 +35,11 @@ namespace Exiled.Events.Patches.Generic
                 .FirstOrDefault(currentType => currentType.Name is "<>c");
             if (PrivateType == null)
                 throw new Exception("State machine type for <>c not found.");
-            MethodInfo moveNextMethod = PrivateType.GetMethods(all).FirstOrDefault(x => x.Name.Contains("UpdateTargetCount"));
+            MethodInfo updateTargetCountFunction = PrivateType.GetMethods(all).FirstOrDefault(x => x.Name.Contains("UpdateTargetCount"));
 
-            if (moveNextMethod == null)
+            if (updateTargetCountFunction == null)
                 throw new Exception("UpdateTargetCount method not found in the state machine type.");
-            return moveNextMethod;
+            return updateTargetCountFunction;
         }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
