@@ -65,7 +65,7 @@ namespace Exiled.Events.Patches.Events.Player
                 // OldRatio
                 new(OpCodes.Ldloc_S, oldRatio.LocalIndex),
 
-                // this.AspectRatio
+                // aspectRatio
                 new(OpCodes.Ldarg_1),
 
                 // ChangedRatioEventArgs ev = new ChangedRatioEventArgs(ReferenceHub, float, float)
