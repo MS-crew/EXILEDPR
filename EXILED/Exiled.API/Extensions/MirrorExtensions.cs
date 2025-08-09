@@ -16,6 +16,7 @@ namespace Exiled.API.Extensions
     using System.Text;
 
     using AudioPooling;
+    using CustomPlayerEffects;
     using Exiled.API.Enums;
     using Exiled.API.Features.Items;
     using Features;
@@ -384,10 +385,6 @@ namespace Exiled.API.Extensions
         {
             SendFakeSyncObject(target, effectOwner.NetworkIdentity, typeof(PlayerEffectsController), (writer) =>
             {
-                const uint ChangesCount = 1;
-                const ulong InitSyncObjectDirtyBit = 0b0001;
-                const byte OperationId = (byte)SyncList<byte>.Operation.OP_SET;
-
                 StatusEffectBase foundEffect = effectOwner.GetEffect(effect);
                 PlayerEffectsController controller = effectOwner.ReferenceHub.playerEffectsController;
                 int foundIndex = -1;
@@ -407,9 +404,9 @@ namespace Exiled.API.Extensions
                     return;
                 }
 
-                writer.WriteULong(InitSyncObjectDirtyBit);
-                writer.WriteUInt(ChangesCount);
-                writer.WriteByte(OperationId);
+                writer.WriteULong(0b0001);
+                writer.WriteUInt(1);
+                writer.WriteByte((byte)SyncList<byte>.Operation.OP_SET);
                 writer.WriteUInt((uint)foundIndex);
                 writer.WriteByte(intensity);
             });
