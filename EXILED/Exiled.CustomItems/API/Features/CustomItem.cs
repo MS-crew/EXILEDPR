@@ -1031,11 +1031,6 @@ namespace Exiled.CustomItems.API.Features
                 return;
 
             OnDroppingItem(ev);
-
-            // TODO: Don't forget to remove this with next update
-#pragma warning disable CS0618
-            OnDropping(ev);
-#pragma warning restore CS0618
         }
 
         private void OnInternalDroppingAmmo(DroppingAmmoEventArgs ev)
