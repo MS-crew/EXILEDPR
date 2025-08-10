@@ -730,23 +730,25 @@ namespace Exiled.API.Features.Items
         /// <summary>
         /// Attempts to reload the firearm with server-side validation.
         /// </summary>
-        public void Reload()
+        /// <returns><see langword="true"/> if the firearm was successfully reloaded. Otherwise, <see langword="false"/>.</returns>
+        public bool Reload()
         {
             if (AnimatorReloaderModule == null)
-                return;
+                return false;
 
-            AnimatorReloaderModule.ServerTryReload();
+            return AnimatorReloaderModule.ServerTryReload();
         }
 
         /// <summary>
         /// Attempts to unload the firearm with server-side validation.
         /// </summary>
-        public void Unload()
+        /// <returns><see langword="true"/> if the firearm was successfully unload. Otherwise, <see langword="false"/>.</returns>
+        public bool Unload()
         {
             if (AnimatorReloaderModule == null)
-                return;
+                return false;
 
-            AnimatorReloaderModule.ServerTryUnload();
+            return AnimatorReloaderModule.ServerTryUnload();
         }
 
         /// <summary>
