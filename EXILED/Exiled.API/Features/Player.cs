@@ -64,6 +64,7 @@ namespace Exiled.API.Features
     using VoiceChat.Playbacks;
 
     using static DamageHandlers.DamageHandlerBase;
+    using static InventorySystem.Items.Firearms.Modules.AnimatorReloaderModuleBase;
 
     using DamageHandlerBase = PlayerStatsSystem.DamageHandlerBase;
     using Firearm = Items.Firearm;
@@ -1804,22 +1805,69 @@ namespace Exiled.API.Features
         public bool TryRemoveCustomeRoleFriendlyFire(string role) => CustomRoleFriendlyFireMultiplier.Remove(role);
 
         /// <summary>
-        /// Forces the player to reload their current weapon.
+        /// Forces the player's client to play the weapon reload animation, bypassing server-side checks.
         /// </summary>
-        /// <returns><see langword="true"/> if firearm was successfully reloaded. Otherwise, <see langword="false"/>.</returns>
-        public bool ReloadWeapon()
+        /// <returns><see langword="true"/> if the command to start reloading was sent. Otherwise, <see langword="false"/>.</returns>
+        /// <remarks>
+        /// This method does not check if the weapon can actually be reloaded. It only forces the animation and is not guaranteed to result in a successful reload.
+        /// </remarks>
+        public bool ForceReloadWeapon()
         {
-            if (CurrentItem is Firearm firearm)
+            if (CurrentItem is not Firearm firearm)
             {
-                // TODO not finish
-                /*
-                bool result = firearm.Base.Ammo.ServerTryReload();
-                Connection.Send(new RequestMessage(firearm.Serial, RequestType.Reload));
-                return result;
-                */
+                return false;
             }
 
-            return false;
+            firearm.AnimatorReloaderModule.IsReloading = true;
+            firearm.AnimatorReloaderModule.SendRpcHeaderWithRandomByte(ReloaderMessageHeader.Reload);
+            return true;
+        }
+
+        /// <summary>
+        /// Forces the player to reload their current weapon.
+        /// </summary>
+        /// <returns><see langword="true"/> if the firearm was successfully reloaded. Otherwise, <see langword="false"/>.</returns>
+        public bool ReloadWeapon()
+        {
+            if (CurrentItem is not Firearm firearm)
+            {
+                return false;
+            }
+
+            return firearm.AnimatorReloaderModule.ServerTryReload();
+        }
+
+        /// <summary>
+        /// Forces the player's client to play the weapon unload animation, bypassing server-side checks.
+        /// </summary>
+        /// <returns><see langword="true"/> if the command to start unloading was sent. Otherwise, <see langword="false"/>.</returns>
+        /// <remarks>
+        /// This method does not check if the weapon can actually be unloaded. It only forces the animation and is not guaranteed to result in a successful unload.
+        /// </remarks>
+        public bool ForceUnloadWeapon()
+        {
+            if (CurrentItem is not Firearm firearm)
+            {
+                return false;
+            }
+
+            firearm.AnimatorReloaderModule.IsUnloading = true;
+            firearm.AnimatorReloaderModule.SendRpcHeaderWithRandomByte(ReloaderMessageHeader.Unload);
+            return true;
+        }
+
+        /// <summary>
+        /// Forces the player to unload their current weapon.
+        /// </summary>
+        /// <returns><see langword="true"/> if the firearm was successfully unloaded. Otherwise, <see langword="false"/>.</returns>
+        public bool UnloadWeapon()
+        {
+            if (CurrentItem is not Firearm firearm)
+            {
+                return false;
+            }
+
+            return firearm.AnimatorReloaderModule.ServerTryUnload();
         }
 
         /// <summary>
