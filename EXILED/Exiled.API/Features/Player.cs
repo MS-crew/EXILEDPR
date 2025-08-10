@@ -1813,7 +1813,7 @@ namespace Exiled.API.Features
         /// </remarks>
         public bool ForceReloadWeapon()
         {
-            if (CurrentItem is not Firearm firearm)
+            if (CurrentItem is not Firearm firearm || firearm.AnimatorReloaderModule == null)
             {
                 return false;
             }
@@ -1829,7 +1829,7 @@ namespace Exiled.API.Features
         /// <returns><see langword="true"/> if the firearm was successfully reloaded. Otherwise, <see langword="false"/>.</returns>
         public bool ReloadWeapon()
         {
-            if (CurrentItem is not Firearm firearm)
+            if (CurrentItem is not Firearm firearm || firearm.AnimatorReloaderModule == null)
             {
                 return false;
             }
@@ -1846,7 +1846,7 @@ namespace Exiled.API.Features
         /// </remarks>
         public bool ForceUnloadWeapon()
         {
-            if (CurrentItem is not Firearm firearm)
+            if (CurrentItem is not Firearm firearm || firearm.AnimatorReloaderModule == null)
             {
                 return false;
             }
@@ -1862,7 +1862,7 @@ namespace Exiled.API.Features
         /// <returns><see langword="true"/> if the firearm was successfully unloaded. Otherwise, <see langword="false"/>.</returns>
         public bool UnloadWeapon()
         {
-            if (CurrentItem is not Firearm firearm)
+            if (CurrentItem is not Firearm firearm || firearm.AnimatorReloaderModule == null)
             {
                 return false;
             }
