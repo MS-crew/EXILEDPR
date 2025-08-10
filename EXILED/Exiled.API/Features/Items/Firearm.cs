@@ -757,7 +757,7 @@ namespace Exiled.API.Features.Items
         /// </remarks>
         public void ForceUnload()
         {
-             if (AnimatorReloaderModule == null)
+            if (AnimatorReloaderModule == null)
                 return;
 
             AnimatorReloaderModule.IsUnloading = true;
