@@ -720,6 +720,9 @@ namespace Exiled.API.Features.Items
         /// </remarks>
         public void ForceReload()
         {
+            if (AnimatorReloaderModule == null)
+                return;
+
             AnimatorReloaderModule.IsReloading = true;
             AnimatorReloaderModule.SendRpcHeaderWithRandomByte(ReloaderMessageHeader.Reload);
         }
@@ -729,6 +732,9 @@ namespace Exiled.API.Features.Items
         /// </summary>
         public void Reload()
         {
+            if (AnimatorReloaderModule == null)
+                return;
+
             AnimatorReloaderModule.ServerTryReload();
         }
 
@@ -737,6 +743,9 @@ namespace Exiled.API.Features.Items
         /// </summary>
         public void Unload()
         {
+            if (AnimatorReloaderModule == null)
+                return;
+
             AnimatorReloaderModule.ServerTryUnload();
         }
 
@@ -748,6 +757,9 @@ namespace Exiled.API.Features.Items
         /// </remarks>
         public void ForceUnload()
         {
+             if (AnimatorReloaderModule == null)
+                return;
+
             AnimatorReloaderModule.IsUnloading = true;
             AnimatorReloaderModule.SendRpcHeaderWithRandomByte(ReloaderMessageHeader.Unload);
         }
