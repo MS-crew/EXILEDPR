@@ -386,18 +386,7 @@ namespace Exiled.API.Extensions
             SendFakeSyncObject(target, effectOwner.NetworkIdentity, typeof(PlayerEffectsController), (writer) =>
             {
                 StatusEffectBase foundEffect = effectOwner.GetEffect(effect);
-                PlayerEffectsController controller = effectOwner.ReferenceHub.playerEffectsController;
-                int foundIndex = -1;
-
-                for (int i = 0; i < controller.EffectsLength; i++)
-                {
-                    if (controller.AllEffects[i] == foundEffect)
-                    {
-                        foundIndex = i;
-                        break;
-                    }
-                }
-
+                int foundIndex = effectOwner.ReferenceHub.playerEffectsController.AllEffects.IndexOf(foundEffect);
                 if (foundIndex == -1)
                 {
                     Log.Error($"Effect {effect} not found in {effectOwner.Nickname}'s effects list.");
