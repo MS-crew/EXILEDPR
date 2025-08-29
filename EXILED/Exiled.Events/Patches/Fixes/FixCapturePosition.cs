@@ -24,7 +24,7 @@ namespace Exiled.Events.Patches.Fixes
         private const RoomType DefaultRoomType = RoomType.Surface;
 
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-        private static void Postfix(PocketCorroding __instance, ref RelativePosition __result)
+        private static void Postfix(ref RelativePosition __result)
         {
             if (__result.Position != Vector3.zero)
                 return;
