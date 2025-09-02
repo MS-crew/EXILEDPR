@@ -5,7 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.Events.Patches.Events.Player
+/*namespace Exiled.Events.Patches.Events.Player
 {
     using System.Collections.Generic;
     using System.Reflection.Emit;
@@ -107,4 +107,4 @@ namespace Exiled.Events.Patches.Events.Player
             ListPool<CodeInstruction>.Pool.Return(newInstructions);
         }
     }
-}
+}*/
