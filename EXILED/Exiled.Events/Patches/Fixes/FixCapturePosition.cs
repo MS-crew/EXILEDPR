@@ -21,7 +21,7 @@ namespace Exiled.Events.Patches.Fixes
     [HarmonyPatch(typeof(PocketCorroding), nameof(PocketCorroding.CapturePosition), MethodType.Getter)]
     internal class FixCapturePosition
     {
-        private const RoomType DefaultRoomType = RoomType.Surface;
+        private const RoomType DefaultRoomType = RoomType.Hcz106;
 
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
         private static void Postfix(ref RelativePosition __result)
