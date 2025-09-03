@@ -13,7 +13,7 @@ namespace Exiled.Events.Patches.Fixes
     using HarmonyLib;
     using RelativePositioning;
     using UnityEngine;
-
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
     /// <summary>
     /// Patches <see cref="PocketCorroding.CapturePosition" />'s setter.
     /// Fix for those who go to pocket without effect and to get empty or null capture position and fall into the void.
@@ -23,10 +23,9 @@ namespace Exiled.Events.Patches.Fixes
     {
         private const RoomType DefaultRoomType = RoomType.Hcz106;
 
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
         private static void Postfix(ref RelativePosition __result)
         {
-            if (__result.Position != Vector3.zero)
+            if (Room.Get(__result.Position) != null)
                 return;
 
             Room room = Room.Get(DefaultRoomType);
