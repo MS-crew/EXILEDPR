@@ -803,23 +803,23 @@ namespace Exiled.CustomItems.API.Features
         /// </summary>
         protected virtual void UnsubscribeEvents()
         {
-            Exiled.Events.Handlers.Player.Dying += OnInternalOwnerDying;
-            Exiled.Events.Handlers.Player.ItemAdded += OnInternalItemAdded;
-            Exiled.Events.Handlers.Player.ChangingItem += OnInternalChanging;
-            Exiled.Events.Handlers.Player.Escaping += OnInternalOwnerEscaping;
-            Exiled.Events.Handlers.Player.PickingUpItem += OnInternalPickingUp;
-            Exiled.Events.Handlers.Player.DroppingItem += OnInternalDroppingItem;
-            Exiled.Events.Handlers.Player.DroppingAmmo += OnInternalDroppingAmmo;
-            Exiled.Events.Handlers.Player.Handcuffing += OnInternalOwnerHandcuffing;
-            Exiled.Events.Handlers.Player.ChangingRole += OnInternalOwnerChangingRole;
+            Exiled.Events.Handlers.Player.Dying -= OnInternalOwnerDying;
+            Exiled.Events.Handlers.Player.ItemAdded -= OnInternalItemAdded;
+            Exiled.Events.Handlers.Player.ChangingItem -= OnInternalChanging;
+            Exiled.Events.Handlers.Player.Escaping -= OnInternalOwnerEscaping;
+            Exiled.Events.Handlers.Player.PickingUpItem -= OnInternalPickingUp;
+            Exiled.Events.Handlers.Player.DroppingItem -= OnInternalDroppingItem;
+            Exiled.Events.Handlers.Player.DroppingAmmo -= OnInternalDroppingAmmo;
+            Exiled.Events.Handlers.Player.Handcuffing -= OnInternalOwnerHandcuffing;
+            Exiled.Events.Handlers.Player.ChangingRole -= OnInternalOwnerChangingRole;
 
             Exiled.Events.Handlers.Map.PickupAdded -= OnInternalPickupSpawned;
             Exiled.Events.Handlers.Map.PickupDestroyed -= OnInternalPickupDestroyed;
 
-            Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+            Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
 
-            Exiled.Events.Handlers.Scp914.UpgradingPickup += OnInternalUpgradingPickup;
-            Exiled.Events.Handlers.Scp914.UpgradingInventoryItem += OnInternalUpgradingInventoryItem;
+            Exiled.Events.Handlers.Scp914.UpgradingPickup -= OnInternalUpgradingPickup;
+            Exiled.Events.Handlers.Scp914.UpgradingInventoryItem -= OnInternalUpgradingInventoryItem;
         }
 
         /// <summary>
