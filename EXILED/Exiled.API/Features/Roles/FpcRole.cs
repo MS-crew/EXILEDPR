@@ -317,11 +317,10 @@ namespace Exiled.API.Features.Roles
                 return false;
 
             Animator animator = animatedModel.Animator;
-            if (animatedModel.Animator == null || !animator.avatar.isValid || !animator.avatar.isHuman)
+            if (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman)
                 return false;
 
             boneTransform = animator.GetBoneTransform(bone);
-
             return boneTransform != null;
         }
 
