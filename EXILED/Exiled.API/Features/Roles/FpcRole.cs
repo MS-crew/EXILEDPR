@@ -315,7 +315,7 @@ namespace Exiled.API.Features.Roles
 
                 if (transform != null)
                     return transform;
-                }
+            }
 
             return null;
         }
