@@ -303,21 +303,26 @@ namespace Exiled.API.Features.Roles
         /// <summary>
         /// Tries to get the <see cref="Transform"/> of a specified <see cref="HumanBodyBones"/> bone.
         /// </summary>
-        /// <param name="bone">The bone to get the <see cref="Transform"/>.</param>
-        /// <returns>
-        /// The <see cref="Transform"/> of the specified bone if found; otherwise, <c>null</c>.
-        /// </returns>
-        public Transform TryGetBoneTransform(HumanBodyBones bone)
+        /// <param name="bone">The bone to get the <see cref="Transform"/> of.</param>
+        /// <param name="boneTransform">
+        /// When this method returns, contains the <see cref="Transform"/> of the specified bone, if found;
+        /// otherwise, <c>null</c>.
+        /// </param>
+        /// <returns><c>true</c> if the bone transform was found; otherwise, <c>false</c>.</returns>
+        public bool TryGetBoneTransform(HumanBodyBones bone, out Transform boneTransform)
         {
-            if (Model is AnimatedCharacterModel animatedModel)
-            {
-                Transform transform = animatedModel.Animator.GetBoneTransform(bone);
+            boneTransform = null;
 
-                if (transform != null)
-                    return transform;
-            }
+            if (Model is not AnimatedCharacterModel animatedModel)
+                return false;
 
-            return null;
+            Animator animator = animatedModel.Animator;
+            if (animatedModel.Animator == null || !animator.avatar.isValid || !animator.avatar.isHuman)
+                return false;
+
+            boneTransform = animator.GetBoneTransform(bone);
+
+            return boneTransform != null;
         }
 
         /// <summary>
