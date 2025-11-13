@@ -301,6 +301,26 @@ namespace Exiled.API.Features.Roles
         public SpectatableModuleBase SpectatableModuleBase => FirstPersonController.SpectatorModule;
 
         /// <summary>
+        /// Tries to get the <see cref="Transform"/> of a specified <see cref="HumanBodyBones"/> bone.
+        /// </summary>
+        /// <param name="bone">The bone to get the <see cref="Transform"/>.</param>
+        /// <returns>
+        /// The <see cref="Transform"/> of the specified bone if found; otherwise, <c>null</c>.
+        /// </returns>
+        public Transform TryGetBoneTransform(HumanBodyBones bone)
+        {
+            if (Model is AnimatedCharacterModel animatedModel)
+            {
+                Transform transform = animatedModel.Animator.GetBoneTransform(bone);
+
+                if (transform != null)
+                    return transform;
+                }
+
+            return null;
+        }
+
+        /// <summary>
         /// Resets the <see cref="Player"/>'s stamina.
         /// </summary>
         /// <param name="multipliers">Resets <see cref="StaminaUsageMultiplier"/> and <see cref="StaminaRegenMultiplier"/>.</param>
