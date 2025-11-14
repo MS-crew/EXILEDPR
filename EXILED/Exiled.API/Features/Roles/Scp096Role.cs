@@ -140,6 +140,20 @@ namespace Exiled.API.Features.Roles
         public bool AttackPossible => AttackAbility.AttackPossible;
 
         /// <summary>
+        /// Gets the head transform of SCP-096's character model.
+        /// </summary>
+        public Transform HeadTransform
+        {
+            get
+            {
+                if (Model is not Scp096CharacterModel scp96AnimatedCharacterModel)
+                    return null;
+
+                return scp96AnimatedCharacterModel.Head;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the Charge Ability Cooldown.
         /// </summary>
         public float ChargeCooldown
