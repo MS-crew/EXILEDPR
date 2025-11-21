@@ -149,7 +149,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="message">An <see cref="AudioMessage"/> instance.</param>
         /// <param name="targets">Targets who will hear the audio. If <c>null</c>, audio will be sent to all players.</param>
-        public static void Play(AudioMessage message, IEnumerable<Player> targets = null)
+        public void Play(AudioMessage message, IEnumerable<Player> targets = null)
         {
             foreach (Player target in targets ?? Player.List)
                 target.Connection.Send(message);
