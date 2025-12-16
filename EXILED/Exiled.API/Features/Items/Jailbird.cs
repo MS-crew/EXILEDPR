@@ -84,12 +84,12 @@ namespace Exiled.API.Features.Items
         }
 
         /// <summary>
-        /// Gets or sets the radius of the Jailbird's hit register.
+        /// Gets or sets the radius of the Jailbird's hit radius.
         /// </summary>
         public float Radius
         {
-            get => Radius;
-            set => Radius = value;
+            get => Base._hitregRadius;
+            set => Base._hitregRadius = value;
         }
 
         /// <summary>
