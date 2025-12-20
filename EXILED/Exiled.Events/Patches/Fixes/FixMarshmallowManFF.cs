@@ -33,10 +33,11 @@ namespace Exiled.Events.Patches.Fixes
     internal class FixMarshmallowManFF : AttackerDamageHandler
     {
 #pragma warning disable SA1600 // Elements should be documented
-        public FixMarshmallowManFF(MarshmallowItem marshmallowItem)
+        public FixMarshmallowManFF(MarshmallowItem marshmallowItem, bool isEvilMode)
         {
-            Attacker = new Footprint(marshmallowItem.Owner);
+            Attacker = new(marshmallowItem.Owner);
             Damage = marshmallowItem._attackDamage;
+            IsFriendlyFire = isEvilMode;
             AllowSelfDamage = false;
             ServerLogsText = "MarshmallowManFF Fix";
         }
@@ -71,7 +72,13 @@ namespace Exiled.Events.Patches.Fixes
             int index = newInstructions.FindIndex(instruction => instruction.Calls(PropertyGetter(typeof(MarshmallowItem), nameof(MarshmallowItem.NewDamageHandler))));
 
             // replace the getter for NewDamageHandler with ctor of FixMarshmallowManFF
-            newInstructions[index] = new CodeInstruction(OpCodes.Newobj, Constructor(typeof(FixMarshmallowManFF), new[] { typeof(MarshmallowItem) }));
+            newInstructions.RemoveAt(index);
+            newInstructions.InsertRange(index, new List<CodeInstruction>
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Callvirt, PropertyGetter(typeof(MarshmallowItem), nameof(MarshmallowItem.EvilMode))),
+                new(OpCodes.Newobj, Constructor(typeof(FixMarshmallowManFF), new[] { typeof(MarshmallowItem) })),
+            });
 
             for (int z = 0; z < newInstructions.Count; z++)
                 yield return newInstructions[z];
