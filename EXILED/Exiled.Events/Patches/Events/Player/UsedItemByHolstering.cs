@@ -32,7 +32,7 @@ namespace Exiled.Events.Patches.Events.Player
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
             // after ServerRemoveSelf, which lines up with before the ret
-            newInstructions.InsertRange(newInstructions.Count - 2, new CodeInstruction[]
+            newInstructions.InsertRange(newInstructions.Count - 1, new CodeInstruction[]
             {
                 // this.Owner
                 new(OpCodes.Ldarg_0),
