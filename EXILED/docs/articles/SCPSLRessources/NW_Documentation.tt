@@ -121,25 +121,38 @@ try
         t.IsClass &&
         baseDamageHandler.IsAssignableFrom(t));
 
-    WriteLine("  - " + baseDamageHandler.FullName);
+    WriteLine("- " + baseDamageHandler.FullName);
     PrintTree(baseDamageHandler, 1);
 
     void PrintTree(Type parent, int depth)
     {
         var children = types2
             .Where(t => t != null && t.BaseType == parent)
-            .OrderBy(t => t.Name);
+            .OrderBy(t => Count(t));
 
         foreach (var child in children)
         {
             // Print only concrete classes, or include abstract if you want
-            if (!child.IsAbstract)
-                WriteLine($"{new string(' ', depth * 2)}- {child.FullName} : {child.BaseType.FullName}");
-
+            WriteLine($"{new string(' ', depth * 2)}- {child.FullName} : {child.BaseType.FullName}, {string.Join<Type>(", ", child.GetInterfaces()).ToString()}");
+                
             // Recurse to process children correctly
             PrintTree(child, depth + 1);
         }
     }
+
+    int Count(Type parent)
+    {
+        var children = types2
+            .Where(t => t != null && t.BaseType == parent);
+
+        int count = 0;
+        foreach (var child in children)
+        {
+            count -= 1 + Count(child);
+        }
+        return count;
+    }
+
 }
 catch (Exception ex)
 {

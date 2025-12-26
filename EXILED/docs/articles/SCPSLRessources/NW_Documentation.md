@@ -5857,29 +5857,31 @@ All available DamageHandlers
 * In C#, inheritance is a process in which one object acquires all the properties and behaviors of its parent object automatically.
 
 
-  - PlayerStatsSystem.DamageHandlerBase
-      - PlayerStatsSystem.DisruptorDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.ExplosionDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.FirearmDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-        - PlayerStatsSystem.CustomReasonFirearmDamageHandler : PlayerStatsSystem.FirearmDamageHandler
-      - PlayerStatsSystem.GrayCandyDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.JailbirdDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.MicroHidDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.RecontainmentDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.Scp018DamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerRoles.PlayableScps.Scp1507.Scp1507DamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - InventorySystem.Items.Scp1509.Scp1509DamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerRoles.PlayableScps.Scp3114.Scp3114DamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerRoles.PlayableScps.Scp939.Scp939DamageHandler : PlayerStatsSystem.AttackerDamageHandler
-      - PlayerStatsSystem.ScpDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-        - PlayerStatsSystem.Scp049DamageHandler : PlayerStatsSystem.ScpDamageHandler
-        - PlayerStatsSystem.Scp096DamageHandler : PlayerStatsSystem.ScpDamageHandler
-      - SnowballDamageHandler : PlayerStatsSystem.AttackerDamageHandler
-    - PlayerStatsSystem.CustomReasonDamageHandler : PlayerStatsSystem.StandardDamageHandler
-    - Scp956DamageHandler : PlayerStatsSystem.StandardDamageHandler
-    - PlayerStatsSystem.SilentDamageHandler : PlayerStatsSystem.StandardDamageHandler
-    - PlayerStatsSystem.UniversalDamageHandler : PlayerStatsSystem.StandardDamageHandler
-    - PlayerStatsSystem.WarheadDamageHandler : PlayerStatsSystem.StandardDamageHandler
+- PlayerStatsSystem.DamageHandlerBase
+  - PlayerStatsSystem.StandardDamageHandler : PlayerStatsSystem.DamageHandlerBase, 
+    - PlayerStatsSystem.AttackerDamageHandler : PlayerStatsSystem.StandardDamageHandler, 
+      - PlayerStatsSystem.ScpDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+        - PlayerStatsSystem.Scp049DamageHandler : PlayerStatsSystem.ScpDamageHandler, 
+        - PlayerStatsSystem.Scp096DamageHandler : PlayerStatsSystem.ScpDamageHandler, 
+      - PlayerStatsSystem.FirearmDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+        - PlayerStatsSystem.CustomReasonFirearmDamageHandler : PlayerStatsSystem.FirearmDamageHandler, 
+      - SnowballDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerStatsSystem.DisruptorDamageHandler : PlayerStatsSystem.AttackerDamageHandler, DisintegrateDeathAnimation+IDisintegrateDamageHandler
+      - PlayerStatsSystem.ExplosionDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerStatsSystem.GrayCandyDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerStatsSystem.JailbirdDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerStatsSystem.MicroHidDamageHandler : PlayerStatsSystem.AttackerDamageHandler, DisintegrateDeathAnimation+IDisintegrateDamageHandler
+      - PlayerStatsSystem.RecontainmentDamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerStatsSystem.Scp018DamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerRoles.PlayableScps.Scp939.Scp939DamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - PlayerRoles.PlayableScps.Scp3114.Scp3114DamageHandler : PlayerStatsSystem.AttackerDamageHandler, PlayerRoles.Ragdolls.IRagdollInspectOverride
+      - PlayerRoles.PlayableScps.Scp1507.Scp1507DamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+      - InventorySystem.Items.Scp1509.Scp1509DamageHandler : PlayerStatsSystem.AttackerDamageHandler, 
+    - Scp956DamageHandler : PlayerStatsSystem.StandardDamageHandler, 
+    - PlayerStatsSystem.CustomReasonDamageHandler : PlayerStatsSystem.StandardDamageHandler, 
+    - PlayerStatsSystem.SilentDamageHandler : PlayerStatsSystem.StandardDamageHandler, PlayerStatsSystem.Modifiers.IDeathRagdollModifier, PlayerStatsSystem.Modifiers.IDeathInventoryModifier
+    - PlayerStatsSystem.UniversalDamageHandler : PlayerStatsSystem.StandardDamageHandler, 
+    - PlayerStatsSystem.WarheadDamageHandler : PlayerStatsSystem.StandardDamageHandler, 
 
 ```
 </details>
