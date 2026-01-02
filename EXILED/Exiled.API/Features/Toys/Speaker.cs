@@ -7,26 +7,60 @@
 
 namespace Exiled.API.Features.Toys
 {
+    using System;
     using System.Collections.Generic;
+    using System.IO;
 
     using AdminToys;
+
     using Enums;
-    using Exiled.API.Interfaces;
+
+    using Exiled.API.Features.Audio;
+
+    using Interfaces;
+
+    using MEC;
+
+    using Mirror;
+
     using UnityEngine;
+
+    using VoiceChat;
+    using VoiceChat.Codec;
+    using VoiceChat.Codec.Enums;
     using VoiceChat.Networking;
-    using VoiceChat.Playbacks;
+
+    using Object = UnityEngine.Object;
 
     /// <summary>
-    /// A wrapper class for <see cref="SpeakerToy"/>.
+    /// Represents a speaker toy that can play audio in the game world.
+    /// Provides methods for playing, stopping, and controlling audio playback, as well as managing playback settings.
     /// </summary>
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
+        private const int SampleRate = VoiceChatSettings.SampleRate;
+        private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
+        private const float FrameTime = (float)FrameSize / SampleRate;
+
+        private readonly OpusEncoder encoder;
+        private readonly float[] frame = new float[FrameSize];
+        private readonly byte[] encoded = new byte[VoiceChatSettings.MaxEncodedSize];
+
+        private IPcmSource source;
+        private float timeAccumulator;
+        private CoroutineHandle playBackRoutine;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
         /// </summary>
         /// <param name="speakerToy">The <see cref="SpeakerToy"/> of the toy.</param>
         internal Speaker(SpeakerToy speakerToy)
-            : base(speakerToy, AdminToyType.Speaker) => Base = speakerToy;
+            : base(speakerToy, AdminToyType.Speaker)
+        {
+            Base = speakerToy;
+            encoder = new OpusEncoder(OpusApplicationType.Audio);
+            AdminToyBase.OnRemoved += OnToyRemoved;
+        }
 
         /// <summary>
         /// Gets the prefab.
@@ -37,6 +71,57 @@ namespace Exiled.API.Features.Toys
         /// Gets the base <see cref="SpeakerToy"/>.
         /// </summary>
         public SpeakerToy Base { get; }
+
+        /// <summary>
+        /// Gets or sets the network channel used for sending audio packets from this speaker.
+        /// </summary>
+        public int Channel { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the audio playback should loop when it reaches the end.
+        /// </summary>
+        public bool Loop { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the speaker should be destroyed after playback finishes.
+        /// </summary>
+        public bool DestroyAfter { get; set; }
+
+        /// <summary>
+        /// Gets or sets the play mode for this speaker, determining how audio is sent to players.
+        /// </summary>
+        public SpeakerPlayMode PlayMode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of target players who will hear the audio played by this speaker when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.PlayerList"/>.
+        /// </summary>
+        public List<Player> TargetPlayers { get; set; }
+
+        /// <summary>
+        /// Gets or sets the predicate used to determine which players will hear the audio when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.Predicate"/>.
+        /// The predicate should return <c>true</c> for players who should receive the audio.
+        /// </summary>
+        public Func<Player, bool> Predicate { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether gets is a sound playing on this speaker or not.
+        /// </summary>
+        public bool IsPlaying
+        {
+            get => playBackRoutine.IsRunning && !IsPaused;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the playback is paused.
+        /// </summary>
+        /// <value>
+        /// A <see cref="bool"/> where <c>true</c> means the playback is paused; <c>false</c> means it is not paused.
+        /// </value>
+        public bool IsPaused
+        {
+            get => playBackRoutine.IsAliveAndPaused;
+            set => playBackRoutine.IsAliveAndPaused = value;
+        }
 
         /// <summary>
         /// Gets or sets the volume of the audio source.
@@ -109,7 +194,7 @@ namespace Exiled.API.Features.Toys
         /// <returns>The new <see cref="Speaker"/>.</returns>
         public static Speaker Create(Vector3? position, Vector3? rotation, Vector3? scale, bool spawn)
         {
-            Speaker speaker = new(UnityEngine.Object.Instantiate(Prefab))
+            Speaker speaker = new(Object.Instantiate(Prefab))
             {
                 Position = position ?? Vector3.zero,
                 Rotation = Quaternion.Euler(rotation ?? Vector3.zero),
@@ -138,7 +223,7 @@ namespace Exiled.API.Features.Toys
                 Scale = transform.localScale.normalized,
             };
 
-            if(spawn)
+            if (spawn)
                 speaker.Spawn();
 
             return speaker;
@@ -162,5 +247,189 @@ namespace Exiled.API.Features.Toys
         /// <param name="length">The length of the samples array.</param>
         /// <param name="targets">Targets who will hear the audio. If <c>null</c>, audio will be sent to all players.</param>
         public void Play(byte[] samples, int? length = null, IEnumerable<Player> targets = null) => Play(new AudioMessage(ControllerId, samples, length ?? samples.Length), targets);
+
+        /// <summary>
+        /// Plays a wav file through this speaker.(File must be 16 bit, mono and 48khz.)
+        /// </summary>
+        /// <param name="path">The path to the wav file.</param>
+        /// <param name="stream">Whether to stream the audio or preload it.</param>
+        /// <param name="destroyAfter">Whether to destroy the speaker after playback.</param>
+        /// <param name="loop">Whether to loop the audio.</param>
+        public void PlayWav(string path, bool stream = true, bool destroyAfter = false, bool loop = false)
+        {
+            Stop();
+
+            Loop = loop;
+            DestroyAfter = destroyAfter;
+            source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(WavToPcm(path));
+            playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
+        }
+
+        /// <summary>
+        /// Stops playback.
+        /// </summary>
+        public void Stop()
+        {
+            if (playBackRoutine.IsRunning)
+                Timing.KillCoroutines(playBackRoutine);
+
+            source?.Dispose();
+            source = null;
+        }
+
+        /// <summary>
+        /// Skips the WAV header.
+        /// </summary>
+        /// <param name="br">The binary reader.</param>
+        internal static void SkipWavHeader(BinaryReader br)
+        {
+            br.ReadBytes(12);
+
+            while (true)
+            {
+                string chunk = new(br.ReadChars(4));
+                int size = br.ReadInt32();
+
+                if (chunk == "fmt ")
+                {
+                    short format = br.ReadInt16();
+                    short channels = br.ReadInt16();
+                    int rate = br.ReadInt32();
+                    br.ReadInt32();
+                    br.ReadInt16();
+                    short bits = br.ReadInt16();
+
+                    if (format != 1 || channels != 1 || rate != SampleRate || bits != 16)
+                        Log.Error("WAV must be PCM16 mono 48kHz");
+
+                    br.BaseStream.Position += size - 16;
+                }
+                else if (chunk == "data")
+                {
+                    return;
+                }
+                else
+                {
+                    br.BaseStream.Position += size;
+                }
+            }
+        }
+
+        private IEnumerator<float> PlayBackCoroutine()
+        {
+            timeAccumulator = 0f;
+
+            while (true)
+            {
+                timeAccumulator += Time.deltaTime;
+
+                while (timeAccumulator >= FrameTime)
+                {
+                    timeAccumulator -= FrameTime;
+
+                    int read = source.Read(frame, 0, FrameSize);
+
+                    if (read < FrameSize)
+                        Array.Clear(frame, read, FrameSize - read);
+
+                    int len = encoder.Encode(frame, encoded);
+
+                    if (len > 2)
+                        SendPacket(len);
+
+                    if (!source.Ended)
+                        continue;
+
+                    if (Loop)
+                    {
+                        source.Reset();
+                        timeAccumulator = 0f;
+                        break;
+                    }
+
+                    if (DestroyAfter)
+                    {
+                        NetworkServer.Destroy(GameObject);
+                    }
+
+                    yield break;
+                }
+
+                yield return Timing.WaitForOneFrame;
+            }
+        }
+
+        private void SendPacket(int len)
+        {
+            AudioMessage msg = new(ControllerId, encoded, len);
+
+            switch(PlayMode)
+            {
+                case SpeakerPlayMode.Global:
+                    NetworkServer.SendToReady(msg, Channel);
+                    break;
+
+                case SpeakerPlayMode.PlayerList:
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(msg, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
+
+                        foreach (Player ply in TargetPlayers)
+                        {
+                            ply.Connection.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+
+                case SpeakerPlayMode.Predicate:
+                    using (NetworkWriterPooled writer2 = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(msg, writer2);
+                        ArraySegment<byte> segment = writer2.ToArraySegment();
+
+                        foreach (Player ply in Player.List)
+                        {
+                            if (Predicate(ply))
+                                ply.Connection.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+            }
+        }
+
+        private float[] WavToPcm(string path)
+        {
+            using FileStream fs = File.OpenRead(path);
+            using BinaryReader br = new(fs);
+
+            SkipWavHeader(br);
+
+            int samples = (int)((fs.Length - fs.Position) / 2);
+            float[] pcm = new float[samples];
+
+            for (int i = 0; i < samples; i++)
+                pcm[i] = br.ReadInt16() / 32768f;
+
+            return pcm;
+        }
+
+        private void OnToyRemoved(AdminToyBase toy)
+        {
+            if (toy != Base)
+                return;
+
+            Dispose();
+        }
+
+        private void Dispose()
+        {
+            AdminToyBase.OnRemoved -= OnToyRemoved;
+
+            Stop();
+            encoder?.Dispose();
+        }
     }
 }
