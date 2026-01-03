@@ -344,10 +344,10 @@ namespace Exiled.API.Features.Toys
                     break;
 
                 case SpeakerPlayMode.Predicate:
-                    using (NetworkWriterPooled writer2 = NetworkWriterPool.Get())
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
                     {
-                        NetworkMessages.Pack(msg, writer2);
-                        ArraySegment<byte> segment = writer2.ToArraySegment();
+                        NetworkMessages.Pack(msg, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
 
                         foreach (Player ply in Player.List)
                         {
