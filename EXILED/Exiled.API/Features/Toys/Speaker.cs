@@ -255,6 +255,12 @@ namespace Exiled.API.Features.Toys
         /// <param name="loop">Whether to loop the audio.</param>
         public void PlayWav(string path, bool stream = false, bool destroyAfter = false, bool loop = false)
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("The specified file does not exist.", path);
+
+            if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException($"The file type '{Path.GetExtension(path)}' is not supported. Please use .wav.");
+
             Stop();
 
             Loop = loop;
