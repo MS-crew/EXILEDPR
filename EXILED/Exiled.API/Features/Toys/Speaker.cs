@@ -254,7 +254,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="stream">Whether to stream the audio or preload it.</param>
         /// <param name="destroyAfter">Whether to destroy the speaker after playback.</param>
         /// <param name="loop">Whether to loop the audio.</param>
-        public void PlayWav(string path, bool stream = true, bool destroyAfter = false, bool loop = false)
+        public void PlayWav(string path, bool stream = false, bool destroyAfter = false, bool loop = false)
         {
             Stop();
 
