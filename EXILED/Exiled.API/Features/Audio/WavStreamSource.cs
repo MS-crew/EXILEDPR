@@ -9,13 +9,12 @@ namespace Exiled.API.Features.Audio
 {
     using System.IO;
 
-    using Exiled.API.Features.Toys;
     using Exiled.API.Interfaces;
 
     /// <summary>
     /// Provides a PCM audio source from a WAV file stream.
     /// </summary>
-    public class WavStreamSource : IPcmSource
+    public sealed class WavStreamSource : IPcmSource
     {
         private readonly long endPosition;
         private readonly long startPosition;
@@ -28,7 +27,7 @@ namespace Exiled.API.Features.Audio
         public WavStreamSource(string path)
         {
             reader = new BinaryReader(File.OpenRead(path));
-            Speaker.SkipWavHeader(reader);
+            WavUtility.SkipHeader(reader);
             startPosition = reader.BaseStream.Position;
             endPosition = reader.BaseStream.Length;
         }

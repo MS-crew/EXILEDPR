@@ -37,9 +37,8 @@ namespace Exiled.API.Features.Toys
     /// </summary>
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
-        private const int SampleRate = VoiceChatSettings.SampleRate;
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
-        private const float FrameTime = (float)FrameSize / SampleRate;
+        private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
         private readonly OpusEncoder encoder;
         private readonly float[] frame = new float[FrameSize];
@@ -94,7 +93,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets or sets the list of target players who will hear the audio played by this speaker when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.PlayerList"/>.
         /// </summary>
-        public List<Player> TargetPlayers { get; set; }
+        public HashSet<Player> TargetPlayers { get; set; }
 
         /// <summary>
         /// Gets or sets the predicate used to determine which players will hear the audio when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.Predicate"/>.
@@ -260,7 +259,7 @@ namespace Exiled.API.Features.Toys
 
             Loop = loop;
             DestroyAfter = destroyAfter;
-            source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(WavToPcm(path));
+            source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
         }
 
@@ -274,44 +273,6 @@ namespace Exiled.API.Features.Toys
 
             source?.Dispose();
             source = null;
-        }
-
-        /// <summary>
-        /// Skips the WAV header.
-        /// </summary>
-        /// <param name="br">The binary reader.</param>
-        internal static void SkipWavHeader(BinaryReader br)
-        {
-            br.ReadBytes(12);
-
-            while (true)
-            {
-                string chunk = new(br.ReadChars(4));
-                int size = br.ReadInt32();
-
-                if (chunk == "fmt ")
-                {
-                    short format = br.ReadInt16();
-                    short channels = br.ReadInt16();
-                    int rate = br.ReadInt32();
-                    br.ReadInt32();
-                    br.ReadInt16();
-                    short bits = br.ReadInt16();
-
-                    if (format != 1 || channels != 1 || rate != SampleRate || bits != 16)
-                        Log.Error("WAV must be PCM16 mono 48kHz");
-
-                    br.BaseStream.Position += size - 16;
-                }
-                else if (chunk == "data")
-                {
-                    return;
-                }
-                else
-                {
-                    br.BaseStream.Position += size;
-                }
-            }
         }
 
         private IEnumerator<float> PlayBackCoroutine()
@@ -397,22 +358,6 @@ namespace Exiled.API.Features.Toys
 
                     break;
             }
-        }
-
-        private float[] WavToPcm(string path)
-        {
-            using FileStream fs = File.OpenRead(path);
-            using BinaryReader br = new(fs);
-
-            SkipWavHeader(br);
-
-            int samples = (int)((fs.Length - fs.Position) / 2);
-            float[] pcm = new float[samples];
-
-            for (int i = 0; i < samples; i++)
-                pcm[i] = br.ReadInt16() / 32768f;
-
-            return pcm;
         }
 
         private void OnToyRemoved(AdminToyBase toy)

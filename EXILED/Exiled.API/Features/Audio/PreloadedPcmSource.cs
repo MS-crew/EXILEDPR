@@ -14,7 +14,7 @@ namespace Exiled.API.Features.Audio
     /// <summary>
     /// Represents a preloaded PCM audio source.
     /// </summary>
-    public class PreloadedPcmSource : IPcmSource
+    public sealed class PreloadedPcmSource : IPcmSource
     {
         /// <summary>
         /// The PCM data buffer.
@@ -29,10 +29,10 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Initializes a new instance of the <see cref="PreloadedPcmSource"/> class.
         /// </summary>
-        /// <param name="pcm">The PCM data to preload.</param>
-        public PreloadedPcmSource(float[] pcm)
+        /// <param name="path">The file path to the WAV audio file to preload as PCM data.</param>
+        public PreloadedPcmSource(string path)
         {
-            data = pcm;
+            data = WavUtility.WavToPcm(path);
         }
 
         /// <summary>
