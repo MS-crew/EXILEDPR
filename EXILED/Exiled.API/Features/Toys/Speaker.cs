@@ -72,7 +72,7 @@ namespace Exiled.API.Features.Toys
         public SpeakerToy Base { get; }
 
         /// <summary>
-        /// Gets or sets the network channel used for sending audio packets from this speaker.
+        /// Gets or sets the network channel used for sending audio packets from this speaker <see cref="Channels"/>.
         /// </summary>
         public int Channel { get; set; }
 
