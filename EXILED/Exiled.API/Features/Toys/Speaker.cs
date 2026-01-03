@@ -309,8 +309,7 @@ namespace Exiled.API.Features.Toys
                     if (Loop)
                     {
                         source.Reset();
-                        timeAccumulator = 0f;
-                        break;
+                        continue;
                     }
 
                     if (DestroyAfter)

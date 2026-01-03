@@ -7,9 +7,13 @@
 
 namespace Exiled.API.Features.Audio
 {
+    using System;
     using System.IO;
+    using System.Runtime.InteropServices;
 
     using Exiled.API.Interfaces;
+
+    using VoiceChat;
 
     /// <summary>
     /// Provides a PCM audio source from a WAV file stream.
@@ -19,6 +23,7 @@ namespace Exiled.API.Features.Audio
         private readonly long endPosition;
         private readonly long startPosition;
         private readonly BinaryReader reader;
+        private readonly byte[] readBuffer = new byte[VoiceChatSettings.PacketSizePerChannel * 2];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WavStreamSource"/> class.
@@ -52,15 +57,26 @@ namespace Exiled.API.Features.Audio
         /// <returns>The number of samples read.</returns>
         public int Read(float[] buffer, int offset, int count)
         {
-            int i = 0;
+            int bytesNeeded = count * 2;
 
-            while (i < count && reader.BaseStream.Position < endPosition)
-            {
-                buffer[offset + i] = reader.ReadInt16() / 32768f;
-                i++;
-            }
+            if (bytesNeeded > readBuffer.Length)
+                bytesNeeded = readBuffer.Length;
 
-            return i;
+            int bytesRead = reader.Read(readBuffer, 0, bytesNeeded);
+            if (bytesRead == 0)
+                return 0;
+
+            if (bytesRead % 2 != 0)
+                bytesRead--;
+
+            Span<byte> byteSpan = readBuffer.AsSpan(0, bytesRead);
+            Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
+
+            int samplesRead = shortSpan.Length;
+            for (int i = 0; i < samplesRead; i++)
+                buffer[offset + i] = shortSpan[i] / 32768f;
+
+            return samplesRead;
         }
 
         /// <summary>

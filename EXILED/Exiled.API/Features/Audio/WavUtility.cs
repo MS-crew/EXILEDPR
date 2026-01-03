@@ -7,7 +7,9 @@
 
 namespace Exiled.API.Features.Audio
 {
+    using System;
     using System.IO;
+    using System.Runtime.InteropServices;
 
     using VoiceChat;
 
@@ -23,16 +25,22 @@ namespace Exiled.API.Features.Audio
         /// <returns>An array of floats representing the PCM data.</returns>
         public static float[] WavToPcm(string path)
         {
-            using FileStream fs = File.OpenRead(path);
-            using BinaryReader br = new(fs);
+            byte[] fileBytes = File.ReadAllBytes(path);
+
+            using MemoryStream ms = new(fileBytes);
+            using BinaryReader br = new(ms);
 
             SkipHeader(br);
 
-            int samples = (int)((fs.Length - fs.Position) / 2);
-            float[] pcm = new float[samples];
+            int headerOffset = (int)ms.Position;
+            int dataLength = fileBytes.Length - headerOffset;
 
-            for (int i = 0; i < samples; i++)
-                pcm[i] = br.ReadInt16() / 32768f;
+            Span<byte> audioDataSpan = fileBytes.AsSpan(headerOffset, dataLength);
+            Span<short> samples = MemoryMarshal.Cast<byte, short>(audioDataSpan);
+
+            float[] pcm = new float[samples.Length];
+            for (int i = 0; i < samples.Length; i++)
+                pcm[i] = samples[i] / 32768f;
 
             return pcm;
         }
