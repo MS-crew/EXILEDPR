@@ -35,7 +35,9 @@ namespace Exiled.API.Features.Audio
             data = pcm;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets a value indicating whether the end of the PCM data buffer has been reached.
+        /// </summary>
         public bool Ended
         {
             get
@@ -44,7 +46,13 @@ namespace Exiled.API.Features.Audio
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Reads a sequence of PCM samples from the preloaded buffer into the specified array.
+        /// </summary>
+        /// <param name="buffer">The destination array to copy the samples into.</param>
+        /// <param name="offset">The zero-based index in <paramref name="buffer"/> at which to begin storing the data.</param>
+        /// <param name="count">The maximum number of samples to read.</param>
+        /// <returns>The number of samples read into <paramref name="buffer"/>.</returns>
         public int Read(float[] buffer, int offset, int count)
         {
             int read = Math.Min(count, data.Length - pos);
@@ -54,13 +62,17 @@ namespace Exiled.API.Features.Audio
             return read;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Resets the read position to the beginning of the PCM data buffer.
+        /// </summary>
         public void Reset()
         {
             pos = 0;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Releases all resources used by the <see cref="PreloadedPcmSource"/>.
+        /// </summary>
         public void Dispose()
         {
         }
