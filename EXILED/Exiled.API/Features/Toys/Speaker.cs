@@ -33,8 +33,7 @@ namespace Exiled.API.Features.Toys
     using Object = UnityEngine.Object;
 
     /// <summary>
-    /// Represents a speaker toy that can play audio in the game world.
-    /// Provides methods for playing, stopping, and controlling audio playback, as well as managing playback settings.
+    /// A wrapper class for <see cref="SpeakerToy"/>.
     /// </summary>
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
