@@ -20,6 +20,16 @@ namespace Exiled.API.Interfaces
         bool Ended { get; }
 
         /// <summary>
+        /// Gets the total duration of the audio in seconds.
+        /// </summary>
+        double TotalDuration { get; }
+
+        /// <summary>
+        /// Gets or sets the current playback position in seconds.
+        /// </summary>
+        double CurrentTime { get; set; }
+
+        /// <summary>
         /// Reads a sequence of PCM samples into the specified buffer.
         /// </summary>
         /// <param name="buffer">The buffer to read the samples into.</param>
@@ -27,6 +37,12 @@ namespace Exiled.API.Interfaces
         /// <param name="count">The maximum number of samples to read.</param>
         /// <returns>The total number of samples read into the buffer.</returns>
         int Read(float[] buffer, int offset, int count);
+
+        /// <summary>
+        /// Seeks to the specified position in the PCM source.
+        /// </summary>
+        /// <param name="seconds">The position in seconds to seek to.</param>
+        void Seek(double seconds);
 
         /// <summary>
         /// Resets the PCM source to its initial state, allowing reading from the beginning.

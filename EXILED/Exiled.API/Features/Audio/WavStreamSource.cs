@@ -38,6 +38,20 @@ namespace Exiled.API.Features.Audio
         }
 
         /// <summary>
+        /// Gets the total duration of the audio in seconds.
+        /// </summary>
+        public double TotalDuration => (endPosition - startPosition) / 2.0 / VoiceChatSettings.SampleRate;
+
+        /// <summary>
+        /// Gets or sets the current playback position in seconds.
+        /// </summary>
+        public double CurrentTime
+        {
+            get => (reader.BaseStream.Position - startPosition) / 2.0 / VoiceChatSettings.SampleRate;
+            set => Seek(value);
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the end of the stream has been reached.
         /// </summary>
         public bool Ended
@@ -77,6 +91,27 @@ namespace Exiled.API.Features.Audio
                 buffer[offset + i] = shortSpan[i] / 32768f;
 
             return samplesRead;
+        }
+
+        /// <summary>
+        /// Seeks to the specified position in the stream.
+        /// </summary>
+        /// <param name="seconds">The position in seconds to seek to.</param>
+        public void Seek(double seconds)
+        {
+            long targetSample = (long)(seconds * VoiceChatSettings.SampleRate);
+            long targetByte = targetSample * 2;
+
+            long newPos = startPosition + targetByte;
+            if (newPos > endPosition)
+                newPos = endPosition;
+            if (newPos < startPosition)
+                newPos = startPosition;
+
+            if (newPos % 2 != 0)
+                newPos--;
+
+            reader.BaseStream.Position = newPos;
         }
 
         /// <summary>

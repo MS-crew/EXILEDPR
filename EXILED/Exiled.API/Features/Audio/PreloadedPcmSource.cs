@@ -11,6 +11,8 @@ namespace Exiled.API.Features.Audio
 
     using Exiled.API.Interfaces;
 
+    using VoiceChat;
+
     /// <summary>
     /// Represents a preloaded PCM audio source.
     /// </summary>
@@ -25,6 +27,15 @@ namespace Exiled.API.Features.Audio
         /// The current read position in the data buffer.
         /// </summary>
         private int pos;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PreloadedPcmSource"/> class.
+        /// </summary>
+        /// <param name="path">The path to the audio file.</param>
+        public PreloadedPcmSource(string path)
+        {
+            data = WavUtility.WavToPcm(path);
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PreloadedPcmSource"/> class.
@@ -47,6 +58,20 @@ namespace Exiled.API.Features.Audio
         }
 
         /// <summary>
+        /// Gets the total duration of the audio in seconds.
+        /// </summary>
+        public double TotalDuration => (double)data.Length / VoiceChatSettings.SampleRate;
+
+        /// <summary>
+        /// Gets or sets the current playback position in seconds.
+        /// </summary>
+        public double CurrentTime
+        {
+            get => (double)pos / VoiceChatSettings.SampleRate;
+            set => Seek(value);
+        }
+
+        /// <summary>
         /// Reads a sequence of PCM samples from the preloaded buffer into the specified array.
         /// </summary>
         /// <param name="buffer">The destination array to copy the samples into.</param>
@@ -63,6 +88,23 @@ namespace Exiled.API.Features.Audio
         }
 
         /// <summary>
+        /// Seeks to the specified position in seconds.
+        /// </summary>
+        /// <param name="seconds">The target position in seconds.</param>
+        public void Seek(double seconds)
+        {
+            long targetIndex = (long)(seconds * VoiceChatSettings.SampleRate);
+
+            if (targetIndex < 0)
+                targetIndex = 0;
+
+            if (targetIndex > data.Length)
+                targetIndex = data.Length;
+
+            pos = (int)targetIndex;
+        }
+
+        /// <summary>
         /// Resets the read position to the beginning of the PCM data buffer.
         /// </summary>
         public void Reset()
@@ -70,9 +112,7 @@ namespace Exiled.API.Features.Audio
             pos = 0;
         }
 
-        /// <summary>
-        /// Releases all resources used by the <see cref="PreloadedPcmSource"/>.
-        /// </summary>
+        /// <inheritdoc/>
         public void Dispose()
         {
         }

@@ -61,6 +61,32 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Invoked when the audio playback is paused.
+        /// </summary>
+        public event Action OnPlaybackPaused;
+
+        /// <summary>
+        /// Invoked when the audio playback is resumed from a paused state.
+        /// </summary>
+        public event Action OnPlaybackResumed;
+
+        /// <summary>
+        /// Invoked when the audio playback starts.
+        /// </summary>
+        public event Action OnPlaybackStarted;
+
+        /// <summary>
+        /// Invoked when the audio playback stops completely (either manually or end of file).
+        /// </summary>
+        public event Action OnPlaybackStopped;
+
+        /// <summary>
+        /// Invoked when the audio track finishes playing.
+        /// If looping is enabled, this triggers every time the track restarts.
+        /// </summary>
+        public event Action OnPlaybackFinished;
+
+        /// <summary>
         /// Gets the prefab.
         /// </summary>
         public static SpeakerToy Prefab => PrefabHelper.GetPrefab<SpeakerToy>(PrefabType.SpeakerToy);
@@ -118,7 +144,17 @@ namespace Exiled.API.Features.Toys
         public bool IsPaused
         {
             get => playBackRoutine.IsAliveAndPaused;
-            set => playBackRoutine.IsAliveAndPaused = value;
+            set
+            {
+                if (!playBackRoutine.IsRunning)
+                    return;
+
+                playBackRoutine.IsAliveAndPaused = value;
+                if (value)
+                    OnPlaybackPaused?.Invoke();
+                else
+                    OnPlaybackResumed?.Invoke();
+            }
         }
 
         /// <summary>
@@ -181,6 +217,26 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkControllerId;
             set => Base.NetworkControllerId = value;
         }
+
+        /// <summary>
+        /// Gets or sets the current playback time in seconds.
+        /// Returns 0 if not playing.
+        /// </summary>
+        public double CurrentTime
+        {
+            get => source?.CurrentTime ?? 0.0;
+            set
+            {
+                if (source != null)
+                    source.CurrentTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total duration of the current track in seconds.
+        /// Returns 0 if not playing.
+        /// </summary>
+        public double Duration => source?.TotalDuration ?? 0.0;
 
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.
@@ -275,7 +331,10 @@ namespace Exiled.API.Features.Toys
         public void Stop()
         {
             if (playBackRoutine.IsRunning)
+            {
                 Timing.KillCoroutines(playBackRoutine);
+                OnPlaybackStopped?.Invoke();
+            }
 
             source?.Dispose();
             source = null;
@@ -283,6 +342,7 @@ namespace Exiled.API.Features.Toys
 
         private IEnumerator<float> PlayBackCoroutine()
         {
+            OnPlaybackStarted?.Invoke();
             timeAccumulator = 0f;
 
             while (true)
@@ -306,6 +366,8 @@ namespace Exiled.API.Features.Toys
                     if (!source.Ended)
                         continue;
 
+                    OnPlaybackFinished?.Invoke();
+
                     if (Loop)
                     {
                         source.Reset();
@@ -313,9 +375,9 @@ namespace Exiled.API.Features.Toys
                     }
 
                     if (DestroyAfter)
-                    {
                         NetworkServer.Destroy(GameObject);
-                    }
+                    else
+                        Stop();
 
                     yield break;
                 }
