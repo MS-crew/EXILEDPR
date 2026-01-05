@@ -321,7 +321,7 @@ namespace Exiled.API.Features.Toys
 
             Loop = loop;
             DestroyAfter = destroyAfter;
-            source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(WavUtility.WavToPcm(path));
+            source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
         }
 
