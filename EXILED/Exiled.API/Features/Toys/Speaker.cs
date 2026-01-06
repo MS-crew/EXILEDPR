@@ -147,6 +147,9 @@ namespace Exiled.API.Features.Toys
                 if (!playBackRoutine.IsRunning)
                     return;
 
+                if (playBackRoutine.IsAliveAndPaused == value)
+                    return;
+
                 playBackRoutine.IsAliveAndPaused = value;
                 if (value)
                     OnPlaybackPaused?.Invoke();
@@ -447,14 +450,12 @@ namespace Exiled.API.Features.Toys
 
             AdminToyBase.OnRemoved -= OnToyRemoved;
 
-            if (!isPlayBackInitialized)
-                return;
-
             Stop();
             encoder?.Dispose();
             encoder = null;
             frame = null;
             encoded = null;
+
             isPlayBackInitialized = false;
         }
     }
