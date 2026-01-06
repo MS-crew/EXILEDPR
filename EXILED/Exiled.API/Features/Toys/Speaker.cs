@@ -40,13 +40,13 @@ namespace Exiled.API.Features.Toys
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
-        private readonly OpusEncoder encoder = new(OpusApplicationType.Audio);
-        private readonly float[] frame = new float[FrameSize];
-        private readonly byte[] encoded = new byte[VoiceChatSettings.MaxEncodedSize];
-
+        private float[] frame;
+        private byte[] encoded;
         private IPcmSource source;
+        private OpusEncoder encoder;
         private float timeAccumulator;
         private CoroutineHandle playBackRoutine;
+        private bool isPlayBackInitialized = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
@@ -56,7 +56,6 @@ namespace Exiled.API.Features.Toys
             : base(speakerToy, AdminToyType.Speaker)
         {
             Base = speakerToy;
-            AdminToyBase.OnRemoved += OnToyRemoved;
         }
 
         /// <summary>
@@ -314,8 +313,9 @@ namespace Exiled.API.Features.Toys
                 throw new FileNotFoundException("The specified file does not exist.", path);
 
             if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException($"The file type '{Path.GetExtension(path)}' is not supported. Please use .wav.");
+                throw new NotSupportedException($"The file type '{Path.GetExtension(path)}' is not supported. Please use .wav file.");
 
+            InitializePlayBack();
             Stop();
 
             Loop = loop;
@@ -337,6 +337,20 @@ namespace Exiled.API.Features.Toys
 
             source?.Dispose();
             source = null;
+        }
+
+        private void InitializePlayBack()
+        {
+            if (isPlayBackInitialized)
+                return;
+
+            isPlayBackInitialized = true;
+
+            frame = new float[FrameSize];
+            encoder = new(OpusApplicationType.Audio);
+            encoded = new byte[VoiceChatSettings.MaxEncodedSize];
+
+            AdminToyBase.OnRemoved += OnToyRemoved;
         }
 
         private IEnumerator<float> PlayBackCoroutine()
@@ -431,15 +445,17 @@ namespace Exiled.API.Features.Toys
             if (toy != Base)
                 return;
 
-            Dispose();
-        }
-
-        private void Dispose()
-        {
             AdminToyBase.OnRemoved -= OnToyRemoved;
+
+            if (!isPlayBackInitialized)
+                return;
 
             Stop();
             encoder?.Dispose();
+            encoder = null;
+            frame = null;
+            encoded = null;
+            isPlayBackInitialized = false;
         }
     }
 }
