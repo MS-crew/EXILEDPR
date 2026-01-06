@@ -40,7 +40,7 @@ namespace Exiled.API.Features.Toys
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
-        private readonly OpusEncoder encoder;
+        private readonly OpusEncoder encoder = new(OpusApplicationType.Audio);
         private readonly float[] frame = new float[FrameSize];
         private readonly byte[] encoded = new byte[VoiceChatSettings.MaxEncodedSize];
 
@@ -56,7 +56,6 @@ namespace Exiled.API.Features.Toys
             : base(speakerToy, AdminToyType.Speaker)
         {
             Base = speakerToy;
-            encoder = new OpusEncoder(OpusApplicationType.Audio);
             AdminToyBase.OnRemoved += OnToyRemoved;
         }
 
