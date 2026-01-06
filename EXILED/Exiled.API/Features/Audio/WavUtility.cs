@@ -14,7 +14,7 @@ namespace Exiled.API.Features.Audio
     using VoiceChat;
 
     /// <summary>
-    /// Provides utility methods for working with WAV audio files, such as converting to PCM data and validating headers.
+    /// Provides utility methods for working with WAV audio files.
     /// </summary>
     public static class WavUtility
     {
@@ -49,9 +49,6 @@ namespace Exiled.API.Features.Audio
         /// Skips the WAV file header and validates that the format is PCM16 mono with the specified sample rate.
         /// </summary>
         /// <param name="br">The <see cref="BinaryReader"/> to read from.</param>
-        /// <exception cref="InvalidDataException">
-        /// Thrown if the WAV file is not PCM16, mono, or does not match the expected sample rate.
-        /// </exception>
         public static void SkipHeader(BinaryReader br)
         {
             br.ReadBytes(12);
