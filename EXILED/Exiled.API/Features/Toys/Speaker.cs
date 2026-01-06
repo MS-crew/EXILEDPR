@@ -237,7 +237,10 @@ namespace Exiled.API.Features.Toys
         /// Gets the total duration of the current track in seconds.
         /// Returns 0 if not playing.
         /// </summary>
-        public double Duration => source?.TotalDuration ?? 0.0;
+        public double Duration
+        {
+            get => source?.TotalDuration ?? 0.0;
+        }
 
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.
