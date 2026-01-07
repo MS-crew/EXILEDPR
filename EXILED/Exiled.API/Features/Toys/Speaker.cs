@@ -59,6 +59,11 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Invoked when the audio playback starts.
+        /// </summary>
+        public event Action OnPlaybackStarted;
+
+        /// <summary>
         /// Invoked when the audio playback is paused.
         /// </summary>
         public event Action OnPlaybackPaused;
@@ -69,20 +74,20 @@ namespace Exiled.API.Features.Toys
         public event Action OnPlaybackResumed;
 
         /// <summary>
-        /// Invoked when the audio playback starts.
+        /// Invoked when the audio playback loops back to the beginning.
         /// </summary>
-        public event Action OnPlaybackStarted;
+        public event Action OnPlaybackLooped;
+
+        /// <summary>
+        /// Invoked when the audio track finishes playing.
+        /// If looping is enabled, this triggers every time the track finished.
+        /// </summary>
+        public event Action OnPlaybackFinished;
 
         /// <summary>
         /// Invoked when the audio playback stops completely (either manually or end of file).
         /// </summary>
         public event Action OnPlaybackStopped;
-
-        /// <summary>
-        /// Invoked when the audio track finishes playing.
-        /// If looping is enabled, this triggers every time the track restarts.
-        /// </summary>
-        public event Action OnPlaybackFinished;
 
         /// <summary>
         /// Gets the prefab.
@@ -390,6 +395,7 @@ namespace Exiled.API.Features.Toys
                     if (Loop)
                     {
                         source.Reset();
+                        OnPlaybackLooped?.Invoke();
                         continue;
                     }
 
