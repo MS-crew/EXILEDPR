@@ -8,6 +8,7 @@
 namespace Exiled.API.Features.Audio
 {
     using System;
+    using System.Buffers;
     using System.IO;
     using System.Runtime.InteropServices;
 
@@ -23,7 +24,6 @@ namespace Exiled.API.Features.Audio
         private readonly long endPosition;
         private readonly long startPosition;
         private readonly BinaryReader reader;
-        private readonly byte[] readBuffer = new byte[VoiceChatSettings.PacketSizePerChannel * 2];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WavStreamSource"/> class.
@@ -73,24 +73,36 @@ namespace Exiled.API.Features.Audio
         {
             int bytesNeeded = count * 2;
 
-            if (bytesNeeded > readBuffer.Length)
-                bytesNeeded = readBuffer.Length;
+            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(bytesNeeded);
 
-            int bytesRead = reader.Read(readBuffer, 0, bytesNeeded);
-            if (bytesRead == 0)
-                return 0;
+            try
+            {
+                int bytesRead = reader.Read(tempBuffer, 0, bytesNeeded);
 
-            if (bytesRead % 2 != 0)
-                bytesRead--;
+                if (bytesRead == 0)
+                    return 0;
 
-            Span<byte> byteSpan = readBuffer.AsSpan(0, bytesRead);
-            Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
+                if (bytesRead % 2 != 0)
+                    bytesRead--;
 
-            int samplesRead = shortSpan.Length;
-            for (int i = 0; i < samplesRead; i++)
-                buffer[offset + i] = shortSpan[i] / 32768f;
+                Span<byte> byteSpan = tempBuffer.AsSpan(0, bytesRead);
+                Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
 
-            return samplesRead;
+                int samplesRead = shortSpan.Length;
+                for (int i = 0; i < samplesRead; i++)
+                {
+                    if (offset + i >= buffer.Length)
+                        break;
+
+                    buffer[offset + i] = shortSpan[i] / 32768f;
+                }
+
+                return samplesRead;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(tempBuffer);
+            }
         }
 
         /// <summary>
@@ -105,6 +117,7 @@ namespace Exiled.API.Features.Audio
             long newPos = startPosition + targetByte;
             if (newPos > endPosition)
                 newPos = endPosition;
+
             if (newPos < startPosition)
                 newPos = startPosition;
 

@@ -42,10 +42,16 @@ namespace Exiled.API.Features.Toys
 
         private float[] frame;
         private byte[] encoded;
+        private float[] resampleBuffer;
+
+        private double resampleTime;
+        private int resampleBufferFilled;
+
         private IPcmSource source;
         private OpusEncoder encoder;
-        private float timeAccumulator;
         private CoroutineHandle playBackRoutine;
+
+        private bool isPitchDefault = true;
         private bool isPlayBackInitialized = false;
 
         /// <summary>
@@ -103,6 +109,24 @@ namespace Exiled.API.Features.Toys
         /// Gets or sets the network channel used for sending audio packets from this speaker <see cref="Channels"/>.
         /// </summary>
         public int Channel { get; set; }
+
+        /// <summary>
+        /// Gets or sets the playback pitch.
+        /// </summary>
+        public float Pitch
+        {
+            get;
+            set
+            {
+                field = value;
+                isPitchDefault = Math.Abs(field - 1.0f) < 0.0001f;
+                if (isPitchDefault)
+                {
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the audio playback should loop when it reaches the end.
@@ -234,7 +258,11 @@ namespace Exiled.API.Features.Toys
             set
             {
                 if (source != null)
+                {
                     source.CurrentTime = value;
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                }
             }
         }
 
@@ -318,7 +346,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="stream">Whether to stream the audio or preload it.</param>
         /// <param name="destroyAfter">Whether to destroy the speaker after playback.</param>
         /// <param name="loop">Whether to loop the audio.</param>
-        public void PlayWav(string path, bool stream = false, bool destroyAfter = false, bool loop = false)
+        public void Play(string path, bool stream = false, bool destroyAfter = false, bool loop = false)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("The specified file does not exist.", path);
@@ -358,6 +386,7 @@ namespace Exiled.API.Features.Toys
             isPlayBackInitialized = true;
 
             frame = new float[FrameSize];
+            resampleBuffer = Array.Empty<float>();
             encoder = new(OpusApplicationType.Audio);
             encoded = new byte[VoiceChatSettings.MaxEncodedSize];
 
@@ -367,7 +396,11 @@ namespace Exiled.API.Features.Toys
         private IEnumerator<float> PlayBackCoroutine()
         {
             OnPlaybackStarted?.Invoke();
-            timeAccumulator = 0f;
+
+            resampleTime = 0.0;
+            resampleBufferFilled = 0;
+
+            float timeAccumulator = 0f;
 
             while (true)
             {
@@ -377,10 +410,16 @@ namespace Exiled.API.Features.Toys
                 {
                     timeAccumulator -= FrameTime;
 
-                    int read = source.Read(frame, 0, FrameSize);
-
-                    if (read < FrameSize)
-                        Array.Clear(frame, read, FrameSize - read);
+                    if (isPitchDefault)
+                    {
+                        int read = source.Read(frame, 0, FrameSize);
+                        if (read < FrameSize)
+                            Array.Clear(frame, read, FrameSize - read);
+                    }
+                    else
+                    {
+                        ResampleFrame();
+                    }
 
                     int len = encoder.Encode(frame, encoded);
 
@@ -396,6 +435,7 @@ namespace Exiled.API.Features.Toys
                     {
                         source.Reset();
                         OnPlaybackLooped?.Invoke();
+                        resampleTime = resampleBufferFilled = 0;
                         continue;
                     }
 
@@ -411,11 +451,81 @@ namespace Exiled.API.Features.Toys
             }
         }
 
+        private void ResampleFrame()
+        {
+            int requiredSize = (int)(FrameSize * Mathf.Abs(Pitch) * 2) + 10;
+
+            if (resampleBuffer.Length < requiredSize)
+            {
+                resampleBuffer = new float[requiredSize];
+                resampleTime = 0.0;
+                resampleBufferFilled = 0;
+            }
+
+            int outputIdx = 0;
+
+            while (outputIdx < FrameSize)
+            {
+                if (resampleBufferFilled == 0)
+                {
+                    int toRead = resampleBuffer.Length - 4;
+                    int actualRead = source.Read(resampleBuffer, 0, toRead);
+
+                    if (actualRead == 0)
+                    {
+                        while (outputIdx < FrameSize)
+                            frame[outputIdx++] = 0f;
+                        return;
+                    }
+
+                    resampleBufferFilled = actualRead;
+                    resampleTime = 0.0;
+                }
+
+                int currentSample = (int)resampleTime;
+
+                if (currentSample >= resampleBufferFilled - 1)
+                {
+                    if (resampleBufferFilled > 0)
+                    {
+                        resampleBuffer[0] = resampleBuffer[resampleBufferFilled - 1];
+
+                        int toRead = resampleBuffer.Length - 5;
+                        int actualRead = source.Read(resampleBuffer, 1, toRead);
+
+                        if (actualRead == 0)
+                        {
+                            while (outputIdx < FrameSize)
+                                frame[outputIdx++] = 0f;
+                            return;
+                        }
+
+                        resampleBufferFilled = actualRead + 1;
+                        resampleTime -= currentSample;
+                    }
+                    else
+                    {
+                        resampleBufferFilled = 0;
+                    }
+
+                    continue;
+                }
+
+                double frac = resampleTime - currentSample;
+                float sample1 = resampleBuffer[currentSample];
+                float sample2 = resampleBuffer[currentSample + 1];
+
+                frame[outputIdx++] = (float)(sample1 + ((sample2 - sample1) * frac));
+
+                resampleTime += Pitch;
+            }
+        }
+
         private void SendPacket(int len)
         {
             AudioMessage msg = new(ControllerId, encoded, len);
 
-            switch(PlayMode)
+            switch (PlayMode)
             {
                 case SpeakerPlayMode.Global:
                     NetworkServer.SendToReady(msg, Channel);
@@ -464,7 +574,7 @@ namespace Exiled.API.Features.Toys
             encoder = null;
             frame = null;
             encoded = null;
-
+            resampleBuffer = null;
             isPlayBackInitialized = false;
         }
     }
