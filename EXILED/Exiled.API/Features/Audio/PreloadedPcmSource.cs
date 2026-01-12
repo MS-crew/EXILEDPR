@@ -49,13 +49,7 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Gets a value indicating whether the end of the PCM data buffer has been reached.
         /// </summary>
-        public bool Ended
-        {
-            get
-            {
-                return pos >= data.Length;
-            }
-        }
+        public bool Ended => pos >= data.Length;
 
         /// <summary>
         /// Gets the total duration of the audio in seconds.

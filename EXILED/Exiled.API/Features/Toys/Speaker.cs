@@ -154,10 +154,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets a value indicating whether gets is a sound playing on this speaker or not.
         /// </summary>
-        public bool IsPlaying
-        {
-            get => playBackRoutine.IsRunning && !IsPaused;
-        }
+        public bool IsPlaying => playBackRoutine.IsRunning && !IsPaused;
 
         /// <summary>
         /// Gets or sets a value indicating whether the playback is paused.
@@ -267,10 +264,7 @@ namespace Exiled.API.Features.Toys
         /// Gets the total duration of the current track in seconds.
         /// Returns 0 if not playing.
         /// </summary>
-        public double Duration
-        {
-            get => source?.TotalDuration ?? 0.0;
-        }
+        public double Duration => source?.TotalDuration ?? 0.0;
 
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.

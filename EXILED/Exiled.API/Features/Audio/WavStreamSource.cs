@@ -54,13 +54,7 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Gets a value indicating whether the end of the stream has been reached.
         /// </summary>
-        public bool Ended
-        {
-            get
-            {
-                return reader.BaseStream.Position >= endPosition;
-            }
-        }
+        public bool Ended => reader.BaseStream.Position >= endPosition;
 
         /// <summary>
         /// Reads PCM data from the stream into the specified buffer.
@@ -130,11 +124,17 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Resets the stream position to the start.
         /// </summary>
-        public void Reset() => reader.BaseStream.Position = startPosition;
+        public void Reset()
+        {
+            reader.BaseStream.Position = startPosition;
+        }
 
         /// <summary>
         /// Releases all resources used by the <see cref="WavStreamSource"/>.
         /// </summary>
-        public void Dispose() => reader.Dispose();
+        public void Dispose()
+        {
+            reader.Dispose();
+        }
     }
 }
