@@ -10,21 +10,21 @@ namespace Exiled.API.Enums
     /// <summary>
     /// Specifies the available modes for playing audio through a speaker.
     /// </summary>
-    public enum SpeakerPlayMode
+    public enum SpeakerPlayMode : byte
     {
         /// <summary>
         /// Play audio globally to all players.
         /// </summary>
-        Global,
+        Global = 0,
 
         /// <summary>
         /// Play audio to a specific list of players.
         /// </summary>
-        PlayerList,
+        PlayerList = 1,
 
         /// <summary>
         /// Play audio to players matching a predicate.
         /// </summary>
-        Predicate,
+        Predicate = 2,
     }
 }
