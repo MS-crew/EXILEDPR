@@ -8,6 +8,7 @@
 namespace Exiled.API.Features.Audio
 {
     using System;
+    using System.Buffers;
     using System.IO;
     using System.Runtime.InteropServices;
 
@@ -25,24 +26,36 @@ namespace Exiled.API.Features.Audio
         /// <returns>An array of floats representing the PCM data.</returns>
         public static float[] WavToPcm(string path)
         {
-            byte[] fileBytes = File.ReadAllBytes(path);
+            using FileStream fs = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            int length = (int)fs.Length;
 
-            using MemoryStream ms = new(fileBytes);
-            using BinaryReader br = new(ms);
+            byte[] rentedBuffer = ArrayPool<byte>.Shared.Rent(length);
 
-            SkipHeader(br);
+            try
+            {
+                int bytesRead = fs.Read(rentedBuffer, 0, length);
 
-            int headerOffset = (int)ms.Position;
-            int dataLength = fileBytes.Length - headerOffset;
+                using MemoryStream ms = new(rentedBuffer, 0, bytesRead);
+                using BinaryReader br = new(ms);
 
-            Span<byte> audioDataSpan = fileBytes.AsSpan(headerOffset, dataLength);
-            Span<short> samples = MemoryMarshal.Cast<byte, short>(audioDataSpan);
+                SkipHeader(br);
 
-            float[] pcm = new float[samples.Length];
-            for (int i = 0; i < samples.Length; i++)
-                pcm[i] = samples[i] / 32768f;
+                int headerOffset = (int)ms.Position;
+                int dataLength = bytesRead - headerOffset;
 
-            return pcm;
+                Span<byte> audioDataSpan = rentedBuffer.AsSpan(headerOffset, dataLength);
+                Span<short> samples = MemoryMarshal.Cast<byte, short>(audioDataSpan);
+
+                float[] pcm = new float[samples.Length];
+                for (int i = 0; i < samples.Length; i++)
+                    pcm[i] = samples[i] / 32768f;
+
+                return pcm;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rentedBuffer);
+            }
         }
 
         /// <summary>
@@ -55,10 +68,11 @@ namespace Exiled.API.Features.Audio
 
             while (true)
             {
-                string chunk = new(br.ReadChars(4));
+                uint chunk = br.ReadUInt32();
                 int size = br.ReadInt32();
 
-                if (chunk == "fmt ")
+                // 'fmt ' chunk
+                if (chunk == 0x20746D66)
                 {
                     short format = br.ReadInt16();
                     short channels = br.ReadInt16();
@@ -72,7 +86,9 @@ namespace Exiled.API.Features.Audio
 
                     br.BaseStream.Position += size - 16;
                 }
-                else if (chunk == "data")
+
+                // 'data' chunk
+                else if (chunk == 0x61746164)
                 {
                     return;
                 }
@@ -80,6 +96,9 @@ namespace Exiled.API.Features.Audio
                 {
                     br.BaseStream.Position += size;
                 }
+
+                if (br.BaseStream.Position >= br.BaseStream.Length)
+                    throw new InvalidDataException("WAV file does not contain a 'data' chunk. File might be corrupted or empty.");
             }
         }
     }
