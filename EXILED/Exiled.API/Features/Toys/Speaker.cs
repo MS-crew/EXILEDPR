@@ -59,10 +59,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="speakerToy">The <see cref="SpeakerToy"/> of the toy.</param>
         internal Speaker(SpeakerToy speakerToy)
-            : base(speakerToy, AdminToyType.Speaker)
-        {
-            Base = speakerToy;
-        }
+            : base(speakerToy, AdminToyType.Speaker) => Base = speakerToy;
 
         /// <summary>
         /// Invoked when the audio playback starts.
