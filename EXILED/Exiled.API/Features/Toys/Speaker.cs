@@ -105,7 +105,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets or sets the network channel used for sending audio packets from this speaker <see cref="Channels"/>.
         /// </summary>
-        public int Channel { get; set; }
+        public int Channel { get; set; } = Channels.ReliableOrdered2;
 
         /// <summary>
         /// Gets or sets the playback pitch.
