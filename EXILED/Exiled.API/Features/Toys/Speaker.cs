@@ -199,7 +199,7 @@ namespace Exiled.API.Features.Toys
             get;
             set
             {
-                field = value;
+                field = Mathf.Max(0.1f, Mathf.Abs(value));
                 isPitchDefault = Math.Abs(field - 1.0f) < 0.0001f;
                 if (isPitchDefault)
                 {
