@@ -108,24 +108,6 @@ namespace Exiled.API.Features.Toys
         public int Channel { get; set; } = Channels.ReliableOrdered2;
 
         /// <summary>
-        /// Gets or sets the playback pitch.
-        /// </summary>
-        public float Pitch
-        {
-            get;
-            set
-            {
-                field = value;
-                isPitchDefault = Math.Abs(field - 1.0f) < 0.0001f;
-                if (isPitchDefault)
-                {
-                    resampleTime = 0.0;
-                    resampleBufferFilled = 0;
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets or sets a value indicating whether the audio playback should loop when it reaches the end.
         /// </summary>
         public bool Loop { get; set; }
@@ -178,6 +160,52 @@ namespace Exiled.API.Features.Toys
                     OnPlaybackPaused?.Invoke();
                 else
                     OnPlaybackResumed?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current playback time in seconds.
+        /// Returns 0 if not playing.
+        /// </summary>
+        public double CurrentTime
+        {
+            get => source?.CurrentTime ?? 0.0;
+            set
+            {
+                if (source != null)
+                {
+                    source.CurrentTime = value;
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the total duration of the current track in seconds.
+        /// Returns 0 if not playing.
+        /// </summary>
+        public double TotalDuration => source?.TotalDuration ?? 0.0;
+
+        /// <summary>
+        /// Gets or sets the playback pitch.
+        /// </summary>
+        /// <value>
+        /// A <see cref="float"/> representing the pitch level of the audio source,
+        /// where 1.0 is normal pitch, less than 1.0 is lower pitch (slower), and greater than 1.0 is higher pitch (faster).
+        /// </value>
+        public float Pitch
+        {
+            get;
+            set
+            {
+                field = value;
+                isPitchDefault = Math.Abs(field - 1.0f) < 0.0001f;
+                if (isPitchDefault)
+                {
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                }
             }
         }
 
@@ -241,30 +269,6 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkControllerId;
             set => Base.NetworkControllerId = value;
         }
-
-        /// <summary>
-        /// Gets or sets the current playback time in seconds.
-        /// Returns 0 if not playing.
-        /// </summary>
-        public double CurrentTime
-        {
-            get => source?.CurrentTime ?? 0.0;
-            set
-            {
-                if (source != null)
-                {
-                    source.CurrentTime = value;
-                    resampleTime = 0.0;
-                    resampleBufferFilled = 0;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the total duration of the current track in seconds.
-        /// Returns 0 if not playing.
-        /// </summary>
-        public double Duration => source?.TotalDuration ?? 0.0;
 
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.
