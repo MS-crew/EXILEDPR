@@ -23,7 +23,9 @@ namespace Exiled.API.Features.Audio
     {
         private readonly long endPosition;
         private readonly long startPosition;
-        private readonly BinaryReader reader;
+        private readonly FileStream stream;
+
+        private byte[] internalBuffer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WavStreamSource"/> class.
@@ -31,10 +33,11 @@ namespace Exiled.API.Features.Audio
         /// <param name="path">The path to the audio file.</param>
         public WavStreamSource(string path)
         {
-            reader = new BinaryReader(File.OpenRead(path));
-            WavUtility.SkipHeader(reader);
-            startPosition = reader.BaseStream.Position;
-            endPosition = reader.BaseStream.Length;
+            stream = File.OpenRead(path);
+            WavUtility.SkipHeader(stream);
+            startPosition = stream.Position;
+            endPosition = stream.Length;
+            internalBuffer = ArrayPool<byte>.Shared.Rent(VoiceChatSettings.PacketSizePerChannel * 2);
         }
 
         /// <summary>
@@ -47,14 +50,14 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         public double CurrentTime
         {
-            get => (reader.BaseStream.Position - startPosition) / 2.0 / VoiceChatSettings.SampleRate;
+            get => (stream.Position - startPosition) / 2.0 / VoiceChatSettings.SampleRate;
             set => Seek(value);
         }
 
         /// <summary>
         /// Gets a value indicating whether the end of the stream has been reached.
         /// </summary>
-        public bool Ended => reader.BaseStream.Position >= endPosition;
+        public bool Ended => stream.Position >= endPosition;
 
         /// <summary>
         /// Reads PCM data from the stream into the specified buffer.
@@ -67,36 +70,30 @@ namespace Exiled.API.Features.Audio
         {
             int bytesNeeded = count * 2;
 
-            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(bytesNeeded);
-
-            try
+            if (internalBuffer.Length < bytesNeeded)
             {
-                int bytesRead = reader.Read(tempBuffer, 0, bytesNeeded);
-
-                if (bytesRead == 0)
-                    return 0;
-
-                if (bytesRead % 2 != 0)
-                    bytesRead--;
-
-                Span<byte> byteSpan = tempBuffer.AsSpan(0, bytesRead);
-                Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
-
-                int samplesRead = shortSpan.Length;
-                for (int i = 0; i < samplesRead; i++)
-                {
-                    if (offset + i >= buffer.Length)
-                        break;
-
-                    buffer[offset + i] = shortSpan[i] / 32768f;
-                }
-
-                return samplesRead;
+                ArrayPool<byte>.Shared.Return(internalBuffer);
+                internalBuffer = ArrayPool<byte>.Shared.Rent(bytesNeeded);
             }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(tempBuffer);
-            }
+
+            int bytesRead = stream.Read(internalBuffer, 0, bytesNeeded);
+
+            if (bytesRead == 0)
+                return 0;
+
+            if (bytesRead % 2 != 0)
+                bytesRead--;
+
+            Span<byte> byteSpan = internalBuffer.AsSpan(0, bytesRead);
+            Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
+
+            int samplesInDestination = buffer.Length - offset;
+            int samplesToWrite = Math.Min(shortSpan.Length, samplesInDestination);
+
+            for (int i = 0; i < samplesToWrite; i++)
+                buffer[offset + i] = shortSpan[i] / 32768f;
+
+            return samplesToWrite;
         }
 
         /// <summary>
@@ -118,7 +115,7 @@ namespace Exiled.API.Features.Audio
             if (newPos % 2 != 0)
                 newPos--;
 
-            reader.BaseStream.Position = newPos;
+            stream.Position = newPos;
         }
 
         /// <summary>
@@ -126,7 +123,7 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         public void Reset()
         {
-            reader.BaseStream.Position = startPosition;
+            stream.Position = startPosition;
         }
 
         /// <summary>
@@ -134,7 +131,12 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         public void Dispose()
         {
-            reader.Dispose();
+            stream?.Dispose();
+            if (internalBuffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(internalBuffer);
+                internalBuffer = null;
+            }
         }
     }
 }
