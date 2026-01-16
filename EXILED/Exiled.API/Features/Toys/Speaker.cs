@@ -349,7 +349,7 @@ namespace Exiled.API.Features.Toys
             if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
                 throw new NotSupportedException($"The file type '{Path.GetExtension(path)}' is not supported. Please use .wav file.");
 
-            InitializePlayBack();
+            TryInitializePlayBack();
             Stop();
 
             Loop = loop;
@@ -373,7 +373,7 @@ namespace Exiled.API.Features.Toys
             source = null;
         }
 
-        private void InitializePlayBack()
+        private void TryInitializePlayBack()
         {
             if (isPlayBackInitialized)
                 return;
