@@ -440,7 +440,7 @@ namespace Exiled.API.Features.Toys
                     }
 
                     if (DestroyAfter)
-                        NetworkServer.Destroy(GameObject);
+                        Destroy();
                     else
                         Stop();
 
@@ -574,11 +574,18 @@ namespace Exiled.API.Features.Toys
             AdminToyBase.OnRemoved -= OnToyRemoved;
 
             Stop();
+
             encoder?.Dispose();
             encoder = null;
+
             frame = null;
             encoded = null;
             resampleBuffer = null;
+
+            Predicate = null;
+            TargetPlayer = null;
+            TargetPlayers = null;
+
             isPlayBackInitialized = false;
         }
     }
