@@ -123,6 +123,11 @@ namespace Exiled.API.Features.Toys
         public SpeakerPlayMode PlayMode { get; set; }
 
         /// <summary>
+        /// Gets or sets the target player who will hear the audio played by this speaker when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.Player"/>.
+        /// </summary>
+        public Player TargetPlayer { get; set; }
+
+        /// <summary>
         /// Gets or sets the list of target players who will hear the audio played by this speaker when <see cref="PlayMode"/> is set to <see cref="SpeakerPlayMode.PlayerList"/>.
         /// </summary>
         public HashSet<Player> TargetPlayers { get; set; }
@@ -526,6 +531,10 @@ namespace Exiled.API.Features.Toys
                     NetworkServer.SendToReady(msg, Channel);
                     break;
 
+                case SpeakerPlayMode.Player:
+                    TargetPlayer?.Connection.Send(msg, Channel);
+                    break;
+
                 case SpeakerPlayMode.PlayerList:
                     using (NetworkWriterPooled writer = NetworkWriterPool.Get())
                     {
@@ -534,7 +543,7 @@ namespace Exiled.API.Features.Toys
 
                         foreach (Player ply in TargetPlayers)
                         {
-                            ply.Connection.Send(segment, Channel);
+                            ply?.Connection.Send(segment, Channel);
                         }
                     }
 

@@ -18,13 +18,18 @@ namespace Exiled.API.Enums
         Global = 0,
 
         /// <summary>
+        /// Play audio to a specific player.
+        /// </summary>
+        Player = 1,
+
+        /// <summary>
         /// Play audio to a specific list of players.
         /// </summary>
-        PlayerList = 1,
+        PlayerList = 2,
 
         /// <summary>
         /// Play audio to players matching a predicate.
         /// </summary>
-        Predicate = 2,
+        Predicate = 3,
     }
 }
