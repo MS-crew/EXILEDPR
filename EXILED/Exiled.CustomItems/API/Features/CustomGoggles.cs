@@ -106,8 +106,6 @@ namespace Exiled.CustomItems.API.Features
 
         private void OnInternalChangedStatus(ChangedStatusEventArgs ev)
         {
-            Log.Warn(ev.Scp1344Status);
-
             if (!Check(ev.Item))
                 return;
 
