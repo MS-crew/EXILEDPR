@@ -150,8 +150,6 @@ namespace Exiled.CustomItems.API.Features
                 player.ReferenceHub?.DisableWearables(WearableElements.Scp1344Goggles);
             }
 
-            player.CurrentItem = null;
-
             OnRemovedGoggles(player, goggles);
         }
 
