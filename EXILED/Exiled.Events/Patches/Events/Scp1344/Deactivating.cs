@@ -43,7 +43,7 @@ namespace Exiled.Events.Patches.Events.Scp1344
 
                 if (!ev.IsAllowed)
                 {
-                    return StopDeactivation(__instance);
+                    return StopDeactivation(__instance, Scp1344Status.Active);
                 }
             }
 
@@ -68,7 +68,7 @@ namespace Exiled.Events.Patches.Events.Scp1344
             return true;
         }
 
-        private static bool StopDeactivation(Scp1344Item instance, Scp1344Status newStatus = Scp1344Status.Active)
+        private static bool StopDeactivation(Scp1344Item instance, Scp1344Status newStatus)
         {
             instance.Status = newStatus;
             instance.ServerSetStatus(newStatus);
