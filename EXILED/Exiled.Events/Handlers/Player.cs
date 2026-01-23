@@ -471,6 +471,11 @@ namespace Exiled.Events.Handlers
         public static Event<VoiceChattingEventArgs> VoiceChatting { get; set; } = new();
 
         /// <summary>
+        /// Invoked before a <see cref="API.Features.Player"/> receiving a voice message.
+        /// </summary>
+        public static Event<ReceivingVoiceMessageEventArgs> ReceivingVoiceMessage { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> makes noise.
         /// </summary>
         public static Event<MakingNoiseEventArgs> MakingNoise { get; set; } = new();
@@ -1042,8 +1047,37 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Invoked after a <see cref="API.Features.Player"/> presses the voicechat key.
         /// </summary>
-        /// <param name="ev">The <see cref="VoiceChattingEventArgs"/> instance.</param>
-        public static void OnVoiceChatting(VoiceChattingEventArgs ev) => VoiceChatting.InvokeSafely(ev);
+        /// <param name="ev">The <see cref="PlayerSendingVoiceMessageEventArgs"/> instance.</param>
+        public static void OnVoiceChatting(PlayerSendingVoiceMessageEventArgs ev)
+        {
+            VoiceChattingEventArgs evVoiceChatting = new(ev.Player, ev.Message, ev.IsAllowed);
+            VoiceChatting.InvokeSafely(evVoiceChatting);
+
+            ev.IsAllowed = evVoiceChatting.IsAllowed;
+            ev.Message = evVoiceChatting.VoiceMessage;
+
+            if(ev.Message.Channel == VoiceChat.VoiceChatChannel.Radio)
+            {
+                TransmittingEventArgs evTransmitting = new(ev.Player, ev.Message, ev.IsAllowed);
+                OnTransmitting(evTransmitting);
+
+                ev.Message = evTransmitting.VoiceMessage;
+                ev.IsAllowed = evTransmitting.IsAllowed;
+            }
+        }
+
+        /// <summary>
+        /// Invoked before a <see cref="API.Features.Player"/> receiving a voice message.
+        /// </summary>
+        /// <param name="ev">The <see cref="ReceivingVoiceMessageEventArgs"/> instance.</param>
+        public static void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
+        {
+            ReceivingVoiceMessageEventArgs evReceivingVoiceMessage = new(ev.Message, ev.Player, ev.Sender, ev.IsAllowed);
+            ReceivingVoiceMessage.InvokeSafely(evReceivingVoiceMessage);
+
+            ev.IsAllowed = evReceivingVoiceMessage.IsAllowed;
+            ev.Message = evReceivingVoiceMessage.VoiceMessage;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> makes noise.
