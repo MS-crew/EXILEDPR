@@ -59,7 +59,9 @@ namespace Exiled.CustomItems.API.Features
         /// <inheritdoc/>
         protected override void SubscribeEvents()
         {
+            Exiled.Events.Handlers.Player.UsingItem += OnInternalUsingItem;
             Exiled.Events.Handlers.Player.ItemRemoved += OnInternalItemRemoved;
+            Exiled.Events.Handlers.Scp1344.Deactivating += OnInternalDeactivating;
             Exiled.Events.Handlers.Scp1344.ChangedStatus += OnInternalChangedStatus;
             Exiled.Events.Handlers.Scp1344.ChangingStatus += OnInternalChangingStatus;
             base.SubscribeEvents();
@@ -68,7 +70,9 @@ namespace Exiled.CustomItems.API.Features
         /// <inheritdoc/>
         protected override void UnsubscribeEvents()
         {
+            Exiled.Events.Handlers.Player.UsingItem -= OnInternalUsingItem;
             Exiled.Events.Handlers.Player.ItemRemoved -= OnInternalItemRemoved;
+            Exiled.Events.Handlers.Scp1344.Deactivating -= OnInternalDeactivating;
             Exiled.Events.Handlers.Scp1344.ChangedStatus -= OnInternalChangedStatus;
             Exiled.Events.Handlers.Scp1344.ChangingStatus -= OnInternalChangingStatus;
             base.UnsubscribeEvents();
@@ -102,6 +106,39 @@ namespace Exiled.CustomItems.API.Features
         /// <param name="goggles">The <see cref="Scp1344"/> item being removed.</param>
         protected virtual void OnRemovedGoggles(Player player, Scp1344 goggles)
         {
+        }
+
+        private void OnInternalDeactivating(DeactivatingEventArgs ev)
+        {
+            if (!Check(ev.Item))
+                return;
+
+            if (!CanBeRemoveSafely)
+                return;
+
+            ev.NewStatus = Scp1344Status.Idle;
+            ev.IsAllowed = false;
+        }
+
+        private void OnInternalUsingItem(UsingItemEventArgs ev)
+        {
+            if (ev.Item.Type != ItemType.SCP1344)
+                return;
+
+            foreach (Item item in ev.Player.Items)
+            {
+                if (item.Type != ItemType.SCP1344)
+                    continue;
+
+                if (item is not Scp1344 scp1344)
+                    continue;
+
+                if (!scp1344.IsWorn)
+                    continue;
+
+                ev.IsAllowed = false;
+                break;
+            }
         }
 
         private void OnInternalChangedStatus(ChangedStatusEventArgs ev)
