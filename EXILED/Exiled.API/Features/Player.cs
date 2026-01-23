@@ -2942,12 +2942,10 @@ namespace Exiled.API.Features
             {
                 item ??= Item.Get(itemBase);
                 item.AddReason = addReason;
-
+                item.ChangeOwner(item.Owner, this);
                 Inventory.UserInventory.Items[item.Serial] = itemBase;
 
                 typeof(InventoryExtensions).InvokeStaticEvent(nameof(InventoryExtensions.OnItemAdded), new object[] { ReferenceHub, itemBase, null });
-
-                item.ChangeOwner(item.Owner, this);
 
                 if (itemBase is IAcquisitionConfirmationTrigger acquisitionConfirmationTrigger)
                 {
