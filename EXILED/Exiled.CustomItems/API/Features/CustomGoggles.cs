@@ -7,10 +7,10 @@
 
 namespace Exiled.CustomItems.API.Features
 {
+    using EventArgs;
     using Exiled.API.Enums;
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
-    using Exiled.CustomItems.API.EventArgs;
     using Exiled.Events.EventArgs.Player;
     using Exiled.Events.EventArgs.Scp1344;
 
@@ -24,16 +24,13 @@ namespace Exiled.CustomItems.API.Features
     public abstract class CustomGoggles : CustomItem
     {
         /// <summary>
-        /// Gets or sets the <see cref="ItemType"/> to use for this goggles.
+        /// Gets or sets the <see cref="ItemType"/> to use for these goggles.
         /// This is locked to <see cref="ItemType.SCP1344"/>.
         /// </summary>
         public override ItemType Type
         {
             get => ItemType.SCP1344;
-            set
-            {
-                base.Type = ItemType.SCP1344;
-            }
+            set => base.Type = ItemType.SCP1344;
         }
 
         /// <summary>
@@ -81,10 +78,10 @@ namespace Exiled.CustomItems.API.Features
         /// <inheritdoc/>
         protected override void OnOwnerChangingRole(OwnerChangingRoleEventArgs ev)
         {
-            if (Item.Get(ev.Item) is not Scp1344 scp1344)
+            if (!ev.IsAllowed)
                 return;
 
-            if (!scp1344.IsWorn)
+            if (Item.Get(ev.Item) is not Scp1344 { IsWorn: true } scp1344)
                 return;
 
             InternalRemove(ev.Player, scp1344);
@@ -108,20 +105,11 @@ namespace Exiled.CustomItems.API.Features
         {
         }
 
-        private void OnInternalDeactivating(DeactivatingEventArgs ev)
-        {
-            if (!Check(ev.Item))
-                return;
-
-            if (!CanBeRemoveSafely)
-                return;
-
-            ev.NewStatus = Scp1344Status.Idle;
-            ev.IsAllowed = false;
-        }
-
         private void OnInternalUsingItem(UsingItemEventArgs ev)
         {
+            if (!ev.IsAllowed)
+                return;
+
             if (ev.Item.Type != ItemType.SCP1344)
                 return;
 
@@ -130,15 +118,27 @@ namespace Exiled.CustomItems.API.Features
                 if (item.Type != ItemType.SCP1344)
                     continue;
 
-                if (item is not Scp1344 scp1344)
-                    continue;
-
-                if (!scp1344.IsWorn)
+                if (item is not Scp1344 { IsWorn: true })
                     continue;
 
                 ev.IsAllowed = false;
                 break;
             }
+        }
+
+        private void OnInternalDeactivating(DeactivatingEventArgs ev)
+        {
+            if (!ev.IsAllowed)
+                return;
+
+            if (!Check(ev.Item))
+                return;
+
+            if (!CanBeRemoveSafely)
+                return;
+
+            ev.NewStatus = Scp1344Status.Idle;
+            ev.IsAllowed = false;
         }
 
         private void OnInternalChangedStatus(ChangedStatusEventArgs ev)
@@ -158,9 +158,6 @@ namespace Exiled.CustomItems.API.Features
 
                 case Scp1344Status.Active:
                     InternalEquip(ev.Player, ev.Scp1344);
-                    break;
-
-                default:
                     break;
             }
         }
@@ -195,7 +192,7 @@ namespace Exiled.CustomItems.API.Features
             if (!Check(ev.Item))
                 return;
 
-            if (ev.Item is not Scp1344 scp1344 || !scp1344.IsWorn)
+            if (ev.Item is not Scp1344 { IsWorn: true } scp1344)
                 return;
 
             InternalRemove(ev.Player, scp1344);
@@ -203,6 +200,9 @@ namespace Exiled.CustomItems.API.Features
 
         private void OnInternalChangingStatus(ChangingStatusEventArgs ev)
         {
+            if (!ev.IsAllowed)
+                return;
+
             if (!Check(ev.Item))
                 return;
 
