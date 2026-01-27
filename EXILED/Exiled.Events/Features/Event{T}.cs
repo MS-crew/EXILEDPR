@@ -384,10 +384,6 @@ namespace Exiled.Events.Features
                     triggerPrefix = "[GC] [MEMORY]";
                     break;
 
-                case (true, false, false):
-                    triggerPrefix = "[GC]";
-                    break;
-
                 case (false, true, true):
                     triggerPrefix = "[CPU]/[MEMORY]";
                     break;
