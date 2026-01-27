@@ -902,6 +902,9 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="ReloadingWeaponEventArgs"/> instance.</param>
         public static void OnReloadingWeapon(PlayerReloadingWeaponEventArgs ev)
         {
+            if (!ReloadingWeapon.HasSubscribers)
+                return;
+
             ReloadingWeaponEventArgs exiledEv = new(ev.FirearmItem.Base, ev.IsAllowed);
             ReloadingWeapon.InvokeSafely(exiledEv);
             ev.IsAllowed = exiledEv.IsAllowed;
@@ -1015,6 +1018,9 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="UnloadingWeaponEventArgs"/> instance.</param>
         public static void OnUnloadingWeapon(PlayerUnloadingWeaponEventArgs ev)
         {
+            if (!UnloadingWeapon.HasSubscribers)
+                return;
+
             UnloadingWeaponEventArgs exiledEv = new(ev.FirearmItem.Base, ev.IsAllowed);
             UnloadingWeapon.InvokeSafely(exiledEv);
             ev.IsAllowed = exiledEv.IsAllowed;
@@ -1050,13 +1056,16 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="PlayerSendingVoiceMessageEventArgs"/> instance.</param>
         public static void OnVoiceChatting(PlayerSendingVoiceMessageEventArgs ev)
         {
-            VoiceChattingEventArgs evVoiceChatting = new(ev.Player, ev.Message, ev.IsAllowed);
-            VoiceChatting.InvokeSafely(evVoiceChatting);
+            if (VoiceChatting.HasSubscribers)
+            {
+                VoiceChattingEventArgs evVoiceChatting = new(ev.Player, ev.Message, ev.IsAllowed);
+                VoiceChatting.InvokeSafely(evVoiceChatting);
 
-            ev.IsAllowed = evVoiceChatting.IsAllowed;
-            ev.Message = evVoiceChatting.VoiceMessage;
+                ev.IsAllowed = evVoiceChatting.IsAllowed;
+                ev.Message = evVoiceChatting.VoiceMessage;
+            }
 
-            if(ev.Message.Channel == VoiceChat.VoiceChatChannel.Radio)
+            if(ev.Message.Channel == VoiceChat.VoiceChatChannel.Radio && Transmitting.HasSubscribers)
             {
                 TransmittingEventArgs evTransmitting = new(ev.Player, ev.Message, ev.IsAllowed);
                 OnTransmitting(evTransmitting);
@@ -1072,6 +1081,9 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="ReceivingVoiceMessageEventArgs"/> instance.</param>
         public static void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
         {
+            if (!ReceivingVoiceMessage.HasSubscribers)
+                return;
+
             ReceivingVoiceMessageEventArgs evReceivingVoiceMessage = new(ev.Message, ev.Player, ev.Sender, ev.IsAllowed);
             ReceivingVoiceMessage.InvokeSafely(evReceivingVoiceMessage);
 
