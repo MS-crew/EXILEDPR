@@ -238,11 +238,13 @@ namespace Exiled.Events.Features
             {
                 long startTick = 0;
                 long startBytes = 0;
+                int startGcCount = 0;
 
                 if (Events.IsProfilerEnabled)
                 {
                     startTick = Stopwatch.GetTimestamp();
                     startBytes = GC.GetTotalMemory(false);
+                    startGcCount = GC.CollectionCount(0);
                 }
 
                 if (eventIndex < innerEvent.Length && (asyncEventIndex >= innerAsyncEvent.Length || innerEvent[eventIndex].priority >= innerAsyncEvent[asyncEventIndex].priority))
@@ -260,10 +262,11 @@ namespace Exiled.Events.Features
                     {
                         double elapsedMs = (Stopwatch.GetTimestamp() - startTick) * 1000.0 / Stopwatch.Frequency;
                         long allocatedBytes = GC.GetTotalMemory(false) - startBytes;
+                        bool gcRan = GC.CollectionCount(0) > startGcCount;
 
                         if (elapsedMs > Events.ProfilerThreshold || allocatedBytes > Events.AllocationThreshold)
                         {
-                            LogWarning(innerEvent[eventIndex].handler, elapsedMs, allocatedBytes);
+                            LogWarning(innerEvent[eventIndex].handler, elapsedMs, allocatedBytes, gcRan);
                         }
                     }
 
@@ -293,11 +296,13 @@ namespace Exiled.Events.Features
             {
                 long startTick = 0;
                 long startBytes = 0;
+                int startGcCount = 0;
 
                 if (Events.IsProfilerEnabled)
                 {
                     startTick = Stopwatch.GetTimestamp();
                     startBytes = GC.GetTotalMemory(false);
+                    startGcCount = GC.CollectionCount(0);
                 }
 
                 try
@@ -313,10 +318,11 @@ namespace Exiled.Events.Features
                 {
                     double elapsedMs = (Stopwatch.GetTimestamp() - startTick) * 1000.0 / Stopwatch.Frequency;
                     long allocatedBytes = GC.GetTotalMemory(false) - startBytes;
+                    bool gcRan = GC.CollectionCount(0) > startGcCount;
 
                     if (elapsedMs > Events.ProfilerThreshold || allocatedBytes > Events.AllocationThreshold)
                     {
-                        LogWarning(registration.handler, elapsedMs, allocatedBytes);
+                        LogWarning(registration.handler, elapsedMs, allocatedBytes, gcRan);
                     }
                 }
             }
@@ -339,7 +345,7 @@ namespace Exiled.Events.Features
             }
         }
 
-        private static void LogWarning(Delegate handler, double ms, long bytes)
+        private static void LogWarning(Delegate handler, double ms, long bytes, bool gcRan)
         {
             MethodInfo method = handler.Method;
             Type targetType = handler.Target?.GetType() ?? method.DeclaringType;
@@ -347,6 +353,9 @@ namespace Exiled.Events.Features
             string pluginName = targetType?.Assembly.GetName().Name;
             string className = targetType?.Name;
             string eventName = typeof(T).Name.Replace("EventArgs", string.Empty);
+
+            if (bytes < 0)
+                bytes = 0;
 
             string[] sizes = { "B", "KB", "MB", "GB" };
             int order = 0;
@@ -360,18 +369,35 @@ namespace Exiled.Events.Features
             string ramResult = $"{len:0.##} {sizes[order]}";
 
             string triggerPrefix = string.Empty;
-            switch (ms > Events.ProfilerThreshold, bytes > Events.AllocationThreshold)
+
+            switch (gcRan, ms > Events.ProfilerThreshold, bytes > Events.AllocationThreshold)
             {
-                case (true, false):
+                case (true, true, true):
+                    triggerPrefix = "[GC] [CPU]/[MEMORY]";
+                    break;
+
+                case (true, true, false):
+                    triggerPrefix = "[GC] [CPU]";
+                    break;
+
+                case (true, false, true):
+                    triggerPrefix = "[GC] [MEMORY]";
+                    break;
+
+                case (true, false, false):
+                    triggerPrefix = "[GC]";
+                    break;
+
+                case (false, true, true):
+                    triggerPrefix = "[CPU]/[MEMORY]";
+                    break;
+
+                case (false, true, false):
                     triggerPrefix = "[CPU]";
                     break;
 
-                case (false, true):
+                case (false, false, true):
                     triggerPrefix = "[MEMORY]";
-                    break;
-
-                case (true, true):
-                    triggerPrefix = "[CPU]/[MEMORY]";
                     break;
             }
 
