@@ -193,6 +193,11 @@ namespace Exiled.API.Features.Toys
         public double TotalDuration => source?.TotalDuration ?? 0.0;
 
         /// <summary>
+        /// Gets the path to the last audio file played on this speaker.
+        /// </summary>
+        public string LastTrack { get; private set; }
+
+        /// <summary>
         /// Gets or sets the playback pitch.
         /// </summary>
         /// <value>
@@ -358,6 +363,7 @@ namespace Exiled.API.Features.Toys
             Stop();
 
             Loop = loop;
+            LastTrack = path;
             DestroyAfter = destroyAfter;
             source = stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
