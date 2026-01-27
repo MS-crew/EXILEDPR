@@ -209,7 +209,7 @@ namespace Exiled.API.Features
         /// <returns><c>true</c> if the RoundSummary singleton was found and the RPC was sent; otherwise, <c>false</c>.</returns>
         public static bool ShowRoundSummary(RoundSummary.SumInfo_ClassList initialStats, RoundSummary.SumInfo_ClassList finalStats, RoundSummary.LeadingTeam leadingTeam, int escapedClassDCount, int escapedScientistCount, int totalScpKills, int nextRoundTime, int totalRoundDuration)
         {
-            if (RoundSummary.singleton == null)
+            if (!RoundSummary._singletonSet)
                 return false;
 
             RoundSummary.singleton.RpcShowRoundSummary(initialStats, finalStats, leadingTeam, escapedClassDCount, escapedScientistCount, totalScpKills, nextRoundTime, totalRoundDuration);
@@ -235,7 +235,7 @@ namespace Exiled.API.Features
         /// <returns><c>true</c> if the RoundSummary singleton is active; otherwise, <c>false</c>.</returns>
         public static bool DimScreens()
         {
-            if (RoundSummary.singleton == null)
+            if (!RoundSummary._singletonSet)
                 return false;
 
             RoundSummary.singleton.RpcDimScreen();
@@ -248,7 +248,7 @@ namespace Exiled.API.Features
         /// <returns><c>true</c> if the RoundSummary singleton is active; otherwise, <c>false</c>.</returns>
         public static bool UndimScreens()
         {
-            if (RoundSummary.singleton == null)
+            if (!RoundSummary._singletonSet)
                 return false;
 
             RoundSummary.singleton.RpcUndimScreen();
