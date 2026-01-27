@@ -110,5 +110,23 @@ namespace Exiled.Events
         /// </summary>
         [Description("Whether to log RA commands.")]
         public bool LogRaCommands { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the Event Profiler is enabled.
+        /// </summary>
+        [Description("Indicates whether to enable the event profiler. This detects and logs plugins that cause lag by taking too long to handle events.")]
+        public bool EnableEventProfiler { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the threshold in milliseconds for the Event Profiler.
+        /// </summary>
+        [Description("The threshold in milliseconds. If a plugin takes longer than this to handle an event, a warning will be logged.")]
+        public double EventProfilerThreshold { get; set; } = 16.6;
+
+        /// <summary>
+        /// Gets or sets the allocation threshold in bytes.
+        /// </summary>
+        [Description("If a plugin allocates more memory than this (bytes) in a single event, it will be logged. Default: 16KB")]
+        public long EventProfilerAllocationThreshold { get; set; } = 16384;
     }
 }
