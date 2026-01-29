@@ -48,7 +48,6 @@ namespace Exiled.Events
         public override void OnEnabled()
         {
             instance = this;
-
             base.OnEnabled();
 
             Stopwatch watch = Stopwatch.StartNew();
