@@ -115,12 +115,12 @@ namespace Exiled.Events
         /// Gets or sets a value indicating whether the Event Profiler is enabled.
         /// </summary>
         [Description("Indicates whether to enable the event profiler. This detects and logs plugins that cause lag by taking too long to handle events.")]
-        public bool EnableEventProfiler { get; set; } = false;
+        public bool EventProfiler { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the threshold in milliseconds for the Event Profiler.
         /// </summary>
-        [Description("The threshold in milliseconds. If a plugin takes longer than this to handle an event, a warning will be logged.")]
+        [Description("The threshold in milliseconds. If a plugin takes longer than this to handle an event, a warning will be logged.(For 60 fps 1 frame time is 16.6 ms)")]
         public double EventProfilerThreshold { get; set; } = 16.6;
 
         /// <summary>

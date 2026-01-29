@@ -236,17 +236,6 @@ namespace Exiled.Events.Features
 
             for (int i = 0; i < count; i++)
             {
-                long startTick = 0;
-                long startBytes = 0;
-                int startGcCount = 0;
-
-                if (Events.IsProfilerEnabled)
-                {
-                    startTick = Stopwatch.GetTimestamp();
-                    startBytes = GC.GetTotalMemory(false);
-                    startGcCount = GC.CollectionCount(0);
-                }
-
                 if (eventIndex < innerEvent.Length && (asyncEventIndex >= innerAsyncEvent.Length || innerEvent[eventIndex].priority >= innerAsyncEvent[asyncEventIndex].priority))
                 {
                     try
@@ -256,18 +245,6 @@ namespace Exiled.Events.Features
                     catch (Exception ex)
                     {
                         Log.Error($"Method \"{innerEvent[eventIndex].handler.Method.Name}\" of the class \"{innerEvent[eventIndex].handler.Method.ReflectedType.FullName}\" caused an exception when handling the event \"{GetType().FullName}\"\n{ex}");
-                    }
-
-                    if (Events.IsProfilerEnabled)
-                    {
-                        double elapsedMs = (Stopwatch.GetTimestamp() - startTick) * 1000.0 / Stopwatch.Frequency;
-                        long allocatedBytes = GC.GetTotalMemory(false) - startBytes;
-                        bool gcRan = GC.CollectionCount(0) > startGcCount;
-
-                        if (elapsedMs > Events.ProfilerThreshold || allocatedBytes > Events.AllocationThreshold)
-                        {
-                            LogWarning(innerEvent[eventIndex].handler, elapsedMs, allocatedBytes, gcRan);
-                        }
                     }
 
                     eventIndex++;
@@ -294,17 +271,6 @@ namespace Exiled.Events.Features
             Registration[] innerEvent = this.innerEvent.ToArray();
             foreach (Registration registration in innerEvent)
             {
-                long startTick = 0;
-                long startBytes = 0;
-                int startGcCount = 0;
-
-                if (Events.IsProfilerEnabled)
-                {
-                    startTick = Stopwatch.GetTimestamp();
-                    startBytes = GC.GetTotalMemory(false);
-                    startGcCount = GC.CollectionCount(0);
-                }
-
                 try
                 {
                     registration.handler(arg);
@@ -312,18 +278,6 @@ namespace Exiled.Events.Features
                 catch (Exception ex)
                 {
                     Log.Error($"Method \"{registration.handler.Method.Name}\" of the class \"{registration.handler.Method.ReflectedType.FullName}\" caused an exception when handling the event \"{GetType().FullName}\"\n{ex}");
-                }
-
-                if (Events.IsProfilerEnabled)
-                {
-                    double elapsedMs = (Stopwatch.GetTimestamp() - startTick) * 1000.0 / Stopwatch.Frequency;
-                    long allocatedBytes = GC.GetTotalMemory(false) - startBytes;
-                    bool gcRan = GC.CollectionCount(0) > startGcCount;
-
-                    if (elapsedMs > Events.ProfilerThreshold || allocatedBytes > Events.AllocationThreshold)
-                    {
-                        LogWarning(registration.handler, elapsedMs, allocatedBytes, gcRan);
-                    }
                 }
             }
         }
@@ -343,61 +297,6 @@ namespace Exiled.Events.Features
                     Log.Error($"Method \"{registration.handler.Method.Name}\" of the class \"{registration.handler.Method.ReflectedType.FullName}\" caused an exception when handling the event \"{GetType().FullName}\"\n{ex}");
                 }
             }
-        }
-
-        private static void LogWarning(Delegate handler, double ms, long bytes, bool gcRan)
-        {
-            MethodInfo method = handler.Method;
-            Type targetType = handler.Target?.GetType() ?? method.DeclaringType;
-
-            string pluginName = targetType?.Assembly.GetName().Name;
-            string className = targetType?.Name;
-            string eventName = typeof(T).Name.Replace("EventArgs", string.Empty);
-
-            if (bytes < 0)
-                bytes = 0;
-
-            string[] sizes = { "B", "KB", "MB", "GB" };
-            int order = 0;
-            double len = bytes;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-
-            string ramResult = $"{len:0.##} {sizes[order]}";
-
-            string triggerPrefix = string.Empty;
-
-            switch (gcRan, ms > Events.ProfilerThreshold, bytes > Events.AllocationThreshold)
-            {
-                case (true, true, true):
-                    triggerPrefix = "[GC] [CPU]/[MEMORY]";
-                    break;
-
-                case (true, true, false):
-                    triggerPrefix = "[GC] [CPU]";
-                    break;
-
-                case (true, false, true):
-                    triggerPrefix = "[GC] [MEMORY]";
-                    break;
-
-                case (false, true, true):
-                    triggerPrefix = "[CPU]/[MEMORY]";
-                    break;
-
-                case (false, true, false):
-                    triggerPrefix = "[CPU]";
-                    break;
-
-                case (false, false, true):
-                    triggerPrefix = "[MEMORY]";
-                    break;
-            }
-
-            Log.Warn($"[Event Profiler] {triggerPrefix} '{eventName}' | Time: {ms:F2}ms | RAM: {ramResult} | Plugin: {pluginName} | Class: {className} | Method: {method.Name}");
         }
     }
 }

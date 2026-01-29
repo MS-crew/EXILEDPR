@@ -15,7 +15,6 @@ namespace Exiled.Events
     using CentralAuth;
     using Exiled.API.Features.Core.UserSettings;
     using Exiled.Events.Features;
-    using HarmonyLib;
     using InventorySystem.Items.Pickups;
     using InventorySystem.Items.Usables;
     using PlayerRoles.Ragdolls;
@@ -30,23 +29,6 @@ namespace Exiled.Events
     /// </summary>
     public sealed class Events : Plugin<Config>
     {
-#pragma warning disable SA1401
-        /// <summary>
-        /// Indicates whether the event profiler is enabled.
-        /// </summary>
-        internal static bool IsProfilerEnabled;
-
-        /// <summary>
-        /// Execution time threshold (ms) for profiler warnings.
-        /// </summary>
-        internal static long AllocationThreshold;
-
-        /// <summary>
-        /// Allocation threshold (bytes) for profiler warnings.
-        /// </summary>
-        internal static double ProfilerThreshold;
-#pragma warning restore SA1401
-
         private static Events instance;
 
         /// <summary>
@@ -66,10 +48,6 @@ namespace Exiled.Events
         public override void OnEnabled()
         {
             instance = this;
-
-            IsProfilerEnabled = Config.EnableEventProfiler;
-            ProfilerThreshold = Config.EventProfilerThreshold;
-            AllocationThreshold = Config.EventProfilerAllocationThreshold;
 
             base.OnEnabled();
 
@@ -126,8 +104,6 @@ namespace Exiled.Events
         /// <inheritdoc/>
         public override void OnDisabled()
         {
-            IsProfilerEnabled = false;
-
             base.OnDisabled();
 
             Unpatch();
