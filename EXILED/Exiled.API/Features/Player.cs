@@ -2767,7 +2767,7 @@ namespace Exiled.API.Features
                 return AddItem(itemType.GetFirearmType(), null);
             }
 
-            Item item = Item.Create(itemType);
+            Item item = Item.Create(itemType, this);
 
             AddItem(item);
 
@@ -2775,7 +2775,7 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Adds an firearm of the specified type with default durability(ammo/charge) and no mods to the player's inventory.
+        /// Adds a firearm of the specified type with default durability(ammo/charge) and no mods to the player's inventory.
         /// </summary>
         /// <param name="firearmType">The firearm to be added.</param>
         /// <param name="identifiers">The attachments to be added to the item.</param>
@@ -2790,16 +2790,6 @@ namespace Exiled.API.Features
                     firearm.AddAttachment(identifiers);
                 else if (Preferences is not null && Preferences.TryGetValue(firearmType, out AttachmentIdentifier[] attachments))
                     firearm.Base.ApplyAttachmentsCode(attachments.GetAttachmentsCode(), true);
-
-                // TODO Not finish
-                /*
-                FirearmStatusFlags flags = FirearmStatusFlags.MagazineInserted;
-
-                if (firearm.Attachments.Any(a => a.Name == AttachmentName.Flashlight))
-                    flags |= FirearmStatusFlags.FlashlightEnabled;
-
-                firearm.Base.Status = new FirearmStatus(firearm.MaxAmmo, flags, firearm.Base.GetCurrentAttachmentsCode());
-                */
             }
 
             AddItem(item);
@@ -3125,14 +3115,10 @@ namespace Exiled.API.Features
         /// <returns>The <see cref="Throwable"/> item that was spawned.</returns>
         public Throwable ThrowGrenade(ProjectileType type, bool fullForce = true)
         {
-            Throwable throwable = type switch
-            {
-                ProjectileType.Flashbang => new FlashGrenade(),
-                ProjectileType.Scp2176 => new Scp2176(),
-                _ => new ExplosiveGrenade(type.GetItemType()),
-            };
+            Throwable throwable = Item.Create<Throwable>(type.GetItemType(), this);
 
             ThrowItem(throwable, fullForce);
+            throwable.Destroy();
             return throwable;
         }
 
