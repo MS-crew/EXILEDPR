@@ -35,11 +35,13 @@ namespace Exiled.Events.Patches.Events.Player
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
+            List<Label> logicLabels;
             Label continueLabel = generator.DefineLabel();
 
             int offset = -4;
             int index = newInstructions.FindIndex(i => i.opcode == OpCodes.Newobj && (ConstructorInfo)i.operand == GetDeclaredConstructors(typeof(LabApi.Events.Arguments.PlayerEvents.PlayerPickingUpItemEventArgs))[0]) + offset;
 
+            logicLabels = newInstructions[index].ExtractLabels();
             newInstructions[index].WithLabels(continueLabel);
 
             newInstructions.InsertRange(
@@ -47,7 +49,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new[]
                 {
                     // this.Hub
-                    new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
+                    new CodeInstruction(OpCodes.Ldarg_0).WithLabels(logicLabels),
                     new(OpCodes.Callvirt, PropertyGetter(typeof(Scp244SearchCompletor), nameof(Scp244SearchCompletor.Hub))),
 
                     // scp244DeployablePickup
