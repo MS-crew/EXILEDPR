@@ -92,8 +92,6 @@ namespace Exiled.Events
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon += Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon += Handlers.Player.OnUnloadingWeapon;
-            LabApi.Events.Handlers.PlayerEvents.SendingVoiceMessage += Handlers.Player.OnVoiceChatting;
-            LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage += Handlers.Player.OnReceivingVoiceMessage;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -137,8 +135,6 @@ namespace Exiled.Events
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon -= Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon -= Handlers.Player.OnUnloadingWeapon;
-            LabApi.Events.Handlers.PlayerEvents.SendingVoiceMessage -= Handlers.Player.OnVoiceChatting;
-            LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage -= Handlers.Player.OnReceivingVoiceMessage;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;

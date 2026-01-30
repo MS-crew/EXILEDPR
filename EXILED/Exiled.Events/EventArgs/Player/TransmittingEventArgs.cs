@@ -28,16 +28,14 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="voiceMessage">
         /// <inheritdoc cref="VoiceMessage" />
         /// </param>
-        /// <param name="isAllowed">
-        /// <inheritdoc cref="IsAllowed" />
+        /// <param name="voiceModule">
+        /// <inheritdoc cref="VoiceModule" />
         /// </param>
-        public TransmittingEventArgs(Player player, VoiceMessage voiceMessage, bool isAllowed)
+        public TransmittingEventArgs(Player player, VoiceMessage voiceMessage, VoiceModuleBase voiceModule)
         {
             Player = player;
             VoiceMessage = voiceMessage;
-            if (player.Role is IVoiceRole voiceRole)
-                VoiceModule = voiceRole.VoiceModule;
-            IsAllowed = isAllowed;
+            VoiceModule = voiceModule;
         }
 
         /// <summary>
@@ -58,6 +56,6 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the player can transmit.
         /// </summary>
-        public bool IsAllowed { get; set; }
+        public bool IsAllowed { get; set; } = true;
     }
 }
