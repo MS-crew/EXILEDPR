@@ -66,11 +66,11 @@ namespace Exiled.Events.Patches.Events.Player
                     new(OpCodes.Brtrue_S, continueLabel),
 
                     new(OpCodes.Ldarg_0),
-                    new(OpCodes.Ldfld, Field(typeof(ArmorSearchCompletor), nameof(ArmorSearchCompletor.TargetPickup))),
+                    new(OpCodes.Ldfld, Field(typeof(AmmoSearchCompletor), nameof(AmmoSearchCompletor.TargetPickup))),
 
                     // this.Hub
                     new(OpCodes.Ldarg_0),
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(ArmorSearchCompletor), nameof(ArmorSearchCompletor.Hub))),
+                    new(OpCodes.Callvirt, PropertyGetter(typeof(AmmoSearchCompletor), nameof(AmmoSearchCompletor.Hub))),
 
                     new(OpCodes.Callvirt, Method(typeof(ItemPickupBase), nameof(ItemPickupBase.ServerHandleAbort))),
                     new(OpCodes.Ret),
