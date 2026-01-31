@@ -140,7 +140,7 @@ namespace Exiled.Events.Patches.Events.Player
 
     /// <summary>
     /// Patches <see cref="VoiceTransceiver.ServerReceiveMessage(NetworkConnection, VoiceMessage)"/>.
-    /// Adds the <see cref="Handlers.Player.ReceivingEffect"/> event.
+    /// Adds the <see cref="Handlers.Player.ReceivingVoiceMessage"/> event.
     /// </summary>
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.ReceivingVoiceMessage))]
     [HarmonyPatch(typeof(VoiceTransceiver), nameof(VoiceTransceiver.ServerReceiveMessage))]
@@ -154,7 +154,7 @@ namespace Exiled.Events.Patches.Events.Player
             Label skipHub = generator.DefineLabel();
             Label skipLabel = generator.DefineLabel();
 
-            LocalBuilder ev = generator.DeclareLocal(typeof(TransmittingEventArgs));
+            LocalBuilder ev = generator.DeclareLocal(typeof(ReceivingVoiceMessageEventArgs));
 
             int offset = -2;
             int index = newInstructions.FindIndex(i => i.opcode == OpCodes.Newobj && (ConstructorInfo)i.operand == GetDeclaredConstructors(typeof(LabApi.Events.Arguments.PlayerEvents.PlayerReceivingVoiceMessageEventArgs))[0]) + offset;
