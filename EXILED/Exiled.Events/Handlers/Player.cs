@@ -1060,7 +1060,7 @@ namespace Exiled.Events.Handlers
         /// Invoked before a <see cref="API.Features.Player"/> receiving a voice message.
         /// </summary>
         /// <param name="ev">The <see cref="ReceivingVoiceMessageEventArgs"/> instance.</param>
-        public static void OnReceivingVoiceMessage(ReceivingVoiceMessageEventArgs ev) => ReceivingVoiceMessage.InvokeNormal(ev);
+        public static void OnReceivingVoiceMessage(ReceivingVoiceMessageEventArgs ev) => ReceivingVoiceMessage.InvokeSafely(ev);
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> makes noise.

@@ -151,20 +151,18 @@ namespace Exiled.Events.Patches.Events.Player
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
-            Label evNull = generator.DefineLabel();
             Label skipHub = generator.DefineLabel();
+            Label skipLabel = generator.DefineLabel();
 
-            LocalBuilder ev = generator.DeclareLocal(typeof(ReceivingVoiceMessageEventArgs));
+            LocalBuilder ev = generator.DeclareLocal(typeof(TransmittingEventArgs));
 
             int offset = -2;
             int index = newInstructions.FindIndex(i => i.opcode == OpCodes.Newobj && (ConstructorInfo)i.operand == GetDeclaredConstructors(typeof(LabApi.Events.Arguments.PlayerEvents.PlayerReceivingVoiceMessageEventArgs))[0]) + offset;
 
+            newInstructions[index].labels.Add(skipLabel);
+
             newInstructions.InsertRange(index, new CodeInstruction[]
             {
-                // ev = null;
-                new(OpCodes.Ldnull),
-                new(OpCodes.Stloc_S, ev.LocalIndex),
-
                 // Player.Get(hub);
                 new(OpCodes.Ldloc_S, 4),
                 new(OpCodes.Call, Method(typeof(API.Features.Player), nameof(API.Features.Player.Get), new[] { typeof(ReferenceHub) })),
@@ -182,7 +180,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldarg_1),
 
                 // ReceivingVoiceMessageEventArgs ev = new(Player receiver, Player sender, VoiceModuleBase, VoiceMessage);
-                new(OpCodes.Call, Method(typeof(ReceivingVoiceMessageEventArgs), nameof(ReceivingVoiceMessageEventArgs.Rent))),
+                new(OpCodes.Newobj, GetDeclaredConstructors(typeof(ReceivingVoiceMessageEventArgs))[0]),
                 new(OpCodes.Dup),
                 new(OpCodes.Dup),
                 new(OpCodes.Stloc_S, ev.LocalIndex),
@@ -204,21 +202,7 @@ namespace Exiled.Events.Patches.Events.Player
             offset = 1;
             index = newInstructions.FindIndex(i => i.opcode == OpCodes.Callvirt && i.operand is MethodInfo mi && mi.Name == nameof(NetworkConnection.Send) && mi.IsGenericMethod) + offset;
 
-            List<Label> moveNextLabels = newInstructions[index].ExtractLabels();
-            moveNextLabels.Add(skipHub);
-
-            newInstructions[index].labels.Add(evNull);
-
-            newInstructions.InsertRange(index, new CodeInstruction[]
-            {
-                // if (ev != null)
-                //  ev.Return();
-                new CodeInstruction(OpCodes.Ldloc_S, ev.LocalIndex).WithLabels(moveNextLabels),
-                new(OpCodes.Brfalse_S, evNull),
-
-                new(OpCodes.Ldloc_S, ev.LocalIndex),
-                new(OpCodes.Callvirt, Method(typeof(ReceivingVoiceMessageEventArgs), nameof(ReceivingVoiceMessageEventArgs.Return))),
-            });
+            newInstructions[index].labels.Add(skipHub);
 
             for (int z = 0; z < newInstructions.Count; z++)
                 yield return newInstructions[z];
