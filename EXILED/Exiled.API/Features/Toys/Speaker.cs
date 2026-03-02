@@ -298,36 +298,14 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.
         /// </summary>
-        /// <param name="position">The position of the <see cref="Speaker"/>.</param>
-        /// <param name="rotation">The rotation of the <see cref="Speaker"/>.</param>
-        /// <param name="scale">The scale of the <see cref="Speaker"/>.</param>
-        /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
-        /// <returns>The new <see cref="Speaker"/>.</returns>
-        [Obsolete("Use the Create(parent, position, scale, controllerId, spawn, worldPositonStays) method, rotation is useless.")]
-        public static Speaker Create(Vector3? position, Vector3? rotation, Vector3? scale, bool spawn) => Create(parent: null, position: position, scale: scale, controllerId: null, spawn: spawn, worldPositionStays: true);
-
-        /// <summary>
-        /// Creates a new <see cref="Speaker"/>.
-        /// </summary>
-        /// <param name="transform">The transform to create this <see cref="Speaker"/> on.</param>
-        /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
-        /// <param name="worldPositionStays">Whether the <see cref="Speaker"/> should keep the same world position.</param>
-        /// <returns>The new <see cref="Speaker"/>.</returns>
-        public static Speaker Create(Transform transform, bool spawn, bool worldPositionStays = true) => Create(parent: transform, position: Vector3.zero, scale: transform.localScale.normalized, controllerId: null, spawn: spawn, worldPositionStays: worldPositionStays);
-
-        /// <summary>
-        /// Creates a new <see cref="Speaker"/>.
-        /// </summary>
         /// <param name="parent">The parent transform to attach the <see cref="Speaker"/> to.</param>
         /// <param name="position">The local position of the <see cref="Speaker"/>.</param>
-        /// <param name="scale">The scale of the <see cref="Speaker"/>.</param>
         /// <param name="controllerId">The specific controller ID to assign. If null, the next available ID is used.</param>
         /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
-        /// <param name="worldPositionStays">Whether the <see cref="Speaker"/> should keep the same world position when parented.</param>
         /// <returns>The new <see cref="Speaker"/>.</returns>
-        public static Speaker Create(Transform parent = null, Vector3? position = null, Vector3? scale = null, byte? controllerId = null, bool spawn = true, bool worldPositionStays = true)
+        public static Speaker Create(Transform parent = null, Vector3? position = null, byte? controllerId = null, bool spawn = true)
         {
-            Speaker speaker = new(Object.Instantiate(Prefab, parent, worldPositionStays))
+            Speaker speaker = new(Object.Instantiate(Prefab, parent))
             {
                  Scale = scale ?? Vector3.one,
                  ControllerId = controllerId ?? GetNextFreeControllerId(),
@@ -408,17 +386,6 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Plays audio through this speaker.
-        /// </summary>
-        /// <param name="message">An <see cref="AudioMessage"/> instance.</param>
-        /// <param name="targets">Targets who will hear the audio. If <c>null</c>, audio will be sent to all players.</param>
-        public static void Play(AudioMessage message, IEnumerable<Player> targets = null)
-        {
-            foreach (Player target in targets ?? Player.List)
-                target.Connection.Send(message);
-        }
-
-        /// <summary>
         /// Rents a speaker from the pool, plays a wav file one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
@@ -467,14 +434,6 @@ namespace Exiled.API.Features.Toys
 
             return speaker;
         }
-
-        /// <summary>
-        /// Plays audio through this speaker.
-        /// </summary>
-        /// <param name="samples">Audio samples.</param>
-        /// <param name="length">The length of the samples array.</param>
-        /// <param name="targets">Targets who will hear the audio. If <c>null</c>, audio will be sent to all players.</param>
-        public void Play(byte[] samples, int? length = null, IEnumerable<Player> targets = null) => Play(new AudioMessage(ControllerId, samples, length ?? samples.Length), targets);
 
         /// <summary>
         /// Plays a wav file through this speaker.(File must be 16 bit, mono and 48khz.)
