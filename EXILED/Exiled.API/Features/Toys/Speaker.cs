@@ -502,7 +502,7 @@ namespace Exiled.API.Features.Toys
             IsStatic = true;
 
             Transform.SetParent(null);
-            Position = Vector3.one * 999;
+            Position = Vector3.down * 9999;
 
             Loop = false;
             DestroyAfter = false;
