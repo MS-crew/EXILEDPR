@@ -536,8 +536,8 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// blabalbla.
-        /// </summary>
+        /// Stops the current playback, resets all properties of the <see cref="Speaker"/>, and returns the instance to the object pool for future reuse.
+        /// </summary> 
         public void ReturnToPool()
         {
             Stop();
