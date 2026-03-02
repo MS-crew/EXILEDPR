@@ -16,7 +16,6 @@ namespace Exiled.API.Features.Toys
     using Enums;
 
     using Exiled.API.Features.Audio;
-    using Exiled.API.Features.Pools;
 
     using Interfaces;
 
@@ -128,6 +127,11 @@ namespace Exiled.API.Features.Toys
         public bool DestroyAfter { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the speaker should return to the pool after playback finishes.
+        /// </summary>
+        public bool ReturnToPoolAfter { get; set; }
+
+        /// <summary>
         /// Gets or sets the play mode for this speaker, determining how audio is sent to players.
         /// </summary>
         public SpeakerPlayMode PlayMode { get; set; }
@@ -187,12 +191,12 @@ namespace Exiled.API.Features.Toys
             get => source?.CurrentTime ?? 0.0;
             set
             {
-                if (source != null)
-                {
-                    source.CurrentTime = value;
-                    resampleTime = 0.0;
-                    resampleBufferFilled = 0;
-                }
+                if (source == null)
+                    return;
+
+                source.CurrentTime = value;
+                resampleTime = 0.0;
+                resampleBufferFilled = 0;
             }
         }
 
@@ -291,11 +295,6 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the speaker should return to the pool after playback finishes.
-        /// </summary>
-        public bool ReturnToPoolAfter { get; set; }
-
-        /// <summary>
         /// Creates a new <see cref="Speaker"/>.
         /// </summary>
         /// <param name="parent">The parent transform to attach the <see cref="Speaker"/> to.</param>
@@ -356,35 +355,6 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Gets the next available controller ID for a <see cref="Speaker"/>.
-        /// </summary>
-        /// <returns>The next available byte ID. If all IDs are currently in use, returns a default of 0.</returns>
-        public static byte GetNextFreeControllerId()
-        {
-            byte id = 0;
-            HashSet<byte> usedIds = NorthwoodLib.Pools.HashSetPool<byte>.Shared.Rent(256);
-
-            foreach (SpeakerToyPlaybackBase playbackBase in SpeakerToyPlaybackBase.AllInstances)
-            {
-                usedIds.Add(playbackBase.ControllerId);
-            }
-
-            if (usedIds.Count >= byte.MaxValue + 1)
-            {
-                NorthwoodLib.Pools.HashSetPool<byte>.Shared.Return(usedIds);
-                return 0;
-            }
-
-            while (usedIds.Contains(id))
-            {
-                id++;
-            }
-
-            NorthwoodLib.Pools.HashSetPool<byte>.Shared.Return(usedIds);
-            return id;
-        }
-
-        /// <summary>
         /// Rents a speaker from the pool, plays a wav file one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
@@ -432,6 +402,35 @@ namespace Exiled.API.Features.Toys
             }
 
             return speaker;
+        }
+
+        /// <summary>
+        /// Gets the next available controller ID for a <see cref="Speaker"/>.
+        /// </summary>
+        /// <returns>The next available byte ID. If all IDs are currently in use, returns a default of 0.</returns>
+        public static byte GetNextFreeControllerId()
+        {
+            byte id = 0;
+            HashSet<byte> usedIds = HashSetPool<byte>.Shared.Rent(256);
+
+            foreach (SpeakerToyPlaybackBase playbackBase in SpeakerToyPlaybackBase.AllInstances)
+            {
+                usedIds.Add(playbackBase.ControllerId);
+            }
+
+            if (usedIds.Count >= byte.MaxValue + 1)
+            {
+                HashSetPool<byte>.Shared.Return(usedIds);
+                return 0;
+            }
+
+            while (usedIds.Contains(id))
+            {
+                id++;
+            }
+
+            HashSetPool<byte>.Shared.Return(usedIds);
+            return id;
         }
 
         /// <summary>
@@ -602,6 +601,51 @@ namespace Exiled.API.Features.Toys
             }
         }
 
+        private void SendPacket(int len)
+        {
+            AudioMessage msg = new(ControllerId, encoded, len);
+
+            switch (PlayMode)
+            {
+                case SpeakerPlayMode.Global:
+                    NetworkServer.SendToReady(msg, Channel);
+                    break;
+
+                case SpeakerPlayMode.Player:
+                    TargetPlayer?.Connection.Send(msg, Channel);
+                    break;
+
+                case SpeakerPlayMode.PlayerList:
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(msg, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
+
+                        foreach (Player ply in TargetPlayers)
+                        {
+                            ply?.Connection.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+
+                case SpeakerPlayMode.Predicate:
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(msg, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
+
+                        foreach (Player ply in Player.List)
+                        {
+                            if (Predicate(ply))
+                                ply.Connection.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+            }
+        }
+
         private void ResampleFrame()
         {
             int requiredSize = (int)(FrameSize * Mathf.Abs(Pitch) * 2) + 10;
@@ -669,51 +713,6 @@ namespace Exiled.API.Features.Toys
                 frame[outputIdx++] = (float)(sample1 + ((sample2 - sample1) * frac));
 
                 resampleTime += Pitch;
-            }
-        }
-
-        private void SendPacket(int len)
-        {
-            AudioMessage msg = new(ControllerId, encoded, len);
-
-            switch (PlayMode)
-            {
-                case SpeakerPlayMode.Global:
-                    NetworkServer.SendToReady(msg, Channel);
-                    break;
-
-                case SpeakerPlayMode.Player:
-                    TargetPlayer?.Connection.Send(msg, Channel);
-                    break;
-
-                case SpeakerPlayMode.PlayerList:
-                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
-                    {
-                        NetworkMessages.Pack(msg, writer);
-                        ArraySegment<byte> segment = writer.ToArraySegment();
-
-                        foreach (Player ply in TargetPlayers)
-                        {
-                            ply?.Connection.Send(segment, Channel);
-                        }
-                    }
-
-                    break;
-
-                case SpeakerPlayMode.Predicate:
-                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
-                    {
-                        NetworkMessages.Pack(msg, writer);
-                        ArraySegment<byte> segment = writer.ToArraySegment();
-
-                        foreach (Player ply in Player.List)
-                        {
-                            if (Predicate(ply))
-                                ply.Connection.Send(segment, Channel);
-                        }
-                    }
-
-                    break;
             }
         }
 
