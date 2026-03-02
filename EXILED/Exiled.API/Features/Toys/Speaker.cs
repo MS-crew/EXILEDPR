@@ -307,7 +307,6 @@ namespace Exiled.API.Features.Toys
         {
             Speaker speaker = new(Object.Instantiate(Prefab, parent))
             {
-                 Scale = scale ?? Vector3.one,
                  ControllerId = controllerId ?? GetNextFreeControllerId(),
             };
 
@@ -496,7 +495,7 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Stops the current playback, resets all properties of the <see cref="Speaker"/>, and returns the instance to the object pool for future reuse.
-        /// </summary> 
+        /// </summary>
         public void ReturnToPool()
         {
             Stop();
