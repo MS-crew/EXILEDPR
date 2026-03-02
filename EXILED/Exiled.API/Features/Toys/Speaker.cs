@@ -425,7 +425,7 @@ namespace Exiled.API.Features.Toys
 
             speaker.ReturnToPoolAfter = true;
 
-            if (!speaker.Play(path, stream: stream))
+            if (!speaker.Play(path, stream))
             {
                 speaker.ReturnToPool();
                 return null;
