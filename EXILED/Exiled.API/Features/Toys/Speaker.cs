@@ -469,8 +469,7 @@ namespace Exiled.API.Features.Toys
             }
             catch (Exception ex)
             {
-                string loadMode = stream ? "Stream" : "Preload";
-                Log.Error($"[Speaker] Failed to initialize audio source ({loadMode}) for file at path: '{path}'.\nException Details: {ex}");
+                Log.Error($"[Speaker] Failed to initialize audio source for file at path: '{path}'.\nException Details: {ex}");
                 return false;
             }
 
