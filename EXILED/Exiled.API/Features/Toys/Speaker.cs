@@ -343,10 +343,11 @@ namespace Exiled.API.Features.Toys
             }
             else
             {
+                speaker.IsStatic = false;
+
                 if (parent != null)
                     speaker.Transform.SetParent(parent);
 
-                speaker.Volume = 1f;
                 speaker.Transform.localPosition = position;
                 speaker.ControllerId = GetNextFreeControllerId();
             }
@@ -370,8 +371,8 @@ namespace Exiled.API.Features.Toys
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
-        /// <returns>The rented <see cref="Speaker"/> instance if playback started successfully; otherwise, <c>null</c>.</returns>
-        public static Speaker PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = true, float? volume = null, float? minDistance = null, float? maxDistance = null, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
+        /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = true, float? volume = null, float? minDistance = null, float? maxDistance = null, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
         {
             Speaker speaker = Rent(position, parent);
 
@@ -398,10 +399,10 @@ namespace Exiled.API.Features.Toys
             if (!speaker.Play(path, stream))
             {
                 speaker.ReturnToPool();
-                return null;
+                return false;
             }
 
-            return speaker;
+            return true;
         }
 
         /// <summary>
@@ -498,8 +499,10 @@ namespace Exiled.API.Features.Toys
         {
             Stop();
 
+            IsStatic = true;
+
             Transform.SetParent(null);
-            Transform.localPosition = Vector3.zero;
+            Position = Vector3.one * 999;
 
             Loop = false;
             DestroyAfter = false;
@@ -513,7 +516,7 @@ namespace Exiled.API.Features.Toys
             TargetPlayers = null;
 
             Pitch = 1f;
-            Volume = 0f;
+            Volume = 1f;
             IsSpatial = true;
 
             MinDistance = 1f;
