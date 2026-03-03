@@ -299,14 +299,22 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="parent">The parent transform to attach the <see cref="Speaker"/> to.</param>
         /// <param name="position">The local position of the <see cref="Speaker"/>.</param>
+        /// <param name="volume">The volume level of the audio source.</param>
+        /// <param name="isSpatial">Whether the audio source is spatialized (3D sound).</param>
+        /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
+        /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
         /// <param name="controllerId">The specific controller ID to assign. If null, the next available ID is used.</param>
         /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
         /// <returns>The new <see cref="Speaker"/>.</returns>
-        public static Speaker Create(Transform parent = null, Vector3? position = null, byte? controllerId = null, bool spawn = true)
+        public static Speaker Create(Transform parent = null, Vector3? position = null, float volume = 1f, bool isSpatial = true, float minDistance = 1f, float maxDistance = 15f, byte? controllerId = null, bool spawn = true)
         {
             Speaker speaker = new(Object.Instantiate(Prefab, parent))
             {
-                 ControllerId = controllerId ?? GetNextFreeControllerId(),
+                Volume = volume,
+                IsSpatial = isSpatial,
+                MinDistance = minDistance,
+                MaxDistance = maxDistance,
+                ControllerId = controllerId ?? GetNextFreeControllerId(),
             };
 
             speaker.Transform.localPosition = position ?? Vector3.zero;
