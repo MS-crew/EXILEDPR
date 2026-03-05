@@ -121,7 +121,7 @@ namespace Exiled.CustomItems.API.Features
                 int ammo = firearm.MagazineAmmo;
                 Log.Debug($"{nameof(Name)}.{nameof(Spawn)}: Spawning weapon with {ammo} ammo.");
                 Pickup? pickup = firearm.CreatePickup(position);
-                item.Destroy();
+
                 pickup.Scale = Scale;
 
                 if (previousOwner is not null)
