@@ -2678,6 +2678,12 @@ namespace Exiled.API.Features
         {
             int index = (int)category;
 
+            if (index < 0 || index >= ServerConfigSynchronizer.Singleton.CategoryLimits.Count)
+            {
+                Log.Error($"{nameof(Player)}.{nameof(SetCategoryLimit)}(ItemCategory, sbyte): Cannot set category limit for ItemCategory.{category}. Index out of bounds.");
+                return;
+            }
+
             CustomCategoryLimits[category] = limit;
 
             MirrorExtensions.SendFakeSyncObject(this, ServerConfigSynchronizer.Singleton.netIdentity, typeof(ServerConfigSynchronizer), writer =>
@@ -2697,6 +2703,12 @@ namespace Exiled.API.Features
         public void ResetCategoryLimit(ItemCategory category)
         {
             int index = (int)category;
+
+            if (index < 0 || index >= ServerConfigSynchronizer.Singleton.CategoryLimits.Count)
+            {
+                Log.Error($"{nameof(Player)}.{nameof(ResetCategoryLimit)}(ItemCategory, sbyte): Cannot reset category limit for ItemCategory.{category}. Index out of bounds.");
+                return;
+            }
 
             if (!HasCustomCategoryLimit(category))
                 return;
