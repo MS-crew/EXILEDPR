@@ -509,8 +509,25 @@ namespace Exiled.API.Features.Toys
 
             IsStatic = true;
 
-            Transform.SetParent(null);
+            if (Transform.parent != null)
+            {
+                Transform.SetParent(null);
+                Base.RpcChangeParent(0);
+            }
+
             Position = Vector3.down * 9999;
+
+            if (Volume != 1f)
+                Volume = 1f;
+
+            if (!IsSpatial)
+                IsSpatial = true;
+
+            if (MinDistance != 1f)
+                MinDistance = 1f;
+
+            if (MaxDistance != 15f)
+                MaxDistance = 15f;
 
             Loop = false;
             DestroyAfter = false;
@@ -524,12 +541,6 @@ namespace Exiled.API.Features.Toys
             TargetPlayers = null;
 
             Pitch = 1f;
-            Volume = 1f;
-            IsSpatial = true;
-
-            MinDistance = 1f;
-            MaxDistance = 15f;
-
             resampleTime = 0.0;
             resampleBufferFilled = 0;
             isPitchDefault = true;
