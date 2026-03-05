@@ -145,12 +145,8 @@ namespace Exiled.Events.Handlers.Internal
                 if (firearmType == FirearmType.None)
                     continue;
 
-                Item item = Item.Create(firearmType.GetItemType());
-                if (item is not Firearm firearm)
-                {
-                    item.Destroy();
+                if (Item.Create(firearmType.GetItemType()) is not Firearm firearm)
                     continue;
-                }
 
                 Firearm.ItemTypeToFirearmInstance[firearmType] = firearm;
 
@@ -176,7 +172,6 @@ namespace Exiled.Events.Handlers.Internal
 
                 ListPool<AttachmentIdentifier>.Pool.Return(attachmentIdentifiers);
                 HashSetPool<AttachmentSlot>.Pool.Return(attachmentsSlots);
-                item.Destroy();
             }
         }
     }
