@@ -509,7 +509,7 @@ namespace Exiled.API.Features.Toys
 
             IsStatic = true;
 
-            if (Transform.parent != null)
+            if (Transform.parent != null || AdminToyBase._clientParentId != 0)
             {
                 Transform.SetParent(null);
                 Base.RpcChangeParent(0);
