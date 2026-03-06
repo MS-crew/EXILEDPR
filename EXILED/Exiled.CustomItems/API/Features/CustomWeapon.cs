@@ -71,13 +71,12 @@ namespace Exiled.CustomItems.API.Features
         /// <inheritdoc />
         public override Pickup? Spawn(Vector3 position, Player? previousOwner = null)
         {
-            Item item = Item.Create(Type);
-            if (item is not Firearm firearm)
+            if (Type.IsWeapon(false))
             {
-                Log.Debug($"{nameof(Spawn)}: Item is not Firearm.");
-                item.Destroy();
+                Log.Warn($"{nameof(Spawn)}: Item is not Firearm.");
                 return null;
             }
+            Firearm firearm = Item.Create<Firearm>(Type);
 
             if (!Attachments.IsEmpty())
                 firearm.AddAttachment(Attachments);
