@@ -507,8 +507,6 @@ namespace Exiled.API.Features.Toys
         {
             Stop();
 
-            IsStatic = true;
-
             if (Transform.parent != null || AdminToyBase._clientParentId != 0)
             {
                 Transform.SetParent(null);
@@ -528,6 +526,8 @@ namespace Exiled.API.Features.Toys
 
             if (MaxDistance != 15f)
                 MaxDistance = 15f;
+
+            IsStatic = true;
 
             Loop = false;
             DestroyAfter = false;
