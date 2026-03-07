@@ -2329,10 +2329,10 @@ namespace Exiled.API.Features
             if (usableItem.GetTemplate() is not UsableItem)
                 return false;
 
-            Item item = Item.Create<Usable>(usableItem);
+            Item usable = Item.Create<Usable>(usableItem);
 
             UseItem(usable);
-            item.Destroy();
+            usable.Destroy();
             return true;
         }
 

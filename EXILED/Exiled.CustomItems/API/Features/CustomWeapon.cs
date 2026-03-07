@@ -76,6 +76,7 @@ namespace Exiled.CustomItems.API.Features
                 Log.Warn($"{nameof(Spawn)}: Item is not Firearm.");
                 return null;
             }
+
             Firearm firearm = Item.Create<Firearm>(Type);
 
             if (!Attachments.IsEmpty())
@@ -85,7 +86,7 @@ namespace Exiled.CustomItems.API.Features
                 firearm.MagazineAmmo = ClipSize;
 
             FirearmPickup? pickup = (FirearmPickup?)firearm.CreatePickup(position, spawn: false);
-            item.Destroy();
+            firearm.Destroy();
 
             if (pickup is null)
             {
