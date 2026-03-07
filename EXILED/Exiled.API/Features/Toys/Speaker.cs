@@ -46,8 +46,16 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         internal static readonly Queue<Speaker> Pool = new();
 
+        private const float DefaultVolume = 1f;
+        private const float DefaultMinDistance = 1f;
+        private const float DefaultMaxDistance = 15f;
+
+        private const bool DefaultSpatial = true;
+
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
+
+        private static readonly Vector3 SpeakerParkPosition = Vector3.down * 999;
 
         private float[] frame;
         private byte[] encoded;
@@ -387,13 +395,13 @@ namespace Exiled.API.Features.Toys
             if (!isSpatial)
                 speaker.IsSpatial = isSpatial;
 
-            if (volume.HasValue)
+            if (volume.HasValue && volume.Value != DefaultVolume)
                 speaker.Volume = volume.Value;
 
-            if (minDistance.HasValue)
+            if (minDistance.HasValue && minDistance.Value != DefaultMinDistance)
                 speaker.MinDistance = minDistance.Value;
 
-            if (maxDistance.HasValue)
+            if (maxDistance.HasValue && maxDistance.Value != DefaultMaxDistance)
                 speaker.MaxDistance = maxDistance.Value;
 
             speaker.Pitch = pitch;
@@ -513,19 +521,19 @@ namespace Exiled.API.Features.Toys
                 Base.RpcChangeParent(0);
             }
 
-            Position = Vector3.down * 9999;
+            Position = SpeakerParkPosition;
 
-            if (Volume != 1f)
-                Volume = 1f;
+            if (Volume != DefaultVolume)
+                Volume = DefaultVolume;
 
-            if (!IsSpatial)
-                IsSpatial = true;
+            if (IsSpatial != DefaultSpatial)
+                IsSpatial = DefaultSpatial;
 
-            if (MinDistance != 1f)
-                MinDistance = 1f;
+            if (MinDistance != DefaultMinDistance)
+                MinDistance = DefaultMinDistance;
 
-            if (MaxDistance != 15f)
-                MaxDistance = 15f;
+            if (MaxDistance != DefaultMaxDistance)
+                MaxDistance = DefaultMaxDistance;
 
             IsStatic = true;
 
