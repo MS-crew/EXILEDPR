@@ -50,6 +50,8 @@ namespace Exiled.API.Features.Toys
         private const float DefaultMinDistance = 1f;
         private const float DefaultMaxDistance = 15f;
 
+        private const byte DefaultControllerId = 0;
+
         private const bool DefaultSpatial = true;
 
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
@@ -444,8 +446,8 @@ namespace Exiled.API.Features.Toys
             if (usedIds.Count >= byte.MaxValue + 1)
             {
                 HashSetPool<byte>.Shared.Return(usedIds);
-                Log.Warn("[Speaker] All controller IDs are in use. Audio may conflict!");
-                return 0;
+                Log.Warn("[Speaker] All controller IDs are in use. Default Controll Id will be use, Audio may conflict!");
+                return DefaultControllerId;
             }
 
             while (usedIds.Contains(id))
