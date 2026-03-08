@@ -202,7 +202,7 @@ namespace Exiled.API.Features.Doors
         /// </summary>
         public bool AllowsScp106
         {
-            get => Base is IScp106PassableDoor door && door.IsScp106Passable;
+            get => Base is not IScp106PassableDoor door || door.IsScp106Passable;
             set => (Base as IScp106PassableDoor)?.IsScp106Passable = value;
         }
 
