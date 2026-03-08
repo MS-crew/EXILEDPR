@@ -544,6 +544,9 @@ namespace Exiled.API.Features.Toys
             if (MaxDistance != DefaultMaxDistance)
                 MaxDistance = DefaultMaxDistance;
 
+            if (ControllerId != DefaultControllerId)
+                ControllerId = DefaultControllerId;
+
             IsStatic = true;
 
             Loop = false;
