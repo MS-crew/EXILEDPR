@@ -322,7 +322,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="controllerId">The specific controller ID to assign. If null, the next available ID is used.</param>
         /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
         /// <returns>The new <see cref="Speaker"/>.</returns>
-        public static Speaker Create(Transform parent = null, Vector3? position = null, float volume = 1f, bool isSpatial = true, float minDistance = 1f, float maxDistance = 15f, byte? controllerId = null, bool spawn = true)
+        public static Speaker Create(Transform parent = null, Vector3? position = null, float volume = DefaultVolume, bool isSpatial = DefaultSpatial, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, byte? controllerId = null, bool spawn = true)
         {
             Speaker speaker = new(Object.Instantiate(Prefab, parent))
             {
