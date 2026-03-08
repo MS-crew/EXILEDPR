@@ -161,18 +161,9 @@ namespace Exiled.API.Features.Toys
         public Func<Player, bool> Predicate { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether gets is a sound playing on this speaker or not.
+        /// Gets a value indicating whether a sound is currently playing on this speaker.
         /// </summary>
-        public bool IsPlaying
-        {
-            get
-            {
-                if (playBackRoutine == null)
-                    return false;
-
-                return playBackRoutine.IsRunning && !IsPaused;
-            }
-        }
+        public bool IsPlaying => playBackRoutine.IsRunning && !IsPaused;
 
         /// <summary>
         /// Gets or sets a value indicating whether the playback is paused.
@@ -185,9 +176,6 @@ namespace Exiled.API.Features.Toys
             get => playBackRoutine.IsAliveAndPaused;
             set
             {
-                if (playBackRoutine == null)
-                    return;
-
                 if (!playBackRoutine.IsRunning)
                     return;
 
@@ -519,7 +507,7 @@ namespace Exiled.API.Features.Toys
         {
             if (playBackRoutine.IsRunning)
             {
-                Timing.KillCoroutines(playBackRoutine);
+                playBackRoutine.IsRunning = false;
                 OnPlaybackStopped?.Invoke();
             }
 
@@ -665,6 +653,10 @@ namespace Exiled.API.Features.Toys
                     break;
 
                 case SpeakerPlayMode.PlayerList:
+
+                    if (TargetPlayers is null)
+                        break;
+
                     using (NetworkWriterPooled writer = NetworkWriterPool.Get())
                     {
                         NetworkMessages.Pack(msg, writer);
@@ -679,6 +671,9 @@ namespace Exiled.API.Features.Toys
                     break;
 
                 case SpeakerPlayMode.Predicate:
+                    if (Predicate is null)
+                        break;
+
                     using (NetworkWriterPooled writer = NetworkWriterPool.Get())
                     {
                         NetworkMessages.Pack(msg, writer);
