@@ -31,7 +31,7 @@ namespace Exiled.Events.EventArgs.Player
             Handler = handler;
             HitboxType = hitboxType;
             DamageAmount = damageAmount;
-        }fuck you github
+        }
 
         /// <summary>
         /// Gets the player who is being saved.
