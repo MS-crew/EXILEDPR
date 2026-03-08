@@ -410,7 +410,7 @@ namespace Exiled.API.Features.Toys
         {
             Speaker speaker = Rent(position, parent);
 
-            if (!isSpatial)
+            if (isSpatial != DefaultSpatial)
                 speaker.IsSpatial = isSpatial;
 
             if (volume.HasValue && volume.Value != DefaultVolume)
