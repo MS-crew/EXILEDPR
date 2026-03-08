@@ -44,11 +44,6 @@ namespace Exiled.Events.EventArgs.Player
         public float DamageAmount { get; }
 
         /// <summary>
-        /// Gets or sets the multiplier for the damage that if event denied.
-        /// </summary>
-        public float DeniedDamageMultiplier { get; set; } = 1;
-
-        /// <summary>
         /// Gets or sets the health amount the player will have after being saved from death.
         /// </summary>
         public float DeathSaveHealth { get; set; } = AntiScp207.DeathSaveHealth;
