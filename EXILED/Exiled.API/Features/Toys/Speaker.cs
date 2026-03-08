@@ -163,7 +163,16 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets a value indicating whether gets is a sound playing on this speaker or not.
         /// </summary>
-        public bool IsPlaying => playBackRoutine.IsRunning && !IsPaused;
+        public bool IsPlaying
+        {
+            get
+            {
+                if (playBackRoutine == null)
+                    return false;
+
+                return playBackRoutine.IsRunning && !IsPaused;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the playback is paused.
@@ -176,6 +185,9 @@ namespace Exiled.API.Features.Toys
             get => playBackRoutine.IsAliveAndPaused;
             set
             {
+                if (playBackRoutine == null)
+                    return;
+
                 if (!playBackRoutine.IsRunning)
                     return;
 
@@ -213,6 +225,12 @@ namespace Exiled.API.Features.Toys
         /// Returns 0 if not playing.
         /// </summary>
         public double TotalDuration => source?.TotalDuration ?? 0.0;
+
+        /// <summary>
+        /// Gets the current playback progress as a value between 0.0 and 1.0.
+        /// Returns 0 if not playing.
+        /// </summary>
+        public float PlaybackProgress => TotalDuration > 0.0 ? (float)(CurrentTime / TotalDuration) : 0f;
 
         /// <summary>
         /// Gets the path to the last audio file played on this speaker.
@@ -428,7 +446,7 @@ namespace Exiled.API.Features.Toys
         public static byte GetNextFreeControllerId()
         {
             byte id = 0;
-            HashSet<byte> usedIds = HashSetPool<byte>.Shared.Rent(256);
+            HashSet<byte> usedIds = HashSetPool<byte>.Shared.Rent(byte.MaxValue + 1);
 
             foreach (SpeakerToyPlaybackBase playbackBase in SpeakerToyPlaybackBase.AllInstances)
             {
@@ -438,6 +456,7 @@ namespace Exiled.API.Features.Toys
             if (usedIds.Count >= byte.MaxValue + 1)
             {
                 HashSetPool<byte>.Shared.Return(usedIds);
+                Log.Warn("[Speaker] All controller IDs are in use. Audio may conflict!");
                 return 0;
             }
 
