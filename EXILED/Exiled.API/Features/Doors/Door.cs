@@ -651,6 +651,7 @@ namespace Exiled.API.Features.Doors
                         ElevatorGroup.LczB01 or ElevatorGroup.LczB02 => DoorType.ElevatorLczB,
                         _ => DoorType.UnknownElevator,
                     },
+                    "Spawnable Unsecured Pryable GateDoor" => DoorType.SpawnableUnsecuredGate,
                     _ => DoorType.UnknownDoor,
                 };
             }
