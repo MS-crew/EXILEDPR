@@ -331,7 +331,7 @@ namespace Exiled.API.Features.Toys
                 MinDistance = minDistance,
                 MaxDistance = maxDistance,
                 ControllerId = controllerId ?? GetNextFreeControllerId(),
-                Position = position ?? Vector3.zero,
+                LocalPosition = position ?? Vector3.zero,
             };
 
             if (spawn)
@@ -362,7 +362,7 @@ namespace Exiled.API.Features.Toys
 
             if (speaker == null)
             {
-                speaker = Create(parent: parent, position: position, spawn: true);
+                speaker = Create(parent, position, spawn: true);
             }
             else
             {
@@ -371,7 +371,7 @@ namespace Exiled.API.Features.Toys
                 if (parent != null)
                     speaker.Transform.SetParent(parent);
 
-                speaker.Position = position;
+                speaker.LocalPosition = position;
                 speaker.ControllerId = GetNextFreeControllerId();
             }
 
@@ -382,7 +382,7 @@ namespace Exiled.API.Features.Toys
         /// Rents a speaker from the pool, plays a wav file one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
-        /// <param name="position">The position of the speaker.</param>
+        /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="isSpatial">Whether the audio source is spatialized.</param>
         /// <param name="volume">The volume level of the audio source.</param>
@@ -522,7 +522,7 @@ namespace Exiled.API.Features.Toys
                 Base.RpcChangeParent(0);
             }
 
-            Position = SpeakerParkPosition;
+            LocalPosition = SpeakerParkPosition;
 
             Volume = DefaultVolume;
 
