@@ -127,7 +127,7 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Gets or sets the scale of the toy.
+        /// Gets or sets the local scale of the toy.
         /// </summary>
         public Vector3 Scale
         {
