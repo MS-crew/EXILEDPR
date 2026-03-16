@@ -331,9 +331,8 @@ namespace Exiled.API.Features.Toys
                 MinDistance = minDistance,
                 MaxDistance = maxDistance,
                 ControllerId = controllerId ?? GetNextFreeControllerId(),
+                Position = position ?? Vector3.zero,
             };
-
-            speaker.Transform.localPosition = position ?? Vector3.zero;
 
             if (spawn)
                 speaker.Spawn();
@@ -372,7 +371,7 @@ namespace Exiled.API.Features.Toys
                 if (parent != null)
                     speaker.Transform.SetParent(parent);
 
-                speaker.Transform.localPosition = position;
+                speaker.Position = position;
                 speaker.ControllerId = GetNextFreeControllerId();
             }
 
