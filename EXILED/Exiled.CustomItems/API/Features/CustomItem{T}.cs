@@ -154,7 +154,6 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomGoggles"/> type.</typeparam>
     public abstract class CustomGoggles<T> : CustomGoggles
-
         where T : CustomGoggles<T>
     {
         /// <summary>
