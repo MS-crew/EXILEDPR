@@ -519,7 +519,7 @@ namespace Exiled.API.Features.Toys
 
             if (Transform.parent != null || AdminToyBase._clientParentId != 0)
             {
-                Transform.SetParent(null);
+                Transform.parent = null;
                 Base.RpcChangeParent(0);
             }
 
