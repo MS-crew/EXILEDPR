@@ -362,17 +362,18 @@ namespace Exiled.API.Features.Toys
 
             if (speaker == null)
             {
-                speaker = Create(parent, position, spawn: true);
+                speaker = Create(parent, position);
             }
             else
             {
                 speaker.IsStatic = false;
 
                 if (parent != null)
-                    speaker.Transform.SetParent(parent);
+                    speaker.Transform.parent = parent;
 
                 speaker.LocalPosition = position;
                 speaker.ControllerId = GetNextFreeControllerId();
+                SpeakerToyPlaybackBase.AllInstances.Add(speaker.Base.Playback);
             }
 
             return speaker;
@@ -529,7 +530,6 @@ namespace Exiled.API.Features.Toys
             IsSpatial = DefaultSpatial;
             MinDistance = DefaultMinDistance;
             MaxDistance = DefaultMaxDistance;
-            ControllerId = DefaultControllerId;
 
             IsStatic = true;
 
@@ -548,6 +548,8 @@ namespace Exiled.API.Features.Toys
             resampleTime = 0.0;
             resampleBufferFilled = 0;
             isPitchDefault = true;
+
+            SpeakerToyPlaybackBase.AllInstances.Remove(Base.Playback);
 
             Pool.Enqueue(this);
         }
