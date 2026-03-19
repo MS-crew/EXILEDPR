@@ -515,6 +515,9 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public void ReturnToPool()
         {
+            if (Base == null)
+                return;
+
             Stop();
 
             if (Transform.parent != null || AdminToyBase._clientParentId != 0)
