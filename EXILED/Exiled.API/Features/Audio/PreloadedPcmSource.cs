@@ -88,14 +88,7 @@ namespace Exiled.API.Features.Audio
         public void Seek(double seconds)
         {
             long targetIndex = (long)(seconds * VoiceChatSettings.SampleRate);
-
-            if (targetIndex < 0)
-                targetIndex = 0;
-
-            if (targetIndex > data.Length)
-                targetIndex = data.Length;
-
-            pos = (int)targetIndex;
+            pos = (int)Math.Max(0, Math.Min(targetIndex, data.Length));
         }
 
         /// <summary>

@@ -70,6 +70,9 @@ namespace Exiled.API.Features.Toys
         private OpusEncoder encoder;
         private CoroutineHandle playBackRoutine;
 
+        private int idChangeFrame;
+        private bool needsSyncWait = false;
+
         private bool isPitchDefault = true;
         private bool isPlayBackInitialized = false;
 
@@ -307,7 +310,15 @@ namespace Exiled.API.Features.Toys
         public byte ControllerId
         {
             get => Base.NetworkControllerId;
-            set => Base.NetworkControllerId = value;
+            set
+            {
+                if (Base.NetworkControllerId != value)
+                {
+                    Base.NetworkControllerId = value;
+                    needsSyncWait = true;
+                    idChangeFrame = Time.frameCount;
+                }
+            }
         }
 
         /// <summary>
@@ -475,6 +486,7 @@ namespace Exiled.API.Features.Toys
             }
 
             TryInitializePlayBack();
+            ResetEncoder();
             Stop();
 
             Loop = loop;
@@ -569,11 +581,27 @@ namespace Exiled.API.Features.Toys
             encoder = new(OpusApplicationType.Audio);
             encoded = new byte[VoiceChatSettings.MaxEncodedSize];
 
+            // 3002 => OPUS_SIGNAL_MUSIC (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L229)
+            OpusWrapper.SetEncoderSetting(encoder._handle, OpusCtlSetRequest.Signal, 3002);
+
             AdminToyBase.OnRemoved += OnToyRemoved;
         }
 
         private IEnumerator<float> PlayBackCoroutine()
         {
+            if (needsSyncWait)
+            {
+                int framesPassed = Time.frameCount - idChangeFrame;
+
+                while (framesPassed < 2)
+                {
+                    yield return Timing.WaitForOneFrame;
+                    framesPassed = Time.frameCount - idChangeFrame;
+                }
+
+                needsSyncWait = false;
+            }
+
             OnPlaybackStarted?.Invoke();
 
             resampleTime = 0.0;
@@ -751,6 +779,15 @@ namespace Exiled.API.Features.Toys
                 frame[outputIdx++] = (float)(sample1 + ((sample2 - sample1) * frac));
 
                 resampleTime += Pitch;
+            }
+        }
+
+        private void ResetEncoder()
+        {
+            if (encoder != null && encoder._handle != IntPtr.Zero)
+            {
+                // 4028 => OPUS_RESET_STATE (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L710)
+                OpusWrapper.SetEncoderSetting(encoder._handle, (OpusCtlSetRequest)4028, 0);
             }
         }
 
