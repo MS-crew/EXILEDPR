@@ -256,12 +256,12 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets the queue of audio file paths to be played sequentially after the current track finishes.
         /// </summary>
-        public List<string> TrackQueue { get; } = new();
+        public List<string> TrackQueue => field ??= new();
 
         /// <summary>
         /// Gets the list of time-based events for the current audio track.
         /// </summary>
-        public List<AudioTimeEvent> TimeEvents { get; } = new();
+        public List<AudioTimeEvent> TimeEvents => field ??= new();
 
         /// <summary>
         /// Gets or sets the playback pitch.
@@ -387,10 +387,10 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Rents an available speaker from the pool or creates a new one if the pool is empty.
         /// </summary>
-        /// <param name="position">The local position of the <see cref="Speaker"/>.</param>
         /// <param name="parent">The parent transform to attach the <see cref="Speaker"/> to.</param>
+        /// <param name="position">The local position of the <see cref="Speaker"/>.</param>
         /// <returns>A clean <see cref="Speaker"/> instance ready for use.</returns>
-        public static Speaker Rent(Vector3? position = null, Transform parent = null)
+        public static Speaker Rent(Transform parent = null, Vector3? position = null)
         {
             Speaker speaker = null;
 
@@ -444,7 +444,7 @@ namespace Exiled.API.Features.Toys
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
         public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, float fadeInDuration = 0f, float fadeOutDuration = 0f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
         {
-            Speaker speaker = Rent(position, parent);
+            Speaker speaker = Rent(parent, position);
 
             speaker.Volume = volume;
             speaker.IsSpatial = isSpatial;
