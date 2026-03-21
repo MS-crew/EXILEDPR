@@ -10,6 +10,7 @@ namespace Exiled.API.Features.Audio
     using System;
 
     using Exiled.API.Interfaces;
+    using Exiled.API.Structs;
 
     using VoiceChat;
 

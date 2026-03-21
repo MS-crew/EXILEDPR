@@ -13,6 +13,8 @@ namespace Exiled.API.Features.Audio
     using System.IO;
     using System.Runtime.InteropServices;
 
+    using Exiled.API.Structs;
+
     using VoiceChat;
 
     /// <summary>

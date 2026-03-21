@@ -12,9 +12,8 @@ namespace Exiled.API.Features.Audio
     using System.IO;
     using System.Runtime.InteropServices;
 
-    using Christmas.Scp2536.Gifts;
-
     using Exiled.API.Interfaces;
+    using Exiled.API.Structs;
 
     using VoiceChat;
 

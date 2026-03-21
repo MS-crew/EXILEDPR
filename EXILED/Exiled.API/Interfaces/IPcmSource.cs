@@ -9,7 +9,7 @@ namespace Exiled.API.Interfaces
 {
     using System;
 
-    using Exiled.API.Features.Audio;
+    using Exiled.API.Structs;
 
     /// <summary>
     /// Represents a source of PCM audio data.
