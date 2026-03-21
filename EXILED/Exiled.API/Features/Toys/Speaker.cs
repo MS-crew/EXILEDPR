@@ -50,9 +50,7 @@ namespace Exiled.API.Features.Toys
         private const float DefaultVolume = 1f;
         private const float DefaultMinDistance = 1f;
         private const float DefaultMaxDistance = 15f;
-
         private const byte DefaultControllerId = 0;
-
         private const bool DefaultSpatial = true;
 
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
@@ -60,21 +58,22 @@ namespace Exiled.API.Features.Toys
 
         private static readonly Vector3 SpeakerParkPosition = Vector3.down * 999;
 
+        private IPcmSource source;
+        private OpusEncoder encoder;
+
         private float[] frame;
         private byte[] encoded;
         private float[] resampleBuffer;
 
-        private double resampleTime;
-        private int resampleBufferFilled;
-
-        private IPcmSource source;
-        private OpusEncoder encoder;
         private CoroutineHandle fadeRoutine;
         private CoroutineHandle playBackRoutine;
 
+        private double resampleTime;
+        private int resampleBufferFilled;
         private int idChangeFrame;
-        private int nextTimeEventIndex = 0;
         private bool needsSyncWait = false;
+
+        private int nextTimeEventIndex = 0;
         private bool isPitchDefault = true;
         private bool isPlayBackInitialized = false;
 
@@ -566,121 +565,6 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Fades the volume to a specific target over a given duration.
-        /// </summary>
-        /// <param name="startVolume">The initial volume level when the fade begins.</param>
-        /// <param name="targetVolume">The final volume level to reach at the end of the fade.</param>
-        /// <param name="duration">The time in seconds the fading process should take to complete.</param>
-        /// <param name="onComplete">An optional action to invoke when the fade process is fully finished.</param>
-        public void FadeVolume(float startVolume, float targetVolume, float duration = 3, Action onComplete = null)
-        {
-            if (fadeRoutine.IsRunning)
-                fadeRoutine.IsRunning = false;
-
-            fadeRoutine = Timing.RunCoroutine(FadeCoroutine(startVolume, targetVolume, duration, onComplete).CancelWith(GameObject));
-        }
-
-        /// <summary>
-        /// Adds an audio file to the playback queue. If nothing is currently playing, playback starts immediately.
-        /// </summary>
-        /// <param name="path">The path to the wav file to enqueue.</param>
-        /// <returns><c>true</c> if the file was successfully queued or playback started; otherwise, <c>false</c>.</returns>
-        public bool QueueTrack(string path)
-        {
-            if (!playBackRoutine.IsRunning && !IsPaused)
-                return Play(path);
-
-            TrackQueue.Add(path);
-            return true;
-        }
-
-        /// <summary>
-        /// Skips the currently playing track and starts playing the next one in the queue.
-        /// </summary>
-        public void SkipTrack()
-        {
-            if (TrySwitchToNextTrack())
-            {
-                IsPaused = false;
-
-                if (!playBackRoutine.IsRunning)
-                    playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
-            }
-            else
-            {
-                Stop();
-            }
-        }
-
-        /// <summary>
-        /// Removes a specific track from the queue by its file path.
-        /// </summary>
-        /// <param name="path">The exact file path of the track to remove.</param>
-        /// <param name="findFirst">If <c>true</c>, removes the first occurrence; if <c>false</c>, removes the last occurrence.</param>
-        /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
-        public bool RemoveFromQueue(string path, bool findFirst = true)
-        {
-            int index = findFirst ? TrackQueue.IndexOf(path) : TrackQueue.LastIndexOf(path);
-
-            if (index == -1)
-                return false;
-
-            TrackQueue.RemoveAt(index);
-            return true;
-        }
-
-        /// <summary>
-        /// Adds an action to be executed at a specific time in seconds during the current playback.
-        /// <para><c>WARNING:</c> Heavy operations can cause audio interruptions. If you need to perform heavy operations, start a new Coroutine inside the action.</para>
-        /// </summary>
-        /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
-        /// <param name="action">The action to invoke when the specified time is reached.</param>
-        /// <param name="id">An optional unique string identifier for this event. If not provided, a random GUID will be assigned.</param>
-        /// <returns>The unique string ID of the created time event, which can be used to remove it later via <see cref="RemoveTimeEvent"/>.</returns>
-        public string AddTimeEvent(double timeInSeconds, Action action, string id = null)
-        {
-            AudioTimeEvent timeEvent = new(timeInSeconds, action, id);
-
-            TimeEvents.Add(timeEvent);
-            TimeEvents.Sort();
-            UpdateNextTimeEventIndex();
-
-            return timeEvent.Id;
-        }
-
-        /// <summary>
-        /// Removes a specific time-based event using its ID.
-        /// </summary>
-        /// <param name="id">The unique string identifier of the event to remove.</param>
-        public void RemoveTimeEvent(string id)
-        {
-            int removed = TimeEvents.RemoveAll(e => e.Id == id);
-
-            if (removed > 0)
-                UpdateNextTimeEventIndex();
-        }
-
-        /// <summary>
-        /// Clears all time-based events for the current playback.
-        /// </summary>
-        public void ClearTimeEvents()
-        {
-            TimeEvents.Clear();
-            nextTimeEventIndex = 0;
-        }
-
-        /// <summary>
-        /// Restarts the currently playing track from the beginning.
-        /// </summary>
-        public void RestartTrack()
-        {
-            if (!playBackRoutine.IsRunning || source == null)
-                return;
-
-            CurrentTime = 0.0;
-        }
-
-        /// <summary>
         /// Stops playback.
         /// </summary>
         /// <param name="clearQueue">If true, clears the upcoming tracks in the playlist.</param>
@@ -726,6 +610,121 @@ namespace Exiled.API.Features.Toys
                 TrackQueue.Clear();
 
             FadeVolume(Volume, 0f, fadeOutDuration, onComplete: () => Stop(clearQueue));
+        }
+
+        /// <summary>
+        /// Fades the volume to a specific target over a given duration.
+        /// </summary>
+        /// <param name="startVolume">The initial volume level when the fade begins.</param>
+        /// <param name="targetVolume">The final volume level to reach at the end of the fade.</param>
+        /// <param name="duration">The time in seconds the fading process should take to complete.</param>
+        /// <param name="onComplete">An optional action to invoke when the fade process is fully finished.</param>
+        public void FadeVolume(float startVolume, float targetVolume, float duration = 3, Action onComplete = null)
+        {
+            if (fadeRoutine.IsRunning)
+                fadeRoutine.IsRunning = false;
+
+            fadeRoutine = Timing.RunCoroutine(FadeCoroutine(startVolume, targetVolume, duration, onComplete).CancelWith(GameObject));
+        }
+
+        /// <summary>
+        /// Restarts the currently playing track from the beginning.
+        /// </summary>
+        public void RestartTrack()
+        {
+            if (!playBackRoutine.IsRunning || source == null)
+                return;
+
+            CurrentTime = 0.0;
+        }
+
+        /// <summary>
+        /// Adds an audio file to the playback queue. If nothing is currently playing, playback starts immediately.
+        /// </summary>
+        /// <param name="path">The path to the wav file to enqueue.</param>
+        /// <returns><c>true</c> if the file was successfully queued or playback started; otherwise, <c>false</c>.</returns>
+        public bool QueueTrack(string path)
+        {
+            if (!playBackRoutine.IsRunning && !IsPaused)
+                return Play(path);
+
+            TrackQueue.Add(path);
+            return true;
+        }
+
+        /// <summary>
+        /// Skips the currently playing track and starts playing the next one in the queue.
+        /// </summary>
+        public void SkipTrack()
+        {
+            if (TrySwitchToNextTrack())
+            {
+                IsPaused = false;
+
+                if (!playBackRoutine.IsRunning)
+                    playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
+            }
+            else
+            {
+                Stop();
+            }
+        }
+
+        /// <summary>
+        /// Adds an action to be executed at a specific time in seconds during the current playback.
+        /// <para><c>WARNING:</c> Heavy operations can cause audio interruptions. If you need to perform heavy operations, start a new Coroutine inside the action.</para>
+        /// </summary>
+        /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
+        /// <param name="action">The action to invoke when the specified time is reached.</param>
+        /// <param name="id">An optional unique string identifier for this event. If not provided, a random GUID will be assigned.</param>
+        /// <returns>The unique string ID of the created time event, which can be used to remove it later via <see cref="RemoveTimeEvent"/>.</returns>
+        public string AddTimeEvent(double timeInSeconds, Action action, string id = null)
+        {
+            AudioTimeEvent timeEvent = new(timeInSeconds, action, id);
+
+            TimeEvents.Add(timeEvent);
+            TimeEvents.Sort();
+            UpdateNextTimeEventIndex();
+
+            return timeEvent.Id;
+        }
+
+        /// <summary>
+        /// Removes a specific time-based event using its ID.
+        /// </summary>
+        /// <param name="id">The unique string identifier of the event to remove.</param>
+        public void RemoveTimeEvent(string id)
+        {
+            int removed = TimeEvents.RemoveAll(e => e.Id == id);
+
+            if (removed > 0)
+                UpdateNextTimeEventIndex();
+        }
+
+        /// <summary>
+        /// Removes a specific track from the queue by its file path.
+        /// </summary>
+        /// <param name="path">The exact file path of the track to remove.</param>
+        /// <param name="findFirst">If <c>true</c>, removes the first occurrence; if <c>false</c>, removes the last occurrence.</param>
+        /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
+        public bool RemoveFromQueue(string path, bool findFirst = true)
+        {
+            int index = findFirst ? TrackQueue.IndexOf(path) : TrackQueue.LastIndexOf(path);
+
+            if (index == -1)
+                return false;
+
+            TrackQueue.RemoveAt(index);
+            return true;
+        }
+
+        /// <summary>
+        /// Clears all time-based events for the current playback.
+        /// </summary>
+        public void ClearTimeEvents()
+        {
+            TimeEvents.Clear();
+            nextTimeEventIndex = 0;
         }
 
         /// <summary>
@@ -847,121 +846,13 @@ namespace Exiled.API.Features.Toys
             }
         }
 
-        private IEnumerator<float> PlayBackCoroutine()
+        private void ResetEncoder()
         {
-            if (needsSyncWait)
+            if (encoder != null && encoder._handle != IntPtr.Zero)
             {
-                int framesPassed = Time.frameCount - idChangeFrame;
-
-                while (framesPassed < 2)
-                {
-                    yield return Timing.WaitForOneFrame;
-                    framesPassed = Time.frameCount - idChangeFrame;
-                }
-
-                needsSyncWait = false;
+                // 4028 => OPUS_RESET_STATE (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L710)
+                OpusWrapper.SetEncoderSetting(encoder._handle, (OpusCtlSetRequest)4028, 0);
             }
-
-            OnPlaybackStarted?.Invoke();
-            SpeakerEvents.OnPlaybackStarted(this);
-
-            resampleTime = 0.0;
-            resampleBufferFilled = 0;
-
-            float timeAccumulator = 0f;
-
-            while (true)
-            {
-                timeAccumulator += Time.deltaTime;
-
-                while (timeAccumulator >= FrameTime)
-                {
-                    timeAccumulator -= FrameTime;
-
-                    if (isPitchDefault)
-                    {
-                        int read = source.Read(frame, 0, FrameSize);
-                        if (read < FrameSize)
-                            Array.Clear(frame, read, FrameSize - read);
-                    }
-                    else
-                    {
-                        ResampleFrame();
-                    }
-
-                    int len = encoder.Encode(frame, encoded);
-
-                    if (len > 2)
-                        SendPacket(len);
-
-                    if (!source.Ended)
-                        continue;
-
-                    OnPlaybackFinished?.Invoke();
-                    SpeakerEvents.OnPlaybackFinished(this);
-
-                    if (Loop)
-                    {
-                        ResetEncoder();
-                        source.Reset();
-                        timeAccumulator = 0;
-                        resampleTime = resampleBufferFilled = 0;
-
-                        nextTimeEventIndex = 0;
-
-                        OnPlaybackLooped?.Invoke();
-                        SpeakerEvents.OnPlaybackLooped(this);
-                        continue;
-                    }
-
-                    if (TrySwitchToNextTrack())
-                    {
-                        timeAccumulator = 0f;
-                        continue;
-                    }
-
-                    if (ReturnToPoolAfter)
-                        ReturnToPool();
-                    else if (DestroyAfter)
-                        Destroy();
-                    else
-                        Stop();
-
-                    yield break;
-                }
-
-                while (nextTimeEventIndex < TimeEvents.Count && CurrentTime >= TimeEvents[nextTimeEventIndex].Time)
-                {
-                    try
-                    {
-                        TimeEvents[nextTimeEventIndex].Action?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"[Speaker] Failed to execute scheduled time event at {TimeEvents[nextTimeEventIndex].Time:F2}s.\nException Details: {ex}");
-                    }
-
-                    nextTimeEventIndex++;
-                }
-
-                yield return Timing.WaitForOneFrame;
-            }
-        }
-
-        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, Action onComplete)
-        {
-            float timePassed = 0f;
-
-            while (timePassed < duration)
-            {
-                timePassed += Time.deltaTime;
-                Volume = Mathf.Lerp(startVolume, targetVolume, timePassed / duration);
-                yield return Timing.WaitForOneFrame;
-            }
-
-            Volume = targetVolume;
-
-            onComplete?.Invoke();
         }
 
         private void SendPacket(int len)
@@ -1086,15 +977,6 @@ namespace Exiled.API.Features.Toys
             }
         }
 
-        private void ResetEncoder()
-        {
-            if (encoder != null && encoder._handle != IntPtr.Zero)
-            {
-                // 4028 => OPUS_RESET_STATE (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L710)
-                OpusWrapper.SetEncoderSetting(encoder._handle, (OpusCtlSetRequest)4028, 0);
-            }
-        }
-
         private void OnToyRemoved(AdminToyBase toy)
         {
             if (toy != Base)
@@ -1105,6 +987,123 @@ namespace Exiled.API.Features.Toys
             Stop();
 
             encoder?.Dispose();
+        }
+
+        private IEnumerator<float> PlayBackCoroutine()
+        {
+            if (needsSyncWait)
+            {
+                int framesPassed = Time.frameCount - idChangeFrame;
+
+                while (framesPassed < 2)
+                {
+                    yield return Timing.WaitForOneFrame;
+                    framesPassed = Time.frameCount - idChangeFrame;
+                }
+
+                needsSyncWait = false;
+            }
+
+            OnPlaybackStarted?.Invoke();
+            SpeakerEvents.OnPlaybackStarted(this);
+
+            resampleTime = 0.0;
+            resampleBufferFilled = 0;
+
+            float timeAccumulator = 0f;
+
+            while (true)
+            {
+                timeAccumulator += Time.deltaTime;
+
+                while (timeAccumulator >= FrameTime)
+                {
+                    timeAccumulator -= FrameTime;
+
+                    if (isPitchDefault)
+                    {
+                        int read = source.Read(frame, 0, FrameSize);
+                        if (read < FrameSize)
+                            Array.Clear(frame, read, FrameSize - read);
+                    }
+                    else
+                    {
+                        ResampleFrame();
+                    }
+
+                    int len = encoder.Encode(frame, encoded);
+
+                    if (len > 2)
+                        SendPacket(len);
+
+                    if (!source.Ended)
+                        continue;
+
+                    OnPlaybackFinished?.Invoke();
+                    SpeakerEvents.OnPlaybackFinished(this);
+
+                    if (Loop)
+                    {
+                        ResetEncoder();
+                        source.Reset();
+                        timeAccumulator = 0;
+                        resampleTime = resampleBufferFilled = 0;
+
+                        nextTimeEventIndex = 0;
+
+                        OnPlaybackLooped?.Invoke();
+                        SpeakerEvents.OnPlaybackLooped(this);
+                        continue;
+                    }
+
+                    if (TrySwitchToNextTrack())
+                    {
+                        timeAccumulator = 0f;
+                        continue;
+                    }
+
+                    if (ReturnToPoolAfter)
+                        ReturnToPool();
+                    else if (DestroyAfter)
+                        Destroy();
+                    else
+                        Stop();
+
+                    yield break;
+                }
+
+                while (nextTimeEventIndex < TimeEvents.Count && CurrentTime >= TimeEvents[nextTimeEventIndex].Time)
+                {
+                    try
+                    {
+                        TimeEvents[nextTimeEventIndex].Action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"[Speaker] Failed to execute scheduled time event at {TimeEvents[nextTimeEventIndex].Time:F2}s.\nException Details: {ex}");
+                    }
+
+                    nextTimeEventIndex++;
+                }
+
+                yield return Timing.WaitForOneFrame;
+            }
+        }
+
+        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, Action onComplete)
+        {
+            float timePassed = 0f;
+
+            while (timePassed < duration)
+            {
+                timePassed += Time.deltaTime;
+                Volume = Mathf.Lerp(startVolume, targetVolume, timePassed / duration);
+                yield return Timing.WaitForOneFrame;
+            }
+
+            Volume = targetVolume;
+
+            onComplete?.Invoke();
         }
     }
 }
