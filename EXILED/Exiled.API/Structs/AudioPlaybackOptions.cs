@@ -29,16 +29,6 @@ namespace Exiled.API.Structs
         public bool Stream { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the speaker object should be automatically destroyed after the playback finishes.
-        /// </summary>
-        public bool DestroyAfter { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the audio should loop continuously.
-        /// </summary>
-        public bool Loop { get; set; }
-
-        /// <summary>
         /// Gets or sets the duration in seconds over which the volume should smoothly increase from 0 to the target volume at the start of playback.
         /// <c>0</c> means no fade-in.
         /// </summary>
