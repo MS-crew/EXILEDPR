@@ -211,6 +211,8 @@ namespace Exiled.API.Features.Toys
                 source.CurrentTime = value;
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
+
+                ResetEncoder();
             }
         }
 
