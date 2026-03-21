@@ -255,9 +255,9 @@ namespace Exiled.API.Features.Toys
         public TrackData LastTrackInfo { get; private set; }
 
         /// <summary>
-        /// Gets the queue of audio file paths to be played sequentially after the current track finishes.
+        /// Gets the queue of audio tracks to be played sequentially.
         /// </summary>
-        public List<string> TrackQueue => field ??= new();
+        public List<QueuedTrack> TrackQueue => field ??= new();
 
         /// <summary>
         /// Gets the list of time-based events for the current audio track.
@@ -548,25 +548,7 @@ namespace Exiled.API.Features.Toys
 
             LastTrackInfo = source.TrackInfo;
 
-            if (options.FadeInDuration > 0f)
-            {
-                float targetVol = Volume;
-                Volume = 0f;
-                FadeVolume(0f, targetVol, options.FadeInDuration);
-            }
-
-            if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
-            {
-                float oldVolume = Volume;
-                double triggerTime = TotalDuration - options.FadeOutDuration;
-                AddTimeEvent(
-                    triggerTime,
-                    () =>
-                    {
-                        FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = oldVolume);
-                    },
-                    id: "AutoFadeOut");
-            }
+            ApplyPlaybackOptions(options);
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             return true;
@@ -617,7 +599,12 @@ namespace Exiled.API.Features.Toys
             if (clearQueue)
                 TrackQueue.Clear();
 
-            FadeVolume(Volume, 0f, fadeOutDuration, onComplete: () => Stop(clearQueue));
+            float oldVolume = Volume;
+            FadeVolume(Volume, 0f, fadeOutDuration, onComplete: () =>
+            {
+                Stop(clearQueue);
+                Volume = oldVolume;
+            });
         }
 
         /// <summary>
@@ -648,16 +635,17 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Adds an audio file to the playback queue. If nothing is currently playing, playback starts immediately.
+        /// Adds an audio file to the playback queue with specific options. If nothing is playing, playback starts immediately.
         /// </summary>
         /// <param name="path">The path to the wav file to enqueue.</param>
-        /// <returns><c>true</c> if the file was successfully queued or playback started; otherwise, <c>false</c>.</returns>
-        public bool QueueTrack(string path)
+        /// <param name="options">The specific playback configuration for this track.</param>
+        /// <returns><c>true</c> if successfully queued or started.</returns>
+        public bool QueueTrack(string path, AudioPlaybackOptions options = default)
         {
             if (!playBackRoutine.IsRunning && !IsPaused)
-                return Play(path);
+                return Play(path, options);
 
-            TrackQueue.Add(path);
+            TrackQueue.Add(new QueuedTrack(path, options));
             return true;
         }
 
@@ -827,14 +815,14 @@ namespace Exiled.API.Features.Toys
         {
             while (TrackQueue.Count > 0)
             {
-                string nextTrack = TrackQueue[0];
+                QueuedTrack nextTrack = TrackQueue[0];
                 TrackQueue.RemoveAt(0);
 
                 IPcmSource newSource;
                 try
                 {
-                    bool useStream = source is WavStreamSource;
-                    newSource = useStream ? new WavStreamSource(nextTrack) : new PreloadedPcmSource(nextTrack);
+                    bool useStream = nextTrack.Options.Stream;
+                    newSource = useStream ? new WavStreamSource(nextTrack.Path) : new PreloadedPcmSource(nextTrack.Path);
                 }
                 catch (Exception ex)
                 {
@@ -851,12 +839,35 @@ namespace Exiled.API.Features.Toys
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
 
+                ApplyPlaybackOptions(nextTrack.Options);
+
                 OnPlaybackStarted?.Invoke();
                 SpeakerEvents.OnPlaybackStarted(this);
                 return true;
             }
 
             return false;
+        }
+
+        private void ApplyPlaybackOptions(AudioPlaybackOptions options)
+        {
+            if (options.FadeInDuration > 0f)
+            {
+                float targetVol = Volume;
+                Volume = 0f;
+                FadeVolume(0f, targetVol, options.FadeInDuration);
+            }
+
+            if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
+            {
+                float oldVolume = Volume;
+                double triggerTime = TotalDuration - options.FadeOutDuration;
+
+                AddTimeEvent(
+                    triggerTime,
+                    () => FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = oldVolume),
+                    id: "AutoFadeOut");
+            }
         }
 
         private void UpdateNextTimeEventIndex()
