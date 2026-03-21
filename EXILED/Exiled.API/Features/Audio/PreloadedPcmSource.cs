@@ -34,7 +34,9 @@ namespace Exiled.API.Features.Audio
         /// <param name="path">The path to the audio file.</param>
         public PreloadedPcmSource(string path)
         {
-            data = WavUtility.WavToPcm(path);
+            (float[] PcmData, TrackData TrackInfo) result = WavUtility.WavToPcm(path);
+            data = result.PcmData;
+            TrackInfo = result.TrackInfo;
         }
 
         /// <summary>
@@ -44,7 +46,13 @@ namespace Exiled.API.Features.Audio
         public PreloadedPcmSource(float[] pcmData)
         {
             data = pcmData;
+            TrackInfo = new TrackData { Duration = TotalDuration };
         }
+
+        /// <summary>
+        /// Gets the metadata of the loaded track.
+        /// </summary>
+        public TrackData TrackInfo { get; }
 
         /// <summary>
         /// Gets a value indicating whether the end of the PCM data buffer has been reached.

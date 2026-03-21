@@ -36,11 +36,16 @@ namespace Exiled.API.Features.Audio
         public WavStreamSource(string path)
         {
             stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.SequentialScan);
-            WavUtility.SkipHeader(stream);
+            TrackInfo = WavUtility.SkipHeader(stream);
             startPosition = stream.Position;
             endPosition = stream.Length;
             internalBuffer = ArrayPool<byte>.Shared.Rent(VoiceChatSettings.PacketSizePerChannel * 2);
         }
+
+        /// <summary>
+        /// Gets the metadata of the streaming track.
+        /// </summary>
+        public TrackData TrackInfo { get; }
 
         /// <summary>
         /// Gets the total duration of the audio in seconds.
