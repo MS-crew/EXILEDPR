@@ -864,7 +864,15 @@ namespace Exiled.API.Features.Toys
 
                 while (nextTimeEventIndex < TimeEvents.Count && CurrentTime >= TimeEvents[nextTimeEventIndex].Time)
                 {
-                    TimeEvents[nextTimeEventIndex].Action?.Invoke();
+                    try
+                    {
+                        TimeEvents[nextTimeEventIndex].Action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"[Speaker] Failed to execute scheduled time event at {TimeEvents[nextTimeEventIndex].Time:F2}s.\nException Details: {ex}");
+                    }
+
                     nextTimeEventIndex++;
                 }
 
