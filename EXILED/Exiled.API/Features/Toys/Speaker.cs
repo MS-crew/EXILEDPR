@@ -721,7 +721,7 @@ namespace Exiled.API.Features.Toys
         /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
         public bool RemoveFromQueue(string path, bool findFirst = true)
         {
-            int index = findFirst ? TrackQueue.IndexOf(path) : TrackQueue.LastIndexOf(path);
+            int index = findFirst ? TrackQueue.FindIndex(t => t.Path == path) : TrackQueue.FindLastIndex(t => t.Path == path);
 
             if (index == -1)
                 return false;
@@ -851,22 +851,18 @@ namespace Exiled.API.Features.Toys
 
         private void ApplyPlaybackOptions(AudioPlaybackOptions options)
         {
+            float originalVolume = Volume;
+
             if (options.FadeInDuration > 0f)
             {
-                float targetVol = Volume;
                 Volume = 0f;
-                FadeVolume(0f, targetVol, options.FadeInDuration);
+                FadeVolume(0f, originalVolume, options.FadeInDuration);
             }
 
             if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
             {
-                float oldVolume = Volume;
                 double triggerTime = TotalDuration - options.FadeOutDuration;
-
-                AddTimeEvent(
-                    triggerTime,
-                    () => FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = oldVolume),
-                    id: "AutoFadeOut");
+                AddTimeEvent(triggerTime, () => FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = originalVolume), id: "AutoFadeOut");
             }
         }
 
