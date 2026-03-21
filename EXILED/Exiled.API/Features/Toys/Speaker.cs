@@ -672,7 +672,7 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Shuffles the tracks in the <see cref="TrackQueue"/> into a random order.
+        /// Shuffles the tracks in the <see cref="TrackQueue"/> into a random order with Fisher-Yates algorithm.
         /// </summary>
         public void ShuffleTracks()
         {
