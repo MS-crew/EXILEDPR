@@ -619,13 +619,14 @@ namespace Exiled.API.Features.Toys
         /// <param name="startVolume">The initial volume level when the fade begins.</param>
         /// <param name="targetVolume">The final volume level to reach at the end of the fade.</param>
         /// <param name="duration">The time in seconds the fading process should take to complete.</param>
+        /// <param name="linear">If <c>true</c>, uses linear interpolation; if <c>false</c>, uses natural easing (ease-in for fade-in, ease-out for fade-out).</param>
         /// <param name="onComplete">An optional action to invoke when the fade process is fully finished.</param>
-        public void FadeVolume(float startVolume, float targetVolume, float duration = 3, Action onComplete = null)
+        public void FadeVolume(float startVolume, float targetVolume, float duration = 3, bool linear = false, Action onComplete = null)
         {
             if (fadeRoutine.IsRunning)
                 fadeRoutine.IsRunning = false;
 
-            fadeRoutine = Timing.RunCoroutine(FadeCoroutine(startVolume, targetVolume, duration, onComplete).CancelWith(GameObject));
+            fadeRoutine = Timing.RunCoroutine(FadeCoroutine(startVolume, targetVolume, duration, linear, onComplete).CancelWith(GameObject));
         }
 
         /// <summary>
@@ -1106,7 +1107,7 @@ namespace Exiled.API.Features.Toys
             }
         }
 
-        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, Action onComplete)
+        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, bool linear, Action onComplete)
         {
             float timePassed = 0f;
             bool isFadeOut = startVolume > targetVolume;
@@ -1115,7 +1116,10 @@ namespace Exiled.API.Features.Toys
             {
                 timePassed += Time.deltaTime;
                 float t = timePassed / duration;
-                t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
+
+                if (!linear)
+                    t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
+
                 Volume = Mathf.Lerp(startVolume, targetVolume, t);
                 yield return Timing.WaitForOneFrame;
             }
