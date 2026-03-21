@@ -616,15 +616,33 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Adds an action to be executed at a specific time in seconds during the current playback.
+        /// <para><c>WARNING:</c> Heavy operations can cause audio interruptions. If you need to perform heavy operations, start a new Coroutine inside the action.</para>
         /// </summary>
         /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
         /// <param name="action">The action to invoke when the specified time is reached.</param>
-        public void AddTimeEvent(double timeInSeconds, Action action)
+        /// <param name="id">An optional unique string identifier for this event. If not provided, a random GUID will be assigned.</param>
+        /// <returns>The unique string ID of the created time event, which can be used to remove it later via <see cref="RemoveTimeEvent"/>.</returns>
+        public string AddTimeEvent(double timeInSeconds, Action action, string id = null)
         {
-            TimeEvents.Add(new AudioTimeEvent(timeInSeconds, action));
-            TimeEvents.Sort();
+            AudioTimeEvent timeEvent = new(timeInSeconds, action, id);
 
+            TimeEvents.Add(timeEvent);
+            TimeEvents.Sort();
             UpdateNextTimeEventIndex();
+
+            return timeEvent.Id;
+        }
+
+        /// <summary>
+        /// Removes a specific time-based event using its ID.
+        /// </summary>
+        /// <param name="id">The unique string identifier of the event to remove.</param>
+        public void RemoveTimeEvent(string id)
+        {
+            int removed = TimeEvents.RemoveAll(e => e.Id == id);
+
+            if (removed > 0)
+                UpdateNextTimeEventIndex();
         }
 
         /// <summary>
@@ -634,6 +652,17 @@ namespace Exiled.API.Features.Toys
         {
             TimeEvents.Clear();
             nextTimeEventIndex = 0;
+        }
+
+        /// <summary>
+        /// Restarts the currently playing track from the beginning.
+        /// </summary>
+        public void RestartTrack()
+        {
+            if (!playBackRoutine.IsRunning || source == null)
+                return;
+
+            CurrentTime = 0.0;
         }
 
         /// <summary>

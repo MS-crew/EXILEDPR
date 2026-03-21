@@ -19,10 +19,12 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         /// <param name="time">The exact time in seconds to trigger the action.</param>
         /// <param name="action">The action to execute.</param>
-        public AudioTimeEvent(double time, Action action)
+        /// /// <param name="id">The optional unique identifier for the event. If null, a random GUID will be generated automatically.</param>
+        public AudioTimeEvent(double time, Action action, string id = null)
         {
             Time = time;
             Action = action;
+            Id = id ?? Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -34,6 +36,11 @@ namespace Exiled.API.Features.Audio
         /// Gets the action to be invoked when the specified time is reached.
         /// </summary>
         public Action Action { get; }
+
+        /// <summary>
+        /// Gets the unique identifier for this time event.
+        /// </summary>
+        public string Id { get; }
 
         /// <summary>
         /// Compares this instance to another <see cref="AudioTimeEvent"/> based on their trigger times.
