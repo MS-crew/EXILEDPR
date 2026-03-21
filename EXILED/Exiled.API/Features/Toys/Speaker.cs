@@ -484,8 +484,9 @@ namespace Exiled.API.Features.Toys
         /// <param name="stream">Whether to stream the audio or preload it.</param>
         /// <param name="destroyAfter">Whether to destroy the speaker after playback.</param>
         /// <param name="loop">Whether to loop the audio.</param>
+        /// <param name="fadeInDuration">The duration in seconds over which the volume should smoothly increase from 0 to speaker volume. 0 means no fade in.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool Play(string path, bool stream = false, bool destroyAfter = false, bool loop = false)
+        public bool Play(string path, bool stream = false, bool destroyAfter = false, bool loop = false, float fadeInDuration = 0f)
         {
             if (!File.Exists(path))
             {
@@ -515,6 +516,13 @@ namespace Exiled.API.Features.Toys
             {
                 Log.Error($"[Speaker] Failed to initialize audio source for file at path: '{path}'.\nException Details: {ex}");
                 return false;
+            }
+
+            if (fadeInDuration > 0f)
+            {
+                float targetVol = Volume;
+                Volume = 0f;
+                FadeVolume(0f, targetVol, fadeInDuration);
             }
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
