@@ -1109,16 +1109,18 @@ namespace Exiled.API.Features.Toys
         private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, Action onComplete)
         {
             float timePassed = 0f;
+            bool isFadeOut = startVolume > targetVolume;
 
             while (timePassed < duration)
             {
                 timePassed += Time.deltaTime;
-                Volume = Mathf.Lerp(startVolume, targetVolume, timePassed / duration);
+                float t = timePassed / duration;
+                t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
+                Volume = Mathf.Lerp(startVolume, targetVolume, t);
                 yield return Timing.WaitForOneFrame;
             }
 
             Volume = targetVolume;
-
             onComplete?.Invoke();
         }
     }
