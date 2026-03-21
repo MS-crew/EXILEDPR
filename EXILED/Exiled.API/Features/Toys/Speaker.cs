@@ -72,8 +72,8 @@ namespace Exiled.API.Features.Toys
         private CoroutineHandle playBackRoutine;
 
         private int idChangeFrame;
+        private int nextTimeEventIndex = 0;
         private bool needsSyncWait = false;
-
         private bool isPitchDefault = true;
         private bool isPlayBackInitialized = false;
 
@@ -219,6 +219,7 @@ namespace Exiled.API.Features.Toys
                 resampleBufferFilled = 0;
 
                 ResetEncoder();
+                UpdateNextTimeEventIndex();
             }
         }
 
@@ -256,6 +257,11 @@ namespace Exiled.API.Features.Toys
         /// Gets the queue of audio file paths to be played sequentially after the current track finishes.
         /// </summary>
         public List<string> TrackQueue { get; } = new();
+
+        /// <summary>
+        /// Gets the list of time-based events for the current audio track.
+        /// </summary>
+        public List<AudioTimeEvent> TimeEvents { get; } = new();
 
         /// <summary>
         /// Gets or sets the playback pitch.
@@ -609,6 +615,28 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Adds an action to be executed at a specific time in seconds during the current playback.
+        /// </summary>
+        /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
+        /// <param name="action">The action to invoke when the specified time is reached.</param>
+        public void AddTimeEvent(double timeInSeconds, Action action)
+        {
+            TimeEvents.Add(new AudioTimeEvent(timeInSeconds, action));
+            TimeEvents.Sort();
+
+            UpdateNextTimeEventIndex();
+        }
+
+        /// <summary>
+        /// Clears all time-based events for the current playback.
+        /// </summary>
+        public void ClearTimeEvents()
+        {
+            TimeEvents.Clear();
+            nextTimeEventIndex = 0;
+        }
+
+        /// <summary>
         /// Stops playback.
         /// </summary>
         /// <param name="clearQueue">If true, clears the upcoming tracks in the playlist.</param>
@@ -632,6 +660,7 @@ namespace Exiled.API.Features.Toys
                 TrackQueue.Clear();
 
             ResetEncoder();
+            ClearTimeEvents();
             source?.Dispose();
             source = null;
         }
@@ -727,6 +756,7 @@ namespace Exiled.API.Features.Toys
                 LastTrackInfo = source.TrackInfo;
 
                 ResetEncoder();
+                ClearTimeEvents();
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
 
@@ -736,6 +766,17 @@ namespace Exiled.API.Features.Toys
             }
 
             return false;
+        }
+
+        private void UpdateNextTimeEventIndex()
+        {
+            nextTimeEventIndex = 0;
+            double current = CurrentTime;
+
+            while (nextTimeEventIndex < TimeEvents.Count && TimeEvents[nextTimeEventIndex].Time <= current)
+            {
+                nextTimeEventIndex++;
+            }
         }
 
         private IEnumerator<float> PlayBackCoroutine()
@@ -798,6 +839,8 @@ namespace Exiled.API.Features.Toys
                         timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
 
+                        nextTimeEventIndex = 0;
+
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
                         continue;
@@ -817,6 +860,12 @@ namespace Exiled.API.Features.Toys
                         Stop();
 
                     yield break;
+                }
+
+                while (nextTimeEventIndex < TimeEvents.Count && CurrentTime >= TimeEvents[nextTimeEventIndex].Time)
+                {
+                    TimeEvents[nextTimeEventIndex].Action?.Invoke();
+                    nextTimeEventIndex++;
                 }
 
                 yield return Timing.WaitForOneFrame;
