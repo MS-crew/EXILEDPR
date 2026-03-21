@@ -68,6 +68,7 @@ namespace Exiled.API.Features.Toys
 
         private IPcmSource source;
         private OpusEncoder encoder;
+        private CoroutineHandle fadeRoutine;
         private CoroutineHandle playBackRoutine;
 
         private int idChangeFrame;
@@ -220,10 +221,23 @@ namespace Exiled.API.Features.Toys
         public double TotalDuration => source?.TotalDuration ?? 0.0;
 
         /// <summary>
-        /// Gets the current playback progress as a value between 0.0 and 1.0.
+        /// Gets the remaining playback time in seconds.
+        /// </summary>
+        public double TimeLeft => Math.Max(0.0, TotalDuration - CurrentTime);
+
+        /// <summary>
+        /// Gets or sets the current playback progress as a value between 0.0 and 1.0.
         /// Returns 0 if not playing.
         /// </summary>
-        public float PlaybackProgress => TotalDuration > 0.0 ? (float)(CurrentTime / TotalDuration) : 0f;
+        public float PlaybackProgress
+        {
+            get => TotalDuration > 0.0 ? (float)(CurrentTime / TotalDuration) : 0f;
+            set
+            {
+                if (TotalDuration > 0.0)
+                    CurrentTime = TotalDuration * Mathf.Clamp01(value);
+            }
+        }
 
         /// <summary>
         /// Gets the path to the last audio file played on this speaker.
@@ -508,6 +522,21 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Fades the volume to a specific target over a given duration.
+        /// </summary>
+        /// <param name="startVolume">The initial volume level when the fade begins.</param>
+        /// <param name="targetVolume">The final volume level to reach at the end of the fade.</param>
+        /// <param name="duration">The time in seconds the fading process should take to complete.</param>
+        /// <param name="stopAfterFade">If set to <c>true</c>, the playback will automatically <see cref="Stop"/> once the <paramref name="targetVolume"/> is reached. Perfect for fade-outs.</param>
+        public void FadeVolume(float startVolume, float targetVolume, float duration = 3, bool stopAfterFade = false)
+        {
+            if (fadeRoutine.IsRunning)
+                fadeRoutine.IsRunning = false;
+
+            fadeRoutine = Timing.RunCoroutine(FadeCoroutine(startVolume, targetVolume, duration, stopAfterFade).CancelWith(GameObject));
+        }
+
+        /// <summary>
         /// Stops playback.
         /// </summary>
         public void Stop()
@@ -517,6 +546,9 @@ namespace Exiled.API.Features.Toys
                 playBackRoutine.IsRunning = false;
                 OnPlaybackStopped?.Invoke();
             }
+
+            if (fadeRoutine.IsRunning)
+                fadeRoutine.IsRunning = false;
 
             source?.Dispose();
             source = null;
@@ -658,6 +690,23 @@ namespace Exiled.API.Features.Toys
 
                 yield return Timing.WaitForOneFrame;
             }
+        }
+
+        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, bool stopAfterFade)
+        {
+            float timePassed = 0f;
+
+            while (timePassed < duration)
+            {
+                timePassed += Time.deltaTime;
+                Volume = Mathf.Lerp(startVolume, targetVolume, timePassed / duration);
+                yield return Timing.WaitForOneFrame;
+            }
+
+            Volume = targetVolume;
+
+            if (stopAfterFade)
+                Stop();
         }
 
         private void SendPacket(int len)
