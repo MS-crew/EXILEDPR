@@ -108,7 +108,7 @@ namespace Exiled.API.Features.Toys
         /// Invoked when the audio track finishes playing.
         /// If looping is enabled, this triggers every time the track finished.
         /// </summary>
-        public event Action<string> OnPlaybackFinished;
+        public event Action OnPlaybackFinished;
 
         /// <summary>
         /// Invoked when the audio playback stops completely (either manually or end of file).
@@ -242,14 +242,14 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Gets the path to the last audio file played on this speaker.
-        /// </summary>
-        public string LastTrack { get; private set; }
-
-        /// <summary>
         /// Gets the metadata information (Title, Artist, Duration) of the last played audio track.
         /// </summary>
         public TrackData LastTrackInfo { get; private set; }
+
+        /// <summary>
+        /// Gets the queue of audio file paths to be played sequentially after the current track finishes.
+        /// </summary>
+        public List<string> TrackQueue { get; } = new();
 
         /// <summary>
         /// Gets or sets the playback pitch.
@@ -509,8 +509,7 @@ namespace Exiled.API.Features.Toys
             }
 
             TryInitializePlayBack();
-            ResetEncoder();
-            Stop();
+            Stop(clearQueue: false);
 
             Loop = loop;
             DestroyAfter = destroyAfter;
@@ -525,7 +524,6 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            LastTrack = path;
             LastTrackInfo = source.TrackInfo;
 
             if (fadeInDuration > 0f)
@@ -555,10 +553,63 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Adds an audio file to the playback queue. If nothing is currently playing, playback starts immediately.
+        /// </summary>
+        /// <param name="path">The path to the wav file to enqueue.</param>
+        /// <returns><c>true</c> if the file was successfully queued or playback started; otherwise, <c>false</c>.</returns>
+        public bool QueueTrack(string path)
+        {
+            if (!playBackRoutine.IsRunning && !IsPaused)
+                return Play(path);
+
+            TrackQueue.Add(path);
+            return true;
+        }
+
+        /// <summary>
+        /// Skips the currently playing track and starts playing the next one in the queue.
+        /// </summary>
+        public void SkipTrack()
+        {
+            if (TrySwitchToNextTrack())
+            {
+                IsPaused = false;
+
+                if (!playBackRoutine.IsRunning)
+                    playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
+            }
+            else
+            {
+                Stop();
+            }
+        }
+
+        /// <summary>
+        /// Removes a specific track from the queue by its file path.
+        /// </summary>
+        /// <param name="path">The exact file path of the track to remove.</param>
+        /// <param name="findFirst">If <c>true</c>, removes the first occurrence; if <c>false</c>, removes the last occurrence.</param>
+        /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
+        public bool RemoveFromQueue(string path, bool findFirst = true)
+        {
+            int index = findFirst ? TrackQueue.IndexOf(path) : TrackQueue.LastIndexOf(path);
+
+            if (index == -1)
+                return false;
+
+            TrackQueue.RemoveAt(index);
+            return true;
+        }
+
+        /// <summary>
         /// Stops playback.
         /// </summary>
-        public void Stop()
+        /// <param name="clearQueue">If true, clears the upcoming tracks in the playlist.</param>
+        public void Stop(bool clearQueue = true)
         {
+            if (!isPlayBackInitialized)
+                return;
+
             if (playBackRoutine.IsRunning)
             {
                 playBackRoutine.IsRunning = false;
@@ -568,6 +619,10 @@ namespace Exiled.API.Features.Toys
             if (fadeRoutine.IsRunning)
                 fadeRoutine.IsRunning = false;
 
+            if (clearQueue)
+                TrackQueue.Clear();
+
+            ResetEncoder();
             source?.Dispose();
             source = null;
         }
@@ -604,7 +659,6 @@ namespace Exiled.API.Features.Toys
             PlayMode = SpeakerPlayMode.Global;
             Channel = Channels.ReliableOrdered2;
 
-            LastTrack = null;
             LastTrackInfo = default;
 
             Predicate = null;
@@ -615,6 +669,7 @@ namespace Exiled.API.Features.Toys
             resampleTime = 0.0;
             resampleBufferFilled = 0;
             isPitchDefault = true;
+            needsSyncWait = false;
 
             SpeakerToyPlaybackBase.AllInstances.Remove(Base.Playback);
 
@@ -637,6 +692,40 @@ namespace Exiled.API.Features.Toys
             OpusWrapper.SetEncoderSetting(encoder._handle, OpusCtlSetRequest.Signal, 3002);
 
             AdminToyBase.OnRemoved += OnToyRemoved;
+        }
+
+        private bool TrySwitchToNextTrack()
+        {
+            while (TrackQueue.Count > 0)
+            {
+                string nextTrack = TrackQueue[0];
+                TrackQueue.RemoveAt(0);
+
+                IPcmSource newSource;
+                try
+                {
+                    bool useStream = source is WavStreamSource;
+                    newSource = useStream ? new WavStreamSource(nextTrack) : new PreloadedPcmSource(nextTrack);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[Speaker] Playlist next track failed: '{nextTrack}'.\n{ex}");
+                    continue;
+                }
+
+                source?.Dispose();
+                source = newSource;
+                LastTrackInfo = source.TrackInfo;
+
+                ResetEncoder();
+                resampleTime = 0.0;
+                resampleBufferFilled = 0;
+
+                OnPlaybackStarted?.Invoke();
+                return true;
+            }
+
+            return false;
         }
 
         private IEnumerator<float> PlayBackCoroutine()
@@ -688,13 +777,22 @@ namespace Exiled.API.Features.Toys
                     if (!source.Ended)
                         continue;
 
-                    OnPlaybackFinished?.Invoke(LastTrack);
+                    OnPlaybackFinished?.Invoke();
 
                     if (Loop)
                     {
+                        ResetEncoder();
                         source.Reset();
-                        OnPlaybackLooped?.Invoke();
+                        timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
+
+                        OnPlaybackLooped?.Invoke();
+                        continue;
+                    }
+
+                    if (TrySwitchToNextTrack())
+                    {
+                        timeAccumulator = 0f;
                         continue;
                     }
 

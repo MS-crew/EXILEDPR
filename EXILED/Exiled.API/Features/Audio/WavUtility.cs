@@ -53,6 +53,7 @@ namespace Exiled.API.Features.Audio
                 for (int i = 0; i < samples.Length; i++)
                     pcm[i] = samples[i] * Divide;
 
+                metaData.Path = path;
                 return (pcm, metaData);
             }
             finally

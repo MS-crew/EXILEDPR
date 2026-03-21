@@ -30,6 +30,11 @@ namespace Exiled.API.Features.Audio
         public double Duration { get; internal set; }
 
         /// <summary>
+        /// Gets the file path of the track.
+        /// </summary>
+        public string Path { get; internal set; }
+
+        /// <summary>
         /// Gets a value indicating whether the track data is completely empty.
         /// </summary>
         public readonly bool IsEmpty => string.IsNullOrEmpty(Title) && string.IsNullOrEmpty(Artist) && Duration <= 0;
@@ -43,8 +48,12 @@ namespace Exiled.API.Features.Audio
             {
                 if (!string.IsNullOrEmpty(Artist) && !string.IsNullOrEmpty(Title))
                     return $"{Artist} - {Title}";
+
                 if (!string.IsNullOrEmpty(Title))
                     return Title;
+
+                if (!string.IsNullOrEmpty(Path))
+                    return System.IO.Path.GetFileNameWithoutExtension(Path);
 
                 return "Unknown Track";
             }

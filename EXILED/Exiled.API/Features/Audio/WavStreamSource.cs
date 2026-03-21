@@ -12,6 +12,8 @@ namespace Exiled.API.Features.Audio
     using System.IO;
     using System.Runtime.InteropServices;
 
+    using Christmas.Scp2536.Gifts;
+
     using Exiled.API.Interfaces;
 
     using VoiceChat;
@@ -109,15 +111,7 @@ namespace Exiled.API.Features.Audio
         /// <param name="seconds">The position in seconds to seek to.</param>
         public void Seek(double seconds)
         {
-            long targetSample = (long)(seconds * VoiceChatSettings.SampleRate);
-            long targetByte = targetSample * 2;
-
-            long newPos = startPosition + targetByte;
-            if (newPos > endPosition)
-                newPos = endPosition;
-
-            if (newPos < startPosition)
-                newPos = startPosition;
+            long newPos = Math.Clamp(startPosition + ((long)(seconds * VoiceChatSettings.SampleRate) * 2), startPosition, endPosition);
 
             if (newPos % 2 != 0)
                 newPos--;
