@@ -557,8 +557,15 @@ namespace Exiled.API.Features.Toys
 
             if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
             {
+                float oldVolume = Volume;
                 double triggerTime = TotalDuration - options.FadeOutDuration;
-                AddTimeEvent(triggerTime, () => FadeVolume(Volume, 0f, options.FadeOutDuration), id: "AutoFadeOut");
+                AddTimeEvent(
+                    triggerTime,
+                    () =>
+                    {
+                        FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = oldVolume);
+                    },
+                    id: "AutoFadeOut");
             }
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
