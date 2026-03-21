@@ -35,6 +35,7 @@ namespace Exiled.API.Features.Toys
     using VoiceChat.Playbacks;
 
     using Object = UnityEngine.Object;
+    using Random = UnityEngine.Random;
 
     /// <summary>
     /// A wrapper class for <see cref="SpeakerToy"/>.
@@ -667,6 +668,21 @@ namespace Exiled.API.Features.Toys
             else
             {
                 Stop();
+            }
+        }
+
+        /// <summary>
+        /// Shuffles the tracks in the <see cref="TrackQueue"/> into a random order.
+        /// </summary>
+        public void ShuffleTracks()
+        {
+            if (TrackQueue.Count <= 1)
+                return;
+
+            for (int i = TrackQueue.Count - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                (TrackQueue[i], TrackQueue[j]) = (TrackQueue[j], TrackQueue[i]);
             }
         }
 
