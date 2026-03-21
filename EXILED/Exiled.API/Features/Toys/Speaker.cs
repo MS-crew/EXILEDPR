@@ -190,9 +190,15 @@ namespace Exiled.API.Features.Toys
 
                 playBackRoutine.IsAliveAndPaused = value;
                 if (value)
+                {
                     OnPlaybackPaused?.Invoke();
+                    SpeakerEvents.OnPlaybackPaused(this);
+                }
                 else
+                {
                     OnPlaybackResumed?.Invoke();
+                    SpeakerEvents.OnPlaybackResumed(this);
+                }
             }
         }
 
@@ -486,15 +492,16 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Plays a wav file through this speaker.(File must be 16 bit, mono and 48khz.)
+        /// Plays a wav file through this speaker. (File must be 16-bit, mono, and 48kHz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
-        /// <param name="stream">Whether to stream the audio or preload it.</param>
-        /// <param name="destroyAfter">Whether to destroy the speaker after playback.</param>
-        /// <param name="loop">Whether to loop the audio.</param>
-        /// <param name="fadeInDuration">The duration in seconds over which the volume should smoothly increase from 0 to speaker volume. 0 means no fade in.</param>
+        /// <param name="stream">Whether to stream the audio directly from the disk (<c>true</c>) or preload it entirely into RAM (<c>false</c>).</param>
+        /// <param name="destroyAfter">Whether to destroy the speaker object automatically after playback finishes.</param>
+        /// <param name="loop">Whether to loop the audio continuously.</param>
+        /// <param name="fadeInDuration">The duration in seconds over which the volume should smoothly increase from 0 to the speaker's volume. <c>0</c> means no fade-in.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears any upcoming tracks in the playlist before playing the new track.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool Play(string path, bool stream = false, bool destroyAfter = false, bool loop = false, float fadeInDuration = 0f)
+        public bool Play(string path, bool stream = false, bool destroyAfter = false, bool loop = false, float fadeInDuration = 0f, bool clearQueue = false)
         {
             if (!File.Exists(path))
             {
@@ -509,7 +516,7 @@ namespace Exiled.API.Features.Toys
             }
 
             TryInitializePlayBack();
-            Stop(clearQueue: false);
+            Stop(clearQueue);
 
             Loop = loop;
             DestroyAfter = destroyAfter;
@@ -613,7 +620,9 @@ namespace Exiled.API.Features.Toys
             if (playBackRoutine.IsRunning)
             {
                 playBackRoutine.IsRunning = false;
+
                 OnPlaybackStopped?.Invoke();
+                SpeakerEvents.OnPlaybackStopped(this);
             }
 
             if (fadeRoutine.IsRunning)
@@ -722,6 +731,7 @@ namespace Exiled.API.Features.Toys
                 resampleBufferFilled = 0;
 
                 OnPlaybackStarted?.Invoke();
+                SpeakerEvents.OnPlaybackStarted(this);
                 return true;
             }
 
@@ -744,6 +754,7 @@ namespace Exiled.API.Features.Toys
             }
 
             OnPlaybackStarted?.Invoke();
+            SpeakerEvents.OnPlaybackStarted(this);
 
             resampleTime = 0.0;
             resampleBufferFilled = 0;
@@ -778,6 +789,7 @@ namespace Exiled.API.Features.Toys
                         continue;
 
                     OnPlaybackFinished?.Invoke();
+                    SpeakerEvents.OnPlaybackFinished(this);
 
                     if (Loop)
                     {
@@ -787,6 +799,7 @@ namespace Exiled.API.Features.Toys
                         resampleTime = resampleBufferFilled = 0;
 
                         OnPlaybackLooped?.Invoke();
+                        SpeakerEvents.OnPlaybackLooped(this);
                         continue;
                     }
 
