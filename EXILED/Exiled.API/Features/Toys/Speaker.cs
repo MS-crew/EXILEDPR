@@ -43,11 +43,6 @@ namespace Exiled.API.Features.Toys
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
         /// <summary>
-        /// The unique identifier used for the automatically scheduled fade-out time event.
-        /// </summary>
-        public const string AutoFadeOutId = "AutoFadeOut";
-
-        /// <summary>
         /// A queue used for object pooling of <see cref="Speaker"/> instances.
         /// Reusing idle speakers instead of constantly creating and destroying them significantly improves server performance, especially for frequent audio events.
         /// </summary>
@@ -71,17 +66,17 @@ namespace Exiled.API.Features.Toys
         private byte[] encoded;
         private float[] resampleBuffer;
 
-        private CoroutineHandle fadeRoutine;
         private CoroutineHandle playBackRoutine;
+        private CoroutineHandle fadeRoutine;
 
         private double resampleTime;
         private int resampleBufferFilled;
-        private int idChangeFrame;
-        private bool needsSyncWait = false;
-
         private int nextTimeEventIndex = 0;
-        private bool isPitchDefault = true;
+        private int idChangeFrame;
+
         private bool isPlayBackInitialized = false;
+        private bool isPitchDefault = true;
+        private bool needsSyncWait = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
@@ -450,14 +445,13 @@ namespace Exiled.API.Features.Toys
         /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
         /// <param name="pitch">The playback pitch level of the audio source.</param>
         /// <param name="fadeInDuration">The duration in seconds over which the volume should smoothly increase from 0 to speaker volume. 0 means no fade in.</param>
-        /// <param name="fadeOutDuration">The duration in seconds over which the volume should smoothly decrease to 0 before the track ends. 0 means no fade out.</param>
         /// <param name="playMode">The play mode determining how audio is sent to players.</param>
         /// <param name="stream">Whether to stream the audio or preload it.</param>
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, float fadeInDuration = 0f, float fadeOutDuration = 0f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, float fadeInDuration = 0f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
         {
             Speaker speaker = Rent(parent, position);
 
@@ -478,7 +472,6 @@ namespace Exiled.API.Features.Toys
             {
                 Stream = stream,
                 FadeInDuration = fadeInDuration,
-                FadeOutDuration = fadeOutDuration,
             };
 
             if (!speaker.Play(path, options))
@@ -835,6 +828,7 @@ namespace Exiled.API.Features.Toys
                 LastTrackInfo = source.TrackInfo;
                 CurrentOptions = nextTrack.Options;
 
+                StopFade();
                 ResetEncoder();
                 ClearTimeEvents();
                 resampleTime = 0.0;
@@ -852,25 +846,12 @@ namespace Exiled.API.Features.Toys
 
         private void ApplyPlaybackOptions(AudioPlaybackOptions options)
         {
-            if (options.FadeInDuration > 0f)
-            {
-                float originalVolume = Volume;
-                Volume = 0f;
-                FadeVolume(0f, originalVolume, options.FadeInDuration);
-            }
+            if (options.FadeInDuration <= 0f)
+                return;
 
-            if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
-            {
-                double triggerTime = TotalDuration - options.FadeOutDuration;
-                AddTimeEvent(
-                    triggerTime,
-                    () =>
-                    {
-                        float currentVol = Volume;
-                        FadeVolume(currentVol, 0f, options.FadeOutDuration, onComplete: () => Volume = currentVol);
-                    },
-                    id: AutoFadeOutId);
-            }
+            float targetVolume = Volume;
+            Base.NetworkVolume = 0f;
+            FadeVolume(0f, targetVolume, options.FadeInDuration);
         }
 
         private void UpdateNextTimeEventIndex()

@@ -1,11 +1,10 @@
-// -----------------------------------------------------------------------
 // <copyright file="AudioTimeEvent.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Features.Audio
+namespace Exiled.API.Structs
 {
     using System;
 

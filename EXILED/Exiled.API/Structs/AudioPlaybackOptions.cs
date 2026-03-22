@@ -20,7 +20,6 @@ namespace Exiled.API.Structs
             Stream = false;
             ClearQueue = false;
             FadeInDuration = 0f;
-            FadeOutDuration = 0f;
         }
 
         /// <summary>
@@ -33,12 +32,6 @@ namespace Exiled.API.Structs
         /// <c>0</c> means no fade-in.
         /// </summary>
         public float FadeInDuration { get; set; }
-
-        /// <summary>
-        /// Gets or sets the duration in seconds over which the volume should smoothly decrease to 0 before the track ends automatically.
-        /// <c>0</c> means no fade-out.
-        /// </summary>
-        public float FadeOutDuration { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to clear any upcoming tracks in the playlist before playing the new track.
