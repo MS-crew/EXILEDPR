@@ -265,6 +265,11 @@ namespace Exiled.API.Features.Toys
         public List<AudioTimeEvent> TimeEvents => field ??= new();
 
         /// <summary>
+        /// Gets the playback options of the currently playing track.
+        /// </summary>
+        public AudioPlaybackOptions CurrentOptions { get; private set; }
+
+        /// <summary>
         /// Gets or sets the playback pitch.
         /// </summary>
         /// <value>
@@ -296,7 +301,15 @@ namespace Exiled.API.Features.Toys
         public float Volume
         {
             get => Base.NetworkVolume;
-            set => Base.NetworkVolume = value;
+            set
+            {
+                if (fadeRoutine.IsRunning)
+                    fadeRoutine.IsRunning = false;
+
+                RemoveTimeEvent("AutoFadeOut");
+
+                Base.NetworkVolume = value;
+            }
         }
 
         /// <summary>
@@ -538,6 +551,7 @@ namespace Exiled.API.Features.Toys
 
             try
             {
+                CurrentOptions = options;
                 source = options.Stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
             }
             catch (Exception ex)
@@ -581,6 +595,7 @@ namespace Exiled.API.Features.Toys
             ClearTimeEvents();
             source?.Dispose();
             source = null;
+            RemoveTimeEvent("ManualStop");
         }
 
         /// <summary>
@@ -832,7 +847,9 @@ namespace Exiled.API.Features.Toys
 
                 source?.Dispose();
                 source = newSource;
+
                 LastTrackInfo = source.TrackInfo;
+                CurrentOptions = nextTrack.Options;
 
                 ResetEncoder();
                 ClearTimeEvents();
@@ -1070,6 +1087,8 @@ namespace Exiled.API.Features.Toys
                     if (!source.Ended)
                         continue;
 
+                    yield return Timing.WaitForOneFrame;
+
                     OnPlaybackFinished?.Invoke();
                     SpeakerEvents.OnPlaybackFinished(this);
 
@@ -1079,8 +1098,9 @@ namespace Exiled.API.Features.Toys
                         source.Reset();
                         timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
-
                         nextTimeEventIndex = 0;
+
+                        ApplyPlaybackOptions(CurrentOptions);
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
@@ -1134,11 +1154,11 @@ namespace Exiled.API.Features.Toys
                 if (!linear)
                     t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
 
-                Volume = Mathf.Lerp(startVolume, targetVolume, t);
+                Base.NetworkVolume = Mathf.Lerp(startVolume, targetVolume, t);
                 yield return Timing.WaitForOneFrame;
             }
 
-            Volume = targetVolume;
+            Base.NetworkVolume = targetVolume;
             onComplete?.Invoke();
         }
     }
