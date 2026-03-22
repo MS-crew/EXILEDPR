@@ -271,11 +271,6 @@ namespace Exiled.API.Features.Toys
         public List<AudioTimeEvent> TimeEvents => field ??= new();
 
         /// <summary>
-        /// Gets the playback options of the currently playing track.
-        /// </summary>
-        public AudioPlaybackOptions CurrentOptions { get; private set; }
-
-        /// <summary>
         /// Gets or sets the playback pitch.
         /// </summary>
         /// <value>
@@ -545,7 +540,6 @@ namespace Exiled.API.Features.Toys
 
             try
             {
-                CurrentOptions = options;
                 source = options.Stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
             }
             catch (Exception ex)
@@ -827,7 +821,6 @@ namespace Exiled.API.Features.Toys
                 source = newSource;
 
                 LastTrackInfo = source.TrackInfo;
-                CurrentOptions = nextTrack.Options;
 
                 ResetEncoder();
                 ClearTimeEvents();
