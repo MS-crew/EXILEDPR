@@ -265,6 +265,11 @@ namespace Exiled.API.Features.Toys
         public TrackData LastTrackInfo { get; private set; }
 
         /// <summary>
+        /// Gets or sets the custom audio filter applied to the PCM data right before encoding.
+        /// </summary>
+        public IAudioFilter Filter { get; set; }
+
+        /// <summary>
         /// Gets the queue of audio tracks to be played sequentially.
         /// </summary>
         public List<QueuedTrack> TrackQueue => field ??= new();
@@ -1045,6 +1050,8 @@ namespace Exiled.API.Features.Toys
                     {
                         ResampleFrame();
                     }
+
+                    Filter?.Process(frame);
 
                     int len = encoder.Encode(frame, encoded);
 
