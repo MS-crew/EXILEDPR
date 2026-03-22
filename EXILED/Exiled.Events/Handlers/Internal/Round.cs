@@ -66,8 +66,6 @@ namespace Exiled.Events.Handlers.Internal
         /// <inheritdoc cref="Handlers.Server.OnRestartingRound" />
         public static void OnRestartingRound()
         {
-            Speaker.Pool.Clear();
-
             Scp049Role.TurnedPlayers.Clear();
             Scp173Role.TurnedPlayers.Clear();
             Scp096Role.TurnedPlayers.Clear();

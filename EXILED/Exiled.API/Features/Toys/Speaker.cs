@@ -26,6 +26,8 @@ namespace Exiled.API.Features.Toys
 
     using NorthwoodLib.Pools;
 
+    using RoundRestarting;
+
     using UnityEngine;
 
     using VoiceChat;
@@ -77,6 +79,8 @@ namespace Exiled.API.Features.Toys
         private bool isPlayBackInitialized = false;
         private bool isPitchDefault = true;
         private bool needsSyncWait = false;
+
+        static Speaker() => RoundRestart.OnRestartTriggered += Pool.Clear;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
