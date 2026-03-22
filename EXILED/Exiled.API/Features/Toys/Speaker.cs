@@ -445,14 +445,13 @@ namespace Exiled.API.Features.Toys
         /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
         /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
         /// <param name="pitch">The playback pitch level of the audio source.</param>
-        /// <param name="fadeInDuration">The duration in seconds over which the volume should smoothly increase from 0 to speaker volume. 0 means no fade in.</param>
         /// <param name="playMode">The play mode determining how audio is sent to players.</param>
         /// <param name="stream">Whether to stream the audio or preload it.</param>
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, float fadeInDuration = 0f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
         {
             Speaker speaker = Rent(parent, position);
 
