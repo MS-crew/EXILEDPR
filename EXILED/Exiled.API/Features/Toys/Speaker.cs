@@ -71,7 +71,7 @@ namespace Exiled.API.Features.Toys
 
         private double resampleTime;
         private int resampleBufferFilled;
-        private int nextTimeEventIndex = 0;
+        private int nextScheduledEventIndex = 0;
         private int idChangeFrame;
 
         private bool isPlayBackInitialized = false;
@@ -226,7 +226,7 @@ namespace Exiled.API.Features.Toys
                 resampleBufferFilled = 0;
 
                 ResetEncoder();
-                UpdateNextTimeEventIndex();
+                UpdateNextScheduledEventIndex();
             }
         }
 
@@ -268,7 +268,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets the list of time-based events for the current audio track.
         /// </summary>
-        public List<AudioTimeEvent> TimeEvents => field ??= new();
+        public List<ScheduledEvent> ScheduledEvents => field ??= new();
 
         /// <summary>
         /// Gets or sets the playback pitch.
@@ -356,12 +356,12 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkControllerId;
             set
             {
-                if (Base.NetworkControllerId != value)
-                {
-                    Base.NetworkControllerId = value;
-                    needsSyncWait = true;
-                    idChangeFrame = Time.frameCount;
-                }
+                if (Base.NetworkControllerId == value)
+                    return;
+
+                Base.NetworkControllerId = value;
+                needsSyncWait = true;
+                idChangeFrame = Time.frameCount;
             }
         }
 
@@ -575,7 +575,7 @@ namespace Exiled.API.Features.Toys
 
             StopFade();
             ResetEncoder();
-            ClearTimeEvents();
+            ClearScheduledEvents();
             source?.Dispose();
             source = null;
         }
@@ -689,14 +689,14 @@ namespace Exiled.API.Features.Toys
         /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
         /// <param name="action">The action to invoke when the specified time is reached.</param>
         /// <param name="id">An optional unique string identifier for this event. If not provided, a random GUID will be assigned.</param>
-        /// <returns>The unique string ID of the created time event, which can be used to remove it later via <see cref="RemoveTimeEvent"/>.</returns>
-        public string AddTimeEvent(double timeInSeconds, Action action, string id = null)
+        /// <returns>The unique string ID of the created time event, which can be used to remove it later via <see cref="RemoveScheduledEvent"/>.</returns>
+        public string AddScheduledEvent(double timeInSeconds, Action action, string id = null)
         {
-            AudioTimeEvent timeEvent = new(timeInSeconds, action, id);
+            ScheduledEvent timeEvent = new(timeInSeconds, action, id);
 
-            TimeEvents.Add(timeEvent);
-            TimeEvents.Sort();
-            UpdateNextTimeEventIndex();
+            ScheduledEvents.Add(timeEvent);
+            ScheduledEvents.Sort();
+            UpdateNextScheduledEventIndex();
 
             return timeEvent.Id;
         }
@@ -705,21 +705,21 @@ namespace Exiled.API.Features.Toys
         /// Removes a specific time-based event using its ID.
         /// </summary>
         /// <param name="id">The unique string identifier of the event to remove.</param>
-        public void RemoveTimeEvent(string id)
+        public void RemoveScheduledEvent(string id)
         {
-            int removed = TimeEvents.RemoveAll(e => e.Id == id);
+            int removed = ScheduledEvents.RemoveAll(e => e.Id == id);
 
             if (removed > 0)
-                UpdateNextTimeEventIndex();
+                UpdateNextScheduledEventIndex();
         }
 
         /// <summary>
         /// Clears all time-based events for the current playback.
         /// </summary>
-        public void ClearTimeEvents()
+        public void ClearScheduledEvents()
         {
-            TimeEvents.Clear();
-            nextTimeEventIndex = 0;
+            ScheduledEvents.Clear();
+            nextScheduledEventIndex = 0;
         }
 
         /// <summary>
@@ -823,7 +823,7 @@ namespace Exiled.API.Features.Toys
                 LastTrackInfo = source.TrackInfo;
 
                 ResetEncoder();
-                ClearTimeEvents();
+                ClearScheduledEvents();
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
 
@@ -835,14 +835,14 @@ namespace Exiled.API.Features.Toys
             return false;
         }
 
-        private void UpdateNextTimeEventIndex()
+        private void UpdateNextScheduledEventIndex()
         {
-            nextTimeEventIndex = 0;
+            nextScheduledEventIndex = 0;
             double current = CurrentTime;
 
-            while (nextTimeEventIndex < TimeEvents.Count && TimeEvents[nextTimeEventIndex].Time <= current)
+            while (nextScheduledEventIndex < ScheduledEvents.Count && ScheduledEvents[nextScheduledEventIndex].Time <= current)
             {
-                nextTimeEventIndex++;
+                nextScheduledEventIndex++;
             }
         }
 
@@ -1057,7 +1057,7 @@ namespace Exiled.API.Features.Toys
                         source.Reset();
                         timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
-                        nextTimeEventIndex = 0;
+                        nextScheduledEventIndex = 0;
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
@@ -1080,18 +1080,18 @@ namespace Exiled.API.Features.Toys
                     yield break;
                 }
 
-                while (nextTimeEventIndex < TimeEvents.Count && CurrentTime >= TimeEvents[nextTimeEventIndex].Time)
+                while (nextScheduledEventIndex < ScheduledEvents.Count && CurrentTime >= ScheduledEvents[nextScheduledEventIndex].Time)
                 {
                     try
                     {
-                        TimeEvents[nextTimeEventIndex].Action?.Invoke();
+                        ScheduledEvents[nextScheduledEventIndex].Action?.Invoke();
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"[Speaker] Failed to execute scheduled time event at {TimeEvents[nextTimeEventIndex].Time:F2}s.\nException Details: {ex}");
+                        Log.Error($"[Speaker] Failed to execute scheduled time event at {ScheduledEvents[nextScheduledEventIndex].Time:F2}s.\nException Details: {ex}");
                     }
 
-                    nextTimeEventIndex++;
+                    nextScheduledEventIndex++;
                 }
 
                 yield return Timing.WaitForOneFrame;
