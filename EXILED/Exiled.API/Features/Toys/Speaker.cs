@@ -985,8 +985,15 @@ namespace Exiled.API.Features.Toys
             AdminToyBase.OnRemoved -= OnToyRemoved;
 
             Stop();
-
             encoder?.Dispose();
+
+            OnPlaybackStarted = null;
+            OnPlaybackPaused = null;
+            OnPlaybackResumed = null;
+            OnPlaybackLooped = null;
+            OnTrackSwitching = null;
+            OnPlaybackFinished = null;
+            OnPlaybackStopped = null;
         }
 
         private IEnumerator<float> PlayBackCoroutine()
