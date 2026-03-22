@@ -709,12 +709,16 @@ namespace Exiled.API.Features.Toys
         /// Removes a specific time-based event using its ID.
         /// </summary>
         /// <param name="id">The unique string identifier of the event to remove.</param>
-        public void RemoveScheduledEvent(string id)
+        /// <returns><c>true</c> if the event was successfully found and removed; otherwise, <c>false</c>.</returns>
+        public bool RemoveScheduledEvent(string id)
         {
             int removed = ScheduledEvents.RemoveAll(e => e.Id == id);
 
-            if (removed > 0)
-                UpdateNextScheduledEventIndex();
+            if (removed <= 0)
+                return false;
+
+            UpdateNextScheduledEventIndex();
+            return true;
         }
 
         /// <summary>
