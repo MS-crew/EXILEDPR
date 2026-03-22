@@ -684,7 +684,7 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Adds an action to be executed at a specific time in seconds during the current playback.
-        /// <para><c>WARNING:</c> Heavy operations can cause audio interruptions. If you need to perform heavy operations, start a new Coroutine inside the action.</para>
+        /// <para><c>WARNING:</c> Heavy operations can cause audio interruptions. If you need to perform heavy operations, start a MEC Coroutine inside the action.</para>
         /// </summary>
         /// <param name="timeInSeconds">The exact time in seconds to trigger the action.</param>
         /// <param name="action">The action to invoke when the specified time is reached.</param>
@@ -768,6 +768,7 @@ namespace Exiled.API.Features.Toys
             OnPlaybackPaused = null;
             OnPlaybackResumed = null;
             OnPlaybackLooped = null;
+            OnTrackSwitching = null;
             OnPlaybackFinished = null;
             OnPlaybackStopped = null;
 
