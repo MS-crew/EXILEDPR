@@ -18,7 +18,6 @@ namespace Exiled.Events.Handlers.Internal
     using Exiled.API.Features.Items;
     using Exiled.API.Features.Pools;
     using Exiled.API.Features.Roles;
-    using Exiled.API.Features.Toys;
     using Exiled.API.Structs;
     using Exiled.Events.EventArgs.Player;
     using Exiled.Events.EventArgs.Scp049;
