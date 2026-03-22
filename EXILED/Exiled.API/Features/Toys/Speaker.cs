@@ -43,6 +43,11 @@ namespace Exiled.API.Features.Toys
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
         /// <summary>
+        /// The unique identifier used for the automatically scheduled fade-out time event.
+        /// </summary>
+        public const string AutoFadeOutId = "AutoFadeOut";
+
+        /// <summary>
         /// A queue used for object pooling of <see cref="Speaker"/> instances.
         /// Reusing idle speakers instead of constantly creating and destroying them significantly improves server performance, especially for frequent audio events.
         /// </summary>
@@ -303,11 +308,7 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkVolume;
             set
             {
-                if (fadeRoutine.IsRunning)
-                    fadeRoutine.IsRunning = false;
-
-                RemoveTimeEvent("AutoFadeOut");
-
+                StopFade();
                 Base.NetworkVolume = value;
             }
         }
@@ -585,45 +586,19 @@ namespace Exiled.API.Features.Toys
                 SpeakerEvents.OnPlaybackStopped(this);
             }
 
-            if (fadeRoutine.IsRunning)
-                fadeRoutine.IsRunning = false;
-
             if (clearQueue)
                 TrackQueue.Clear();
 
+            StopFade();
             ResetEncoder();
             ClearTimeEvents();
             source?.Dispose();
             source = null;
-            RemoveTimeEvent("ManualStop");
-        }
-
-        /// <summary>
-        /// Smoothly fades out the volume over the specified duration and then stops the playback completely.
-        /// </summary>
-        /// <param name="fadeOutDuration">The duration in seconds to fade out the audio.</param>
-        /// <param name="clearQueue">If true, clears the upcoming tracks in the playlist.</param>
-        public void Stop(float fadeOutDuration, bool clearQueue = true)
-        {
-            if (fadeOutDuration <= 0f || !IsPlaying)
-            {
-                Stop(clearQueue);
-                return;
-            }
-
-            if (clearQueue)
-                TrackQueue.Clear();
-
-            float oldVolume = Volume;
-            FadeVolume(Volume, 0f, fadeOutDuration, onComplete: () =>
-            {
-                Stop(clearQueue);
-                Volume = oldVolume;
-            });
         }
 
         /// <summary>
         /// Fades the volume to a specific target over a given duration.
+        /// <para><c>IMPORTANT:</c> If the <see cref="Volume"/> property is manually changed while a fade is in progress, the fade operation will be immediately aborted.</para>
         /// </summary>
         /// <param name="startVolume">The initial volume level when the fade begins.</param>
         /// <param name="targetVolume">The final volume level to reach at the end of the fade.</param>
@@ -639,11 +614,20 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Stops currently active volume fading process, leaving the volume at its exact current level.
+        /// </summary>
+        public void StopFade()
+        {
+            if (fadeRoutine.IsRunning)
+                fadeRoutine.IsRunning = false;
+        }
+
+        /// <summary>
         /// Restarts the currently playing track from the beginning.
         /// </summary>
         public void RestartTrack()
         {
-            if (!playBackRoutine.IsRunning || source == null)
+            if (!playBackRoutine.IsRunning)
                 return;
 
             CurrentTime = 0.0;
@@ -680,6 +664,23 @@ namespace Exiled.API.Features.Toys
             {
                 Stop();
             }
+        }
+
+        /// <summary>
+        /// Removes a specific track from the playback queue by its file path.
+        /// </summary>
+        /// <param name="path">The exact file path of the track to remove.</param>
+        /// <param name="findFirst">If <c>true</c>, removes the first occurrence; if <c>false</c>, removes the last occurrence.</param>
+        /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
+        public bool RemoveTrack(string path, bool findFirst = true)
+        {
+            int index = findFirst ? TrackQueue.FindIndex(t => t.Path == path) : TrackQueue.FindLastIndex(t => t.Path == path);
+
+            if (index == -1)
+                return false;
+
+            TrackQueue.RemoveAt(index);
+            return true;
         }
 
         /// <summary>
@@ -726,23 +727,6 @@ namespace Exiled.API.Features.Toys
 
             if (removed > 0)
                 UpdateNextTimeEventIndex();
-        }
-
-        /// <summary>
-        /// Removes a specific track from the queue by its file path.
-        /// </summary>
-        /// <param name="path">The exact file path of the track to remove.</param>
-        /// <param name="findFirst">If <c>true</c>, removes the first occurrence; if <c>false</c>, removes the last occurrence.</param>
-        /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
-        public bool RemoveFromQueue(string path, bool findFirst = true)
-        {
-            int index = findFirst ? TrackQueue.FindIndex(t => t.Path == path) : TrackQueue.FindLastIndex(t => t.Path == path);
-
-            if (index == -1)
-                return false;
-
-            TrackQueue.RemoveAt(index);
-            return true;
         }
 
         /// <summary>
@@ -868,10 +852,9 @@ namespace Exiled.API.Features.Toys
 
         private void ApplyPlaybackOptions(AudioPlaybackOptions options)
         {
-            float originalVolume = Volume;
-
             if (options.FadeInDuration > 0f)
             {
+                float originalVolume = Volume;
                 Volume = 0f;
                 FadeVolume(0f, originalVolume, options.FadeInDuration);
             }
@@ -879,7 +862,14 @@ namespace Exiled.API.Features.Toys
             if (options.FadeOutDuration > 0f && TotalDuration > options.FadeOutDuration)
             {
                 double triggerTime = TotalDuration - options.FadeOutDuration;
-                AddTimeEvent(triggerTime, () => FadeVolume(Volume, 0f, options.FadeOutDuration, onComplete: () => Volume = originalVolume), id: "AutoFadeOut");
+                AddTimeEvent(
+                    triggerTime,
+                    () =>
+                    {
+                        float currentVol = Volume;
+                        FadeVolume(currentVol, 0f, options.FadeOutDuration, onComplete: () => Volume = currentVol);
+                    },
+                    id: AutoFadeOutId);
             }
         }
 
@@ -914,7 +904,7 @@ namespace Exiled.API.Features.Toys
                     break;
 
                 case SpeakerPlayMode.Player:
-                    TargetPlayer?.Connection.Send(msg, Channel);
+                    TargetPlayer?.Connection?.Send(msg, Channel);
                     break;
 
                 case SpeakerPlayMode.PlayerList:
@@ -929,7 +919,7 @@ namespace Exiled.API.Features.Toys
 
                         foreach (Player ply in TargetPlayers)
                         {
-                            ply?.Connection.Send(segment, Channel);
+                            ply?.Connection?.Send(segment, Channel);
                         }
                     }
 
@@ -947,7 +937,7 @@ namespace Exiled.API.Features.Toys
                         foreach (Player ply in Player.List)
                         {
                             if (Predicate(ply))
-                                ply.Connection.Send(segment, Channel);
+                                ply.Connection?.Send(segment, Channel);
                         }
                     }
 
