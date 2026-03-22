@@ -600,7 +600,7 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Smoothly fades out the volume over the specified duration and then stops the playback completely.
-								 /// <para><c>Note:</c> Manually changing the <see cref="Volume"/> during fade-out will cancel the stop process.</para>
+        /// <para><c>Note:</c> Manually changing the <see cref="Volume"/> during fade-out will cancel the stop process.</para>
         /// </summary>
         /// <param name="fadeOutDuration">The duration in seconds to fade out the audio.</param>
         /// <param name="clearQueue">If true, clears the upcoming tracks in the playlist.</param>
