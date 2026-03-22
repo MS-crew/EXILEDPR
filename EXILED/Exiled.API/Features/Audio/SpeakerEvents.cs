@@ -9,6 +9,8 @@ namespace Exiled.API.Features.Audio
 {
     using System;
 
+    using Exiled.API.Structs;
+
     using Toys;
 
     /// <summary>
@@ -35,6 +37,11 @@ namespace Exiled.API.Features.Audio
         /// Invoked when the audio playback of a speaker loops back to the beginning.
         /// </summary>
         public static event Action<Speaker> PlaybackLooped;
+
+        /// <summary>
+        /// Invoked just before the speaker switches to the next track in the queue.
+        /// </summary>
+        public static event Action<Speaker, QueuedTrack> TrackSwitching;
 
         /// <summary>
         /// Invoked when a speaker finishes playing its current audio track.
@@ -69,6 +76,13 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         /// <param name="speaker">The <see cref="Speaker"/> instance.</param>
         internal static void OnPlaybackLooped(Speaker speaker) => PlaybackLooped?.Invoke(speaker);
+
+        /// <summary>
+        /// Called just before the speaker switches to the next track in the queue.
+        /// </summary>
+        /// <param name="speaker">The <see cref="Speaker"/> instance.</param>
+        /// <param name="nextTrack">The upcoming <see cref="QueuedTrack"/> to be played.</param>
+        internal static void OnTrackSwitching(Speaker speaker, QueuedTrack nextTrack) => TrackSwitching?.Invoke(speaker, nextTrack);
 
         /// <summary>
         /// Called when a speaker finishes playing its current audio track.

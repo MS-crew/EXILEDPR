@@ -19,19 +19,12 @@ namespace Exiled.API.Structs
         {
             Stream = false;
             ClearQueue = false;
-            FadeInDuration = 0f;
         }
 
         /// <summary>
         /// Gets or sets a value indicating whether to stream the audio directly from the disk (<c>true</c>) or preload it entirely into RAM (<c>false</c>).
         /// </summary>
         public bool Stream { get; set; }
-
-        /// <summary>
-        /// Gets or sets the duration in seconds over which the volume should smoothly increase from 0 to the target volume at the start of playback.
-        /// <c>0</c> means no fade-in.
-        /// </summary>
-        public float FadeInDuration { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to clear any upcoming tracks in the playlist before playing the new track.

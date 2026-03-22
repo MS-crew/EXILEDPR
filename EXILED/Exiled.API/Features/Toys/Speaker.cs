@@ -117,6 +117,12 @@ namespace Exiled.API.Features.Toys
         public event Action OnPlaybackStopped;
 
         /// <summary>
+        /// Invoked just before the speaker switches to the next track in the queue.
+        /// Passes the upcoming <see cref="QueuedTrack"/> as an argument.
+        /// </summary>
+        public event Action<QueuedTrack> OnTrackSwitching;
+
+        /// <summary>
         /// Gets the prefab.
         /// </summary>
         public static SpeakerToy Prefab => PrefabHelper.GetPrefab<SpeakerToy>(PrefabType.SpeakerToy);
@@ -468,13 +474,7 @@ namespace Exiled.API.Features.Toys
 
             speaker.ReturnToPoolAfter = true;
 
-            AudioPlaybackOptions options = new()
-            {
-                Stream = stream,
-                FadeInDuration = fadeInDuration,
-            };
-
-            if (!speaker.Play(path, options))
+            if (!speaker.Play(path, new() { Stream = stream }))
             {
                 speaker.ReturnToPool();
                 return false;
@@ -555,8 +555,6 @@ namespace Exiled.API.Features.Toys
             }
 
             LastTrackInfo = source.TrackInfo;
-
-            ApplyPlaybackOptions(options);
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             return true;
@@ -808,6 +806,9 @@ namespace Exiled.API.Features.Toys
             while (TrackQueue.Count > 0)
             {
                 QueuedTrack nextTrack = TrackQueue[0];
+                OnTrackSwitching?.Invoke(nextTrack);
+                SpeakerEvents.OnTrackSwitching(this, nextTrack);
+
                 TrackQueue.RemoveAt(0);
 
                 IPcmSource newSource;
@@ -828,13 +829,10 @@ namespace Exiled.API.Features.Toys
                 LastTrackInfo = source.TrackInfo;
                 CurrentOptions = nextTrack.Options;
 
-                StopFade();
                 ResetEncoder();
                 ClearTimeEvents();
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
-
-                ApplyPlaybackOptions(nextTrack.Options);
 
                 OnPlaybackStarted?.Invoke();
                 SpeakerEvents.OnPlaybackStarted(this);
@@ -842,16 +840,6 @@ namespace Exiled.API.Features.Toys
             }
 
             return false;
-        }
-
-        private void ApplyPlaybackOptions(AudioPlaybackOptions options)
-        {
-            if (options.FadeInDuration <= 0f)
-                return;
-
-            float targetVolume = Volume;
-            Base.NetworkVolume = 0f;
-            FadeVolume(0f, targetVolume, options.FadeInDuration);
         }
 
         private void UpdateNextTimeEventIndex()
@@ -1070,8 +1058,6 @@ namespace Exiled.API.Features.Toys
                         timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
                         nextTimeEventIndex = 0;
-
-                        ApplyPlaybackOptions(CurrentOptions);
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
