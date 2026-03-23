@@ -18,7 +18,7 @@ namespace Exiled.API.Features.Audio
     using VoiceChat;
 
     /// <summary>
-    /// Provides a PCM audio source from a WAV file stream.
+    /// Provides a <see cref="IPcmSource"/> from a WAV file stream.
     /// </summary>
     public sealed class WavStreamSource : IPcmSource
     {

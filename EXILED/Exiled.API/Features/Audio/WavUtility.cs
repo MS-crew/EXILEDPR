@@ -13,6 +13,7 @@ namespace Exiled.API.Features.Audio
     using System.IO;
     using System.Runtime.InteropServices;
 
+    using Exiled.API.Interfaces;
     using Exiled.API.Structs;
 
     using VoiceChat;
@@ -25,12 +26,38 @@ namespace Exiled.API.Features.Audio
         private const float Divide = 1f / 32768f;
 
         /// <summary>
+        /// Evaluates the given path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
+        /// </summary>
+        /// <param name="path">The local file path or web URL of the .wav file.</param>
+        /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory. (Ignored for web URLs).</param>
+        /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
+        public static IPcmSource CreateWavPcmSource(string path, bool stream)
+        {
+            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                return new WebPreloadWavPcmSource(path);
+
+            return stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
+        }
+
+        /// <summary>
         /// Converts a WAV file at the specified path to a PCM float array.
         /// </summary>
         /// <param name="path">The file path of the WAV file to convert.</param>
         /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
         public static (float[] PcmData, TrackData TrackInfo) WavToPcm(string path)
         {
+            if (!File.Exists(path))
+            {
+                Log.Error($"[Speaker] The specified local file does not exist, path: `{path}`");
+                throw new FileNotFoundException("File does not exist");
+            }
+
+            if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+            {
+                Log.Error($"[Speaker] The file type '{Path.GetExtension(path)}' is not supported for wav utility. Please use .wav file.");
+                throw new InvalidDataException("Unsupported WAV format.");
+            }
+
             using FileStream fs = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             int length = (int)fs.Length;
 

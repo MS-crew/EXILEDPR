@@ -15,18 +15,11 @@ namespace Exiled.API.Features.Audio
     using VoiceChat;
 
     /// <summary>
-    /// Represents a preloaded PCM audio source.
+    /// Provides a <see cref="IPcmSource"/> preloaded with Pcm data or file.
     /// </summary>
     public sealed class PreloadedPcmSource : IPcmSource
     {
-        /// <summary>
-        /// The PCM data buffer.
-        /// </summary>
         private readonly float[] data;
-
-        /// <summary>
-        /// The current read position in the data buffer.
-        /// </summary>
         private int pos;
 
         /// <summary>

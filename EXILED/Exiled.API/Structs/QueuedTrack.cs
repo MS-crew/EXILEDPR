@@ -7,6 +7,10 @@
 
 namespace Exiled.API.Structs
 {
+    using System;
+
+    using Exiled.API.Interfaces;
+
     /// <summary>
     /// Represents a track waiting in the queue, along with its specific playback options.
     /// </summary>
@@ -15,22 +19,22 @@ namespace Exiled.API.Structs
         /// <summary>
         /// Initializes a new instance of the <see cref="QueuedTrack"/> struct.
         /// </summary>
-        /// <param name="path">The path to the .wav file.</param>
-        /// <param name="options">The specific playback configuration for this track.</param>
-        public QueuedTrack(string path, AudioPlaybackOptions options = default)
+        /// <param name="name">The name, path, or identifier of the track (used for displaying or removing from queue).</param>
+        /// <param name="sourceFactory">A function that returns the instantiated <see cref="IPcmSource"/>.</param>
+        public QueuedTrack(string name, Func<IPcmSource> sourceFactory)
         {
-            Path = path;
-            Options = options;
+            Name = name;
+            SourceProvider = sourceFactory;
         }
 
         /// <summary>
-        /// Gets the absolute path to the .wav file.
+        /// Gets the name, path, or identifier of the track.
         /// </summary>
-        public string Path { get; }
+        public string Name { get; }
 
         /// <summary>
-        /// Gets the playback options configured for this specific track.
+        /// Gets the provider function used to create the custom audio source on demand.
         /// </summary>
-        public AudioPlaybackOptions Options { get; }
+        public Func<IPcmSource> SourceProvider { get; }
     }
 }

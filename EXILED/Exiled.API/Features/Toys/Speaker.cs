@@ -61,7 +61,6 @@ namespace Exiled.API.Features.Toys
 
         private static readonly Vector3 SpeakerParkPosition = Vector3.down * 999;
 
-        private IPcmSource source;
         private OpusEncoder encoder;
 
         private float[] frame;
@@ -219,13 +218,13 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public double CurrentTime
         {
-            get => source?.CurrentTime ?? 0.0;
+            get => CurrentSource?.CurrentTime ?? 0.0;
             set
             {
-                if (source == null)
+                if (CurrentSource == null)
                     return;
 
-                source.CurrentTime = value;
+                CurrentSource.CurrentTime = value;
                 resampleTime = 0.0;
                 resampleBufferFilled = 0;
 
@@ -238,7 +237,7 @@ namespace Exiled.API.Features.Toys
         /// Gets the total duration of the current track in seconds.
         /// Returns 0 if not playing.
         /// </summary>
-        public double TotalDuration => source?.TotalDuration ?? 0.0;
+        public double TotalDuration => CurrentSource?.TotalDuration ?? 0.0;
 
         /// <summary>
         /// Gets the remaining playback time in seconds.
@@ -258,6 +257,11 @@ namespace Exiled.API.Features.Toys
                     CurrentTime = TotalDuration * Mathf.Clamp01(value);
             }
         }
+
+        /// <summary>
+        /// Gets the currently playing audio source.
+        /// </summary>
+        public IPcmSource CurrentSource { get; private set; }
 
         /// <summary>
         /// Gets the metadata information (Title, Artist, Duration) of the last played audio track.
@@ -477,7 +481,7 @@ namespace Exiled.API.Features.Toys
 
             speaker.ReturnToPoolAfter = true;
 
-            if (!speaker.Play(path, new() { Stream = stream }))
+            if (!speaker.PlayWav(path, true, stream))
             {
                 speaker.ReturnToPool();
                 return false;
@@ -527,28 +531,37 @@ namespace Exiled.API.Features.Toys
         /// Plays a wav file through this speaker. (File must be 16-bit, mono, and 48kHz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
-        /// <param name="options">The configuration options for playback.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <param name="stream">If <c>true</c>, the file is streamed from disk; otherwise, it is fully loaded into memory.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool Play(string path, AudioPlaybackOptions options = default)
+        public bool PlayWav(string path, bool clearQueue = true, bool stream = false)
         {
-            if (!File.Exists(path))
+            if (string.IsNullOrWhiteSpace(path))
             {
-                Log.Error($"[Speaker] The specified file does not exist, path: `{path}`.");
+                Log.Error("[Speaker] Provided path or URL cannot be null or empty!");
                 return false;
             }
 
-            if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+            bool isUrl = path.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+            if (!isUrl)
             {
-                Log.Error($"[Speaker] The file type '{Path.GetExtension(path)}' is not supported. Please use .wav file.");
-                return false;
+                if (!File.Exists(path))
+                {
+                    Log.Error($"[Speaker] The specified local file does not exist, path: `{path}`");
+                    return false;
+                }
+
+                if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+                {
+                    Log.Error($"[Speaker] Unsupported file format! Only .wav files are allowed on PlayWav method. Path: `{path}`");
+                    return false;
+                }
             }
 
-            TryInitializePlayBack();
-            Stop(options.ClearQueue);
-
+            IPcmSource newSource;
             try
             {
-                source = options.Stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
+                newSource = WavUtility.CreateWavPcmSource(path, stream);
             }
             catch (Exception ex)
             {
@@ -556,7 +569,49 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            LastTrackInfo = source.TrackInfo;
+            return Play(newSource, clearQueue);
+        }
+
+        /// <summary>
+        /// Plays the live voice of a specific player through this speaker.
+        /// </summary>
+        /// <param name="player">The player whose voice will be broadcasted.</param>
+        /// <param name="voiceSource">Outputs the newly created <see cref="PlayerVoiceSource"/> instance.</param>
+        /// <param name="delayInSeconds">The broadcast delay in seconds.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <returns><c>true</c> if the playback started successfully; otherwise, <c>false</c>.</returns>
+        public bool PlayPlayerVoice(Player player, out PlayerVoiceSource voiceSource, float delayInSeconds = 0f, bool clearQueue = true)
+        {
+            voiceSource = null;
+            if (player == null)
+            {
+                Log.Error("[Speaker] Source player cannot be null when streaming live microphone!");
+                return false;
+            }
+
+            voiceSource = new PlayerVoiceSource(player, delayInSeconds);
+            return Play(voiceSource, clearQueue);
+        }
+
+        /// <summary>
+        /// Plays audio directly from a provided PCM source.
+        /// </summary>
+        /// <param name="customSource">The custom IPcmSource to play.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <returns><c>true</c> if the source is valid and playback started; otherwise, <c>false</c>.</returns>
+        public bool Play(IPcmSource customSource, bool clearQueue = true)
+        {
+            if (customSource == null)
+            {
+                Log.Error("[Speaker] Provided custom IPcmSource is null!");
+                return false;
+            }
+
+            TryInitializePlayBack();
+            Stop(clearQueue);
+
+            CurrentSource = customSource;
+            LastTrackInfo = CurrentSource.TrackInfo;
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             return true;
@@ -585,8 +640,8 @@ namespace Exiled.API.Features.Toys
             StopFade();
             ResetEncoder();
             ClearScheduledEvents();
-            source?.Dispose();
-            source = null;
+            CurrentSource?.Dispose();
+            CurrentSource = null;
         }
 
         /// <summary>
@@ -627,17 +682,29 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Adds an audio file to the playback queue with specific options. If nothing is playing, playback starts immediately.
+        /// Helper method to easily queue a .wav file with stream support.
         /// </summary>
-        /// <param name="path">The path to the wav file to enqueue.</param>
-        /// <param name="options">The specific playback configuration for this track.</param>
+        /// <param name="path">The absolute path to the .wav file.</param>
+        /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueTrack(string path, AudioPlaybackOptions options = default)
+        public bool QueueWavTrack(string path, bool isStream = false)
+        {
+            Func<IPcmSource> factory = () => WavUtility.CreateWavPcmSource(path, isStream);
+
+            return QueueTrack(new QueuedTrack(path, factory));
+        }
+
+        /// <summary>
+        /// Adds a track to the playback queue. If nothing is playing, playback starts immediately.
+        /// </summary>
+        /// <param name="track">The queued track containing its creation logic and optional identifier.</param>
+        /// <returns><c>true</c> if successfully queued or started.</returns>
+        public bool QueueTrack(QueuedTrack track)
         {
             if (!playBackRoutine.IsRunning && !IsPaused)
-                return Play(path, options);
+                return Play(track.SourceProvider.Invoke());
 
-            TrackQueue.Add(new QueuedTrack(path, options));
+            TrackQueue.Add(track);
             return true;
         }
 
@@ -667,7 +734,7 @@ namespace Exiled.API.Features.Toys
         /// <returns><c>true</c> if the track was successfully found and removed; otherwise, <c>false</c>.</returns>
         public bool RemoveTrack(string path, bool findFirst = true)
         {
-            int index = findFirst ? TrackQueue.FindIndex(t => t.Path == path) : TrackQueue.FindLastIndex(t => t.Path == path);
+            int index = findFirst ? TrackQueue.FindIndex(t => t.Name == path) : TrackQueue.FindLastIndex(t => t.Name == path);
 
             if (index == -1)
                 return false;
@@ -821,8 +888,7 @@ namespace Exiled.API.Features.Toys
                 IPcmSource newSource;
                 try
                 {
-                    bool useStream = nextTrack.Options.Stream;
-                    newSource = useStream ? new WavStreamSource(nextTrack.Path) : new PreloadedPcmSource(nextTrack.Path);
+                    newSource = nextTrack.SourceProvider.Invoke();
                 }
                 catch (Exception ex)
                 {
@@ -830,10 +896,10 @@ namespace Exiled.API.Features.Toys
                     continue;
                 }
 
-                source?.Dispose();
-                source = newSource;
+                CurrentSource?.Dispose();
+                CurrentSource = newSource;
 
-                LastTrackInfo = source.TrackInfo;
+                LastTrackInfo = CurrentSource.TrackInfo;
 
                 ResetEncoder();
                 ClearScheduledEvents();
@@ -938,7 +1004,7 @@ namespace Exiled.API.Features.Toys
                 if (resampleBufferFilled == 0)
                 {
                     int toRead = resampleBuffer.Length - 4;
-                    int actualRead = source.Read(resampleBuffer, 0, toRead);
+                    int actualRead = CurrentSource.Read(resampleBuffer, 0, toRead);
 
                     if (actualRead == 0)
                     {
@@ -960,7 +1026,7 @@ namespace Exiled.API.Features.Toys
                         resampleBuffer[0] = resampleBuffer[resampleBufferFilled - 1];
 
                         int toRead = resampleBuffer.Length - 5;
-                        int actualRead = source.Read(resampleBuffer, 1, toRead);
+                        int actualRead = CurrentSource.Read(resampleBuffer, 1, toRead);
 
                         if (actualRead == 0)
                         {
@@ -1042,7 +1108,7 @@ namespace Exiled.API.Features.Toys
 
                     if (isPitchDefault)
                     {
-                        int read = source.Read(frame, 0, FrameSize);
+                        int read = CurrentSource.Read(frame, 0, FrameSize);
                         if (read < FrameSize)
                             Array.Clear(frame, read, FrameSize - read);
                     }
@@ -1058,7 +1124,7 @@ namespace Exiled.API.Features.Toys
                     if (len > 2)
                         SendPacket(len);
 
-                    if (!source.Ended)
+                    if (!CurrentSource.Ended)
                         continue;
 
                     yield return Timing.WaitForOneFrame;
@@ -1069,7 +1135,7 @@ namespace Exiled.API.Features.Toys
                     if (Loop)
                     {
                         ResetEncoder();
-                        source.Reset();
+                        CurrentSource.Reset();
                         timeAccumulator = 0;
                         resampleTime = resampleBufferFilled = 0;
                         nextScheduledEventIndex = 0;
