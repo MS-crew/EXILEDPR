@@ -263,6 +263,7 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Gets the currently playing audio source.
+        /// <para>Pre-made filters are available in the <see cref="Exiled.API.Features.Audio.Filters"/> namespace.</para>
         /// </summary>
         public IPcmSource CurrentSource { get; private set; }
 
