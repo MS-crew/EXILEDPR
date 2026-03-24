@@ -5,12 +5,14 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Features.Audio
+namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Buffers;
     using System.IO;
     using System.Runtime.InteropServices;
+
+    using Exiled.API.Features.Audio;
 
     using Exiled.API.Interfaces;
     using Exiled.API.Structs;

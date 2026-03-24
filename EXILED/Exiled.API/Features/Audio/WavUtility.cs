@@ -13,6 +13,7 @@ namespace Exiled.API.Features.Audio
     using System.IO;
     using System.Runtime.InteropServices;
 
+    using Exiled.API.Features.Audio.PcmSources;
     using Exiled.API.Interfaces;
     using Exiled.API.Structs;
 
@@ -31,10 +32,10 @@ namespace Exiled.API.Features.Audio
         /// <param name="path">The local file path or web URL of the .wav file.</param>
         /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory. (Ignored for web URLs).</param>
         /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
-        public static IPcmSource CreateWavPcmSource(string path, bool stream)
+        public static IPcmSource CreatePcmSource(string path, bool stream)
         {
             if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                return new WebPreloadWavPcmSource(path);
+                return new PreloadWebWavPcmSource(path);
 
             return stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
         }
@@ -66,29 +67,52 @@ namespace Exiled.API.Features.Audio
             try
             {
                 int bytesRead = fs.Read(rentedBuffer, 0, length);
-
                 using MemoryStream ms = new(rentedBuffer, 0, bytesRead);
 
-                TrackData metaData = SkipHeader(ms);
+                (float[] PcmData, TrackData TrackInfo) result = ParseWavSpanToPcm(ms, rentedBuffer.AsSpan(0, bytesRead));
+                result.TrackInfo.Path = path;
 
-                int headerOffset = (int)ms.Position;
-                int dataLength = bytesRead - headerOffset;
-
-                Span<byte> audioDataSpan = rentedBuffer.AsSpan(headerOffset, dataLength);
-                Span<short> samples = MemoryMarshal.Cast<byte, short>(audioDataSpan);
-
-                float[] pcm = new float[samples.Length];
-
-                for (int i = 0; i < samples.Length; i++)
-                    pcm[i] = samples[i] * Divide;
-
-                metaData.Path = path;
-                return (pcm, metaData);
+                return result;
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(rentedBuffer);
             }
+        }
+
+        /// <summary>
+        /// Converts a WAV byte array to a PCM float array.
+        /// </summary>
+        /// <param name="data">The raw bytes of the WAV file.</param>
+        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static (float[] PcmData, TrackData TrackInfo) WavToPcm(byte[] data)
+        {
+            using MemoryStream ms = new(data, 0, data.Length);
+
+            return ParseWavSpanToPcm(ms, data.AsSpan());
+        }
+
+        /// <summary>
+        /// Parses the WAV header from the provided stream and converts the remaining audio data span into a PCM float array.
+        /// </summary>
+        /// <param name="stream">The stream used to read and skip the WAV header.</param>
+        /// <param name="audioData">The complete span of WAV audio data including the header.</param>
+        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static (float[] PcmData, TrackData TrackInfo) ParseWavSpanToPcm(Stream stream, ReadOnlySpan<byte> audioData)
+        {
+            TrackData metaData = SkipHeader(stream);
+
+            int headerOffset = (int)stream.Position;
+            int dataLength = audioData.Length - headerOffset;
+
+            ReadOnlySpan<short> samples = MemoryMarshal.Cast<byte, short>(audioData.Slice(headerOffset, dataLength));
+
+            float[] pcm = new float[samples.Length];
+
+            for (int i = 0; i < samples.Length; i++)
+                pcm[i] = samples[i] * Divide;
+
+            return (pcm, metaData);
         }
 
         /// <summary>
@@ -204,6 +228,39 @@ namespace Exiled.API.Features.Audio
             }
 
             return trackData;
+        }
+
+        /// <summary>
+        /// Validates a given local file path or web URL to ensure it is suitable for WAV processing.
+        /// </summary>
+        /// <param name="path">The local file path or web URL to validate.</param>
+        /// <param name="errorMessage">Outputs a specific error message explaining why the validation failed. Returns <see cref="string.Empty"/> if successful.</param>
+        /// <returns><c>true</c> if the path is valid and safe to process; otherwise, <c>false</c>.</returns>
+        public static bool TryValidatePath(string path, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                errorMessage = "Provided path or URL cannot be null or empty!";
+                return false;
+            }
+
+            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!File.Exists(path))
+            {
+                errorMessage = $"The specified local file does not exist. Path: `{path}`";
+                return false;
+            }
+
+            if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = $"Unsupported file format! Only .wav files are allowed. Path: `{path}`";
+                return false;
+            }
+
+            return true;
         }
     }
 }

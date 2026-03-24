@@ -5,7 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Features.Audio
+namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Buffers;
@@ -37,12 +37,15 @@ namespace Exiled.API.Features.Audio
         /// Initializes a new instance of the <see cref="PlayerVoiceSource"/> class.
         /// </summary>
         /// <param name="player">The player whose voice will be captured.</param>
+        /// <param name="blockOriginalVoice">If <c>true</c>, prevents the player's original voice message's from being heard while broadcasting.</param>
         /// <param name="delay">The broadcast delay in seconds.</param>
-        public PlayerVoiceSource(Player player, float delay = 0f)
+        public PlayerVoiceSource(Player player, bool blockOriginalVoice = false, float delay = 0f)
         {
             sourcePlayer = player;
             sourcePlayerId = player.Id;
+
             Delay = delay;
+            BlockOriginalVoice = blockOriginalVoice;
 
             decoder = new OpusDecoder();
             pcmQueue = new ConcurrentQueue<float>();
@@ -50,7 +53,7 @@ namespace Exiled.API.Features.Audio
 
             TrackInfo = new TrackData
             {
-                Path = $"Live Stream from {player.Nickname}'s Microphone",
+                Path = $"{player.Nickname}-Mic",
                 Duration = double.PositiveInfinity,
             };
 
@@ -64,6 +67,16 @@ namespace Exiled.API.Features.Audio
         /// Gets or sets the broadcast delay in seconds.
         /// </summary>
         public float Delay { get; set; }
+
+        /// <summary>
+        /// Gets or sets the threshold in seconds of silence required before the delay buffer is refilled.
+        /// </summary>
+        public double SilenceThreshold { get; set; } = 0.5;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player's original voice chat should be blocked while being broadcasted by this source.
+        /// </summary>
+        public bool BlockOriginalVoice { get; set; } = false;
 
         /// <summary>
         /// Gets the metadata of the streaming track.
@@ -101,14 +114,14 @@ namespace Exiled.API.Features.Audio
             if (Ended)
                 return 0;
 
-            int written = 0;
-            while (written < count && pcmQueue.TryDequeue(out float sample))
+            int read = 0;
+            while (read < count && pcmQueue.TryDequeue(out float sample))
             {
-                buffer[offset + written] = sample;
-                written++;
+                buffer[offset + read] = sample;
+                read++;
             }
 
-            return written;
+            return read;
         }
 
         /// <inheritdoc/>
@@ -157,7 +170,10 @@ namespace Exiled.API.Features.Audio
             if (ev.Message.DataLength <= 2)
                 return;
 
-            if ((DateTime.UtcNow - lastPacketTime).TotalSeconds > 0.5)
+            if (BlockOriginalVoice)
+                ev.IsAllowed = false;
+
+            if ((DateTime.UtcNow - lastPacketTime).TotalSeconds > SilenceThreshold)
                 FillDelayBuffer();
 
             lastPacketTime = DateTime.UtcNow;

@@ -16,7 +16,10 @@ namespace Exiled.API.Features.Toys
     using Enums;
 
     using Exiled.API.Features.Audio;
+    using Exiled.API.Features.Audio.PcmSources;
     using Exiled.API.Structs;
+
+    using HarmonyLib;
 
     using Interfaces;
 
@@ -448,7 +451,7 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Rents a speaker from the pool, plays a wav file one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
+        /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
         /// <param name="position">The local position of the speaker.</param>
@@ -463,9 +466,55 @@ namespace Exiled.API.Features.Toys
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
+        /// <param name="filter">An optional audio filter to apply to the source.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
         {
+            if (!WavUtility.TryValidatePath(path, out string errorMessage))
+            {
+                Log.Error($"[Speaker] {errorMessage}");
+                return false;
+            }
+
+            IPcmSource source;
+            try
+            {
+                source = WavUtility.CreatePcmSource(path, stream);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[Speaker] Failed to initialize audio source for PlayFromPool. Path: '{path}'.\n{ex}");
+                return false;
+            }
+
+            return PlayFromPool(source, position, parent, isSpatial, volume, minDistance, maxDistance, pitch, playMode, targetPlayer, targetPlayers, predicate, filter);
+        }
+
+        /// <summary>
+        /// Rents a speaker from the pool, plays a custom PCM source one time, and automatically returns it to the pool afterwards.
+        /// </summary>
+        /// <param name="source">The custom IPcmSource to play.</param>
+        /// <param name="position">The local position of the speaker.</param>
+        /// <param name="parent">The parent transform, if any.</param>
+        /// <param name="isSpatial">Whether the audio source is spatialized.</param>
+        /// <param name="volume">The volume level of the audio source.</param>
+        /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
+        /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
+        /// <param name="pitch">The playback pitch level of the audio source.</param>
+        /// <param name="playMode">The play mode determining how audio is sent to players.</param>
+        /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
+        /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
+        /// <param name="predicate">The condition if PlayMode is Predicate.</param>
+        /// <param name="filter">An optional audio filter to apply to the source.</param>
+        /// <returns><c>true</c> if the source is valid and playback started; otherwise, <c>false</c>.</returns>
+        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
+        {
+            if (source == null)
+            {
+                Log.Error("[Speaker] Provided custom IPcmSource is null for PlayFromPool!");
+                return false;
+            }
+
             Speaker speaker = Rent(parent, position);
 
             speaker.Volume = volume;
@@ -478,10 +527,11 @@ namespace Exiled.API.Features.Toys
             speaker.Predicate = predicate;
             speaker.TargetPlayer = targetPlayer;
             speaker.TargetPlayers = targetPlayers;
+            speaker.Filter = filter;
 
             speaker.ReturnToPoolAfter = true;
 
-            if (!speaker.PlayWav(path, true, stream))
+            if (!speaker.Play(source, true))
             {
                 speaker.ReturnToPool();
                 return false;
@@ -528,40 +578,24 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Plays a wav file through this speaker. (File must be 16-bit, mono, and 48kHz.)
+        /// Plays a local wav file or web URL through this speaker. (File must be 16-bit, mono, and 48kHz.)
         /// </summary>
         /// <param name="path">The path to the wav file.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <param name="stream">If <c>true</c>, the file is streamed from disk; otherwise, it is fully loaded into memory.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool PlayWav(string path, bool clearQueue = true, bool stream = false)
+        public bool Play(string path, bool clearQueue = true, bool stream = false)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (!WavUtility.TryValidatePath(path, out string errorMessage))
             {
-                Log.Error("[Speaker] Provided path or URL cannot be null or empty!");
+                Log.Error($"[Speaker] {errorMessage}");
                 return false;
-            }
-
-            bool isUrl = path.StartsWith("http", StringComparison.OrdinalIgnoreCase);
-            if (!isUrl)
-            {
-                if (!File.Exists(path))
-                {
-                    Log.Error($"[Speaker] The specified local file does not exist, path: `{path}`");
-                    return false;
-                }
-
-                if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
-                {
-                    Log.Error($"[Speaker] Unsupported file format! Only .wav files are allowed on PlayWav method. Path: `{path}`");
-                    return false;
-                }
             }
 
             IPcmSource newSource;
             try
             {
-                newSource = WavUtility.CreateWavPcmSource(path, stream);
+                newSource = WavUtility.CreatePcmSource(path, stream);
             }
             catch (Exception ex)
             {
@@ -576,21 +610,30 @@ namespace Exiled.API.Features.Toys
         /// Plays the live voice of a specific player through this speaker.
         /// </summary>
         /// <param name="player">The player whose voice will be broadcasted.</param>
-        /// <param name="voiceSource">Outputs the newly created <see cref="PlayerVoiceSource"/> instance.</param>
+        /// <param name="blockOriginalVoice">If <c>true</c>, prevents the player's original voice message's from being heard while broadcasting.</param>
         /// <param name="delayInSeconds">The broadcast delay in seconds.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <returns><c>true</c> if the playback started successfully; otherwise, <c>false</c>.</returns>
-        public bool PlayPlayerVoice(Player player, out PlayerVoiceSource voiceSource, float delayInSeconds = 0f, bool clearQueue = true)
+        public bool PlayLiveVoice(Player player, bool blockOriginalVoice = false, float delayInSeconds = 0f, bool clearQueue = true)
         {
-            voiceSource = null;
             if (player == null)
             {
                 Log.Error("[Speaker] Source player cannot be null when streaming live microphone!");
                 return false;
             }
 
-            voiceSource = new PlayerVoiceSource(player, delayInSeconds);
-            return Play(voiceSource, clearQueue);
+            PlayerVoiceSource source;
+            try
+            {
+                source = new PlayerVoiceSource(player, blockOriginalVoice, delayInSeconds);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[Speaker] Failed to initialize live voice stream for player '{player.Nickname}' ({player.Id}).\nException Details: {ex}");
+                return false;
+            }
+
+            return Play(source, clearQueue);
         }
 
         /// <summary>
@@ -687,12 +730,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="path">The absolute path to the .wav file.</param>
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueWavTrack(string path, bool isStream = false)
-        {
-            Func<IPcmSource> factory = () => WavUtility.CreateWavPcmSource(path, isStream);
-
-            return QueueTrack(new QueuedTrack(path, factory));
-        }
+        public bool QueueWav(string path, bool isStream = false) => QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
 
         /// <summary>
         /// Adds a track to the playback queue. If nothing is playing, playback starts immediately.
@@ -839,6 +877,7 @@ namespace Exiled.API.Features.Toys
             TargetPlayers = null;
 
             Pitch = 1f;
+            Filter = null;
             resampleTime = 0.0;
             resampleBufferFilled = 0;
             isPitchDefault = true;

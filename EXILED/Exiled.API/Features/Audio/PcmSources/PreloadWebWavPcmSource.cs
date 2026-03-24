@@ -1,15 +1,14 @@
 // -----------------------------------------------------------------------
-// <copyright file="WebPreloadWavPcmSource.cs" company="ExMod Team">
+// <copyright file="PreloadWebWavPcmSource.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Features.Audio
+namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
 
     using Exiled.API.Features;
     using Exiled.API.Interfaces;
@@ -22,19 +21,18 @@ namespace Exiled.API.Features.Audio
     /// <summary>
     /// Provides a <see cref="IPcmSource"/> that downloads a .wav file from a URL and preloads it for playback.
     /// </summary>
-    public sealed class WebPreloadWavPcmSource : IPcmSource
+    public sealed class PreloadWebWavPcmSource : IPcmSource
     {
-        private string tempFilePath;
         private IPcmSource internalSource;
 
         private bool isReady = false;
         private bool isFailed = false;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WebPreloadWavPcmSource"/> class.
+        /// Initializes a new instance of the <see cref="PreloadWebWavPcmSource"/> class.
         /// </summary>
         /// <param name="url">The direct URL to the .wav file.</param>
-        public WebPreloadWavPcmSource(string url)
+        public PreloadWebWavPcmSource(string url)
         {
             TrackInfo = default;
             Timing.RunCoroutine(Download(url));
@@ -105,24 +103,9 @@ namespace Exiled.API.Features.Audio
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="WebPreloadWavPcmSource"/>.
+        /// Releases all resources used by the <see cref="PreloadWebWavPcmSource"/>.
         /// </summary>
-        public void Dispose()
-        {
-            internalSource?.Dispose();
-
-            if (!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath))
-            {
-                try
-                {
-                    File.Delete(tempFilePath);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"[WebPreloadWavPcmSource] Failed to delete temporary audio file at path: {tempFilePath}. Please delete it yourself.\nException Details: {ex}");
-                }
-            }
-        }
+        public void Dispose() => internalSource?.Dispose();
 
         private IEnumerator<float> Download(string url)
         {
@@ -136,14 +119,14 @@ namespace Exiled.API.Features.Audio
                 yield break;
             }
 
-            tempFilePath = Path.Combine(Paths.Exiled, $"temp_audio_{Guid.NewGuid()}.wav");
-
             try
             {
-                File.WriteAllBytes(tempFilePath, www.downloadHandler.data);
+                byte[] rawBytes = www.downloadHandler.data;
+                (float[] pcmData, TrackData trackInfo) = WavUtility.WavToPcm(rawBytes);
+                trackInfo.Path = url;
 
-                internalSource = new PreloadedPcmSource(tempFilePath);
-                TrackInfo = internalSource.TrackInfo;
+                internalSource = new PreloadedPcmSource(pcmData);
+                TrackInfo = trackInfo;
                 isReady = true;
             }
             catch (Exception e)
