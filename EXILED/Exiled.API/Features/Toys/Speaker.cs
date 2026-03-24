@@ -730,7 +730,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="path">The absolute path to the .wav file.</param>
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueWav(string path, bool isStream = false) => QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
+        public bool QueueTrack(string path, bool isStream = false) => QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
 
         /// <summary>
         /// Adds a track to the playback queue. If nothing is playing, playback starts immediately.
