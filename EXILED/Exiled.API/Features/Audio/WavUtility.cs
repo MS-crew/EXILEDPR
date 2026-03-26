@@ -30,7 +30,7 @@ namespace Exiled.API.Features.Audio
         /// Evaluates the given path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
         /// </summary>
         /// <param name="path">The local file path or web URL of the .wav file.</param>
-        /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory. (Ignored for web URLs).</param>
+        /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory (Ignored for web URLs).</param>
         /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
         public static IPcmSource CreatePcmSource(string path, bool stream)
         {

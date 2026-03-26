@@ -454,7 +454,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
-        /// <param name="path">The path to the wav file.</param>
+        /// <param name="path">The path/url to the wav file.</param>
         /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="isSpatial">Whether the audio source is spatialized.</param>
@@ -463,7 +463,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
         /// <param name="pitch">The playback pitch level of the audio source.</param>
         /// <param name="playMode">The play mode determining how audio is sent to players.</param>
-        /// <param name="stream">Whether to stream the audio or preload it.</param>
+        /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
@@ -581,9 +581,9 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Plays a local wav file or web URL through this speaker. (File must be 16-bit, mono, and 48kHz.)
         /// </summary>
-        /// <param name="path">The path to the wav file.</param>
+        /// <param name="path">The path/url to the wav file.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
-        /// <param name="stream">If <c>true</c>, the file is streamed from disk; otherwise, it is fully loaded into memory.</param>
+        /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
         public bool Play(string path, bool clearQueue = true, bool stream = false)
         {
@@ -726,12 +726,21 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Helper method to easily queue a .wav file with stream support.
+        /// Helper method to easily queue a .wav file/url with stream support.
         /// </summary>
         /// <param name="path">The absolute path to the .wav file.</param>
-        /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory.</param>
+        /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueTrack(string path, bool isStream = false) => QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
+        public bool QueueTrack(string path, bool isStream = false)
+        {
+            if (!WavUtility.TryValidatePath(path, out string errorMessage))
+            {
+                Log.Error($"[Speaker] {errorMessage}");
+                return false;
+            }
+
+            return QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
+        }
 
         /// <summary>
         /// Adds a track to the playback queue. If nothing is playing, playback starts immediately.
