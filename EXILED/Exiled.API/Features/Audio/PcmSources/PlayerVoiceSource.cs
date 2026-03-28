@@ -25,7 +25,6 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// </summary>
     public sealed class PlayerVoiceSource : IPcmSource
     {
-        private readonly int sourcePlayerId;
         private readonly Player sourcePlayer;
         private readonly OpusDecoder decoder;
         private readonly ConcurrentQueue<float> pcmQueue;
@@ -42,7 +41,6 @@ namespace Exiled.API.Features.Audio.PcmSources
         public PlayerVoiceSource(Player player, bool blockOriginalVoice = false, float delay = 0f)
         {
             sourcePlayer = player;
-            sourcePlayerId = player.Id;
 
             Delay = delay;
             BlockOriginalVoice = blockOriginalVoice;
@@ -164,7 +162,7 @@ namespace Exiled.API.Features.Audio.PcmSources
 
         private void OnVoiceChatting(PlayerSendingVoiceMessageEventArgs ev)
         {
-            if (ev.Player.PlayerId != sourcePlayerId)
+            if (ev.Player != sourcePlayer)
                 return;
 
             if (ev.Message.DataLength <= 2)

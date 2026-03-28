@@ -906,6 +906,60 @@ namespace Exiled.API.Features.Toys
             Pool.Enqueue(this);
         }
 
+        /// <summary>
+        /// Sends the constructed audio message to the appropriate players based on the current <see cref="PlayMode"/>.
+        /// </summary>
+        /// <param name="audioMessage">The <see cref="AudioMessage"/>.</param>
+        public void SendAudioMessage(AudioMessage audioMessage)
+        {
+            switch (PlayMode)
+            {
+                case SpeakerPlayMode.Global:
+                    NetworkServer.SendToReady(audioMessage, Channel);
+                    break;
+
+                case SpeakerPlayMode.Player:
+                    TargetPlayer?.Connection?.Send(audioMessage, Channel);
+                    break;
+
+                case SpeakerPlayMode.PlayerList:
+
+                    if (TargetPlayers is null)
+                        break;
+
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(audioMessage, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
+
+                        foreach (Player ply in TargetPlayers)
+                        {
+                            ply?.Connection?.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+
+                case SpeakerPlayMode.Predicate:
+                    if (Predicate is null)
+                        break;
+
+                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+                    {
+                        NetworkMessages.Pack(audioMessage, writer);
+                        ArraySegment<byte> segment = writer.ToArraySegment();
+
+                        foreach (Player ply in Player.List)
+                        {
+                            if (Predicate(ply))
+                                ply.Connection?.Send(segment, Channel);
+                        }
+                    }
+
+                    break;
+            }
+        }
+
         private void TryInitializePlayBack()
         {
             if (isPlayBackInitialized)
@@ -980,58 +1034,6 @@ namespace Exiled.API.Features.Toys
             {
                 // 4028 => OPUS_RESET_STATE (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L710)
                 OpusWrapper.SetEncoderSetting(encoder._handle, (OpusCtlSetRequest)4028, 0);
-            }
-        }
-
-        private void SendPacket(int len)
-        {
-            AudioMessage msg = new(ControllerId, encoded, len);
-
-            switch (PlayMode)
-            {
-                case SpeakerPlayMode.Global:
-                    NetworkServer.SendToReady(msg, Channel);
-                    break;
-
-                case SpeakerPlayMode.Player:
-                    TargetPlayer?.Connection?.Send(msg, Channel);
-                    break;
-
-                case SpeakerPlayMode.PlayerList:
-
-                    if (TargetPlayers is null)
-                        break;
-
-                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
-                    {
-                        NetworkMessages.Pack(msg, writer);
-                        ArraySegment<byte> segment = writer.ToArraySegment();
-
-                        foreach (Player ply in TargetPlayers)
-                        {
-                            ply?.Connection?.Send(segment, Channel);
-                        }
-                    }
-
-                    break;
-
-                case SpeakerPlayMode.Predicate:
-                    if (Predicate is null)
-                        break;
-
-                    using (NetworkWriterPooled writer = NetworkWriterPool.Get())
-                    {
-                        NetworkMessages.Pack(msg, writer);
-                        ArraySegment<byte> segment = writer.ToArraySegment();
-
-                        foreach (Player ply in Player.List)
-                        {
-                            if (Predicate(ply))
-                                ply.Connection?.Send(segment, Channel);
-                        }
-                    }
-
-                    break;
             }
         }
 
@@ -1171,23 +1173,25 @@ namespace Exiled.API.Features.Toys
                     int len = encoder.Encode(frame, encoded);
 
                     if (len > 2)
-                        SendPacket(len);
+                        SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
 
                     if (!CurrentSource.Ended)
                         continue;
 
-                    yield return Timing.WaitForOneFrame;
-
                     OnPlaybackFinished?.Invoke();
                     SpeakerEvents.OnPlaybackFinished(this);
 
+                    yield return Timing.WaitForOneFrame;
+
                     if (Loop)
                     {
+                        resampleTime = 0;
+                        timeAccumulator = 0;
+                        resampleBufferFilled = 0;
+                        nextScheduledEventIndex = 0;
+
                         ResetEncoder();
                         CurrentSource.Reset();
-                        timeAccumulator = 0;
-                        resampleTime = resampleBufferFilled = 0;
-                        nextScheduledEventIndex = 0;
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
