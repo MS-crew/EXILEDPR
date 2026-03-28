@@ -14,7 +14,7 @@ namespace Exiled.CustomRoles.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomRole"/> type.</typeparam>
     public abstract class CustomRole<T> : CustomRole
-        where T : CustomRole<T>
+        where T : CustomRole<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomRole"/>.

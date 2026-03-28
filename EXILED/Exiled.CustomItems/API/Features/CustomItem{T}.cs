@@ -14,7 +14,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomItem"/> type.</typeparam>
     public abstract class CustomItem<T> : CustomItem
-        where T : CustomItem<T>
+        where T : CustomItem<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomItem"/>.
@@ -42,7 +42,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomWeapon"/> type.</typeparam>
     public abstract class CustomWeapon<T> : CustomWeapon
-        where T : CustomWeapon<T>
+        where T : CustomWeapon<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomWeapon"/>.
@@ -70,7 +70,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomKeycard"/> type.</typeparam>
     public abstract class CustomKeycard<T> : CustomKeycard
-        where T : CustomKeycard<T>
+        where T : CustomKeycard<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomKeycard"/>.
@@ -98,7 +98,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomGrenade"/> type.</typeparam>
     public abstract class CustomGrenade<T> : CustomGrenade
-        where T : CustomGrenade<T>
+        where T : CustomGrenade<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomGrenade"/>.
@@ -126,7 +126,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomArmor"/> type.</typeparam>
     public abstract class CustomArmor<T> : CustomArmor
-        where T : CustomArmor<T>
+        where T : CustomArmor<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomArmor"/>.
@@ -154,7 +154,7 @@ namespace Exiled.CustomItems.API.Features
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="CustomGoggles"/> type.</typeparam>
     public abstract class CustomGoggles<T> : CustomGoggles
-        where T : CustomGoggles<T>
+        where T : CustomGoggles<T>, new()
     {
         /// <summary>
         /// Gets the singleton instance of this <see cref="CustomGoggles"/>.
