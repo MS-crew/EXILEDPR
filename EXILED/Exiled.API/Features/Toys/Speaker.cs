@@ -9,7 +9,6 @@ namespace Exiled.API.Features.Toys
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
 
     using AdminToys;
 
@@ -19,8 +18,6 @@ namespace Exiled.API.Features.Toys
     using Exiled.API.Features.Audio.PcmSources;
     using Exiled.API.Interfaces.Audio;
     using Exiled.API.Structs.Audio;
-
-    using HarmonyLib;
 
     using Interfaces;
 
@@ -49,16 +46,35 @@ namespace Exiled.API.Features.Toys
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
         /// <summary>
+        /// The default volume level of the base SpeakerToy prefab.
+        /// </summary>
+        public const float DefaultVolume = 1f;
+
+        /// <summary>
+        /// The default minimum spatial distance of the base SpeakerToy prefab.
+        /// </summary>
+        public const float DefaultMinDistance = 1f;
+
+        /// <summary>
+        /// The default maximum spatial distance of the base SpeakerToy prefab.
+        /// </summary>
+        public const float DefaultMaxDistance = 15f;
+
+        /// <summary>
+        /// The default network controller ID of the base SpeakerToy prefab.
+        /// </summary>
+        public const byte DefaultControllerId = 0;
+
+        /// <summary>
+        /// The default spatialization setting of the base SpeakerToy prefab.
+        /// </summary>
+        public const bool DefaultSpatial = true;
+
+        /// <summary>
         /// A queue used for object pooling of <see cref="Speaker"/> instances.
         /// Reusing idle speakers instead of constantly creating and destroying them significantly improves server performance, especially for frequent audio events.
         /// </summary>
-        internal static readonly Queue<Speaker> Pool = new();
-
-        private const float DefaultVolume = 1f;
-        private const float DefaultMinDistance = 1f;
-        private const float DefaultMaxDistance = 15f;
-        private const byte DefaultControllerId = 0;
-        private const bool DefaultSpatial = true;
+        internal static readonly Queue<Speaker> Pool;
 
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
@@ -83,7 +99,11 @@ namespace Exiled.API.Features.Toys
         private bool isPitchDefault = true;
         private bool needsSyncWait = false;
 
-        static Speaker() => RoundRestart.OnRestartTriggered += Pool.Clear;
+        static Speaker()
+        {
+            Pool = new();
+            RoundRestart.OnRestartTriggered += Pool.Clear;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
@@ -264,7 +284,7 @@ namespace Exiled.API.Features.Toys
 
         /// <summary>
         /// Gets the currently playing audio source.
-        /// <para>Pre-made filters are available in the <see cref="Exiled.API.Features.Audio.Filters"/> namespace.</para>
+        /// <para>Pre-made filters are available in the <see cref="Audio.Filters"/> namespace.</para>
         /// </summary>
         public IPcmSource CurrentSource { get; private set; }
 
@@ -455,23 +475,12 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
-        /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
+        /// <param name="path">The path/url or custom name(if <see cref="PlaybackSettings.UseCache"/> is true) to the wav file.</param>
         /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
-        /// <param name="isSpatial">Whether the audio source is spatialized.</param>
-        /// <param name="volume">The volume level of the audio source.</param>
-        /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
-        /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
-        /// <param name="pitch">The playback pitch level of the audio source.</param>
-        /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played (Ignored for web URLs or if useCache is true).</param>
-        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
-        /// <param name="playMode">The play mode determining how audio is sent to players.</param>
-        /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
-        /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
-        /// <param name="predicate">The condition if PlayMode is Predicate.</param>
-        /// <param name="filter">An optional audio filter to apply to the source.</param>
+        /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, bool stream = false, bool useCache = false, SpeakerPlayMode playMode = SpeakerPlayMode.Global, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, PlaybackSettings settings = null)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -479,7 +488,8 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            if (!useCache && !WavUtility.TryValidatePath(path, out string errorMessage))
+            settings ??= new PlaybackSettings();
+            if (!settings.UseCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
                 return false;
@@ -488,7 +498,7 @@ namespace Exiled.API.Features.Toys
             IPcmSource source;
             try
             {
-                source = WavUtility.CreatePcmSource(path, stream, useCache);
+                source = WavUtility.CreatePcmSource(path, settings.Stream, settings.UseCache);
             }
             catch (Exception ex)
             {
@@ -496,7 +506,7 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            return PlayFromPool(source, position, parent, isSpatial, volume, minDistance, maxDistance, pitch, playMode, targetPlayer, targetPlayers, predicate, filter);
+            return PlayFromPool(source, position, parent, settings);
         }
 
         /// <summary>
@@ -505,18 +515,9 @@ namespace Exiled.API.Features.Toys
         /// <param name="source">The custom IPcmSource to play.</param>
         /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
-        /// <param name="isSpatial">Whether the audio source is spatialized.</param>
-        /// <param name="volume">The volume level of the audio source.</param>
-        /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
-        /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
-        /// <param name="pitch">The playback pitch level of the audio source.</param>
-        /// <param name="playMode">The play mode determining how audio is sent to players.</param>
-        /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
-        /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
-        /// <param name="predicate">The condition if PlayMode is Predicate.</param>
-        /// <param name="filter">An optional audio filter to apply to the source.</param>
+        /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the source is valid and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
+        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, PlaybackSettings settings = null)
         {
             if (source == null)
             {
@@ -526,17 +527,19 @@ namespace Exiled.API.Features.Toys
 
             Speaker speaker = Rent(parent, position);
 
-            speaker.Volume = volume;
-            speaker.IsSpatial = isSpatial;
-            speaker.MinDistance = minDistance;
-            speaker.MaxDistance = maxDistance;
+            settings ??= new PlaybackSettings();
 
-            speaker.Pitch = pitch;
-            speaker.PlayMode = playMode;
-            speaker.Predicate = predicate;
-            speaker.TargetPlayer = targetPlayer;
-            speaker.TargetPlayers = targetPlayers;
-            speaker.Filter = filter;
+            speaker.Volume = settings.Volume;
+            speaker.IsSpatial = settings.IsSpatial;
+            speaker.MinDistance = settings.MinDistance;
+            speaker.MaxDistance = settings.MaxDistance;
+
+            speaker.Pitch = settings.Pitch;
+            speaker.PlayMode = settings.PlayMode;
+            speaker.Predicate = settings.Predicate;
+            speaker.TargetPlayer = settings.TargetPlayer;
+            speaker.TargetPlayers = settings.TargetPlayers;
+            speaker.Filter = settings.Filter;
 
             speaker.ReturnToPoolAfter = true;
 
