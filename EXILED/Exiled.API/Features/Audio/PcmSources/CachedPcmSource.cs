@@ -70,6 +70,41 @@ namespace Exiled.API.Features.Audio.PcmSources
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="CachedPcmSource"/> class by directly injecting raw PCM audio samples into the cache under a custom name.
+        /// </summary>
+        /// <param name="name">The custom name/key to assign to this audio in the cache.</param>
+        /// <param name="pcm">The raw PCM audio samples (float array).</param>
+        public CachedPcmSource(string name, float[] pcm)
+        {
+            if (string.IsNullOrEmpty(name) || pcm == null || pcm.Length == 0)
+            {
+                Log.Error($"[CachedPcmSource] Cannot initialize CachedPcmSource. Invalid name or empty PCM data for '{name}'.");
+                throw new ArgumentException("Name cannot be null/empty and PCM data cannot be null/empty.");
+            }
+
+            if (AudioCache.TryGetValue(name, out AudioData cachedAudio))
+            {
+                data = cachedAudio.Pcm;
+                TrackInfo = cachedAudio.TrackInfo;
+                Log.Debug($"[CachedPcmSource] Loaded audio from cache for key '{name}'.");
+                return;
+            }
+
+            if (!AddSource(name, pcm))
+            {
+                Log.Error($"[CachedPcmSource] Failed to load raw PCM data into cache under the name '{name}'.");
+                throw new InvalidOperationException($"Failed to cache PCM data for '{name}'.");
+            }
+
+            if (AudioCache.TryGetValue(name, out AudioData createdAudio))
+            {
+                data = createdAudio.Pcm;
+                TrackInfo = createdAudio.TrackInfo;
+                Log.Debug($"[CachedPcmSource] Successfully cached raw PCM data as '{name}'.");
+            }
+        }
+
+        /// <summary>
         /// Gets the global audio cache dictionary.
         /// </summary>
         public static ConcurrentDictionary<string, AudioData> AudioCache { get; } = new();
