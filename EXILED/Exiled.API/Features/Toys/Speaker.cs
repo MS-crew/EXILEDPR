@@ -475,7 +475,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
-        /// <param name="path">The path/url or custom name(if <see cref="PlaybackSettings.UseCache"/> is true) to the wav file.</param>
+        /// <param name="path">The path/url or custom name/key (if <paramref name="settings"/> has <see cref="PlaybackSettings.UseCache"/> set to true) to the wav file.</param>
         /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
@@ -595,7 +595,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
-        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
+        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimized playback.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
         public bool Play(string path, bool clearQueue = true, bool stream = false, bool useCache = false)
         {
@@ -748,7 +748,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
-        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
+        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimized playback.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
         public bool QueueTrack(string path, bool isStream = false, bool useCache = false)
         {

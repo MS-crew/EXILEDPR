@@ -35,11 +35,11 @@ namespace Exiled.API.Features.Audio
         /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
         public static IPcmSource CreatePcmSource(string path, bool stream = false, bool cache = false)
         {
-            if (!cache && path.StartsWith("http"))
-                return new PreloadWebWavPcmSource(path);
-
             if (cache)
                 return new CachedPcmSource(path, path);
+
+            if (path.StartsWith("http"))
+                return new PreloadWebWavPcmSource(path);
 
             if (stream)
                 return new WavStreamSource(path);
@@ -56,13 +56,13 @@ namespace Exiled.API.Features.Audio
         {
             if (!File.Exists(path))
             {
-                Log.Error($"[Speaker] The specified local file does not exist, path: `{path}`");
+                Log.Error($"[WavUtility] The specified local file does not exist, path: `{path}`");
                 throw new FileNotFoundException("File does not exist");
             }
 
             if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
             {
-                Log.Error($"[Speaker] The file type '{Path.GetExtension(path)}' is not supported for wav utility. Please use .wav file.");
+                Log.Error($"[WavUtility] The file type '{Path.GetExtension(path)}' is not supported for wav utility. Please use .wav file.");
                 throw new InvalidDataException("Unsupported WAV format.");
             }
 
@@ -161,7 +161,7 @@ namespace Exiled.API.Features.Audio
 
                     if (format != 1 || channels != 1 || rate != VoiceChatSettings.SampleRate || bits != 16)
                     {
-                        Log.Error($"[Speaker] Invalid WAV format (format={format}, channels={channels}, rate={rate}, bits={bits}). Expected PCM16, mono and {VoiceChatSettings.SampleRate}Hz.");
+                        Log.Error($"[WavUtility] Invalid WAV format (format={format}, channels={channels}, rate={rate}, bits={bits}). Expected PCM16, mono and {VoiceChatSettings.SampleRate}Hz.");
                         throw new InvalidDataException("Unsupported WAV format.");
                     }
 
@@ -229,7 +229,7 @@ namespace Exiled.API.Features.Audio
 
                 if (stream.Position >= stream.Length)
                 {
-                    Log.Error("[Speaker] WAV file does not contain a 'data' chunk.");
+                    Log.Error("[WavUtility] WAV file does not contain a 'data' chunk.");
                     throw new InvalidDataException("Missing 'data' chunk in WAV file.");
                 }
             }

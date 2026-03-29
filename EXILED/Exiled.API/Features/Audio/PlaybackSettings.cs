@@ -21,6 +21,11 @@ namespace Exiled.API.Features.Audio
     public class PlaybackSettings
     {
         /// <summary>
+        /// Gets a global, read-only instance of <see cref="PlaybackSettings"/> with all default values.
+        /// </summary>
+        public static readonly PlaybackSettings Default = new();
+
+        /// <summary>
         /// Gets or sets the volume level.
         /// </summary>
         public float Volume { get; set; } = Speaker.DefaultVolume;
@@ -51,7 +56,7 @@ namespace Exiled.API.Features.Audio
         public bool Stream { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets a value indicating whether to load the audio via the Cache Manager for optimize playback.
+        /// Gets or sets a value indicating whether to load the audio via the storage Manager for optimized playback.
         /// </summary>
         public bool UseCache { get; set; } = false;
 

@@ -17,7 +17,7 @@ namespace Exiled.API.Features.Audio.PcmSources
     using VoiceChat;
 
     /// <summary>
-    /// Provides an <see cref="IPcmSource"/> that plays audio data directly from the <see cref="AudioPcmCache"/> for optimize, repeated playback.
+    /// Provides an <see cref="IPcmSource"/> that plays audio data directly from the <see cref="AudioDataStorage"/> for optimized, repeated playback.
     /// </summary>
     public sealed class CachedPcmSource : IPcmSource
     {
@@ -36,16 +36,14 @@ namespace Exiled.API.Features.Audio.PcmSources
                 throw new ArgumentException("Cache name cannot be null or empty.", nameof(name));
             }
 
-            if (AudioPcmCache.AudioCache.TryGetValue(name, out AudioData cachedAudio))
+            if (!AudioDataStorage.AudioStorage.TryGetValue(name, out AudioData cachedAudio))
             {
-                data = cachedAudio.Pcm;
-                TrackInfo = cachedAudio.TrackInfo;
+                Log.Error($"[CachedPcmSource] Audio with name '{name}' not found in AudioDataStorage.");
+                throw new FileNotFoundException($"Audio '{name}' is not cached. Please cache it first using AudioDataStorage");
             }
-            else
-            {
-                Log.Error($"[CachedPcmSource] Audio with name '{name}' not found in AudioPcmCache.");
-                throw new FileNotFoundException($"Audio '{name}' is not cached. Please cache it first using AudioPcmCache.");
-            }
+
+            data = cachedAudio.Pcm;
+            TrackInfo = cachedAudio.TrackInfo;
         }
 
         /// <summary>
@@ -61,20 +59,23 @@ namespace Exiled.API.Features.Audio.PcmSources
                 throw new ArgumentException("Name or path cannot be null or empty.");
             }
 
-            if (!AudioPcmCache.AudioCache.ContainsKey(name))
+            if (!AudioDataStorage.AudioStorage.ContainsKey(name))
             {
-                if (!AudioPcmCache.Add(name, path))
+                if (!AudioDataStorage.Add(name, path))
                 {
                     Log.Error($"[CachedPcmSource] Failed to load local file '{path}' into cache under the name '{name}'.");
                     throw new FileNotFoundException($"Failed to cache and load '{path}'.");
                 }
             }
 
-            if (AudioPcmCache.AudioCache.TryGetValue(name, out AudioData cachedAudio))
+            if (!AudioDataStorage.AudioStorage.TryGetValue(name, out AudioData cachedAudio))
             {
-                data = cachedAudio.Pcm;
-                TrackInfo = cachedAudio.TrackInfo;
+                Log.Error($"[CachedPcmSource] Audio with name '{name}' could not be retrieved from storage after adding.");
+                throw new InvalidOperationException($"Failed to retrieve '{name}' from storage after caching.");
             }
+
+            data = cachedAudio.Pcm;
+            TrackInfo = cachedAudio.TrackInfo;
         }
 
         /// <summary>
@@ -90,20 +91,23 @@ namespace Exiled.API.Features.Audio.PcmSources
                 throw new ArgumentException("Name or PCM data cannot be null.");
             }
 
-            if (!AudioPcmCache.AudioCache.ContainsKey(name))
+            if (!AudioDataStorage.AudioStorage.ContainsKey(name))
             {
-                if (!AudioPcmCache.Add(name, pcm))
+                if (!AudioDataStorage.Add(name, pcm))
                 {
                     Log.Error($"[CachedPcmSource] Failed to load raw PCM data into cache under the name '{name}'.");
                     throw new InvalidOperationException($"Failed to cache PCM data for '{name}'.");
                 }
             }
 
-            if (AudioPcmCache.AudioCache.TryGetValue(name, out AudioData cachedAudio))
+            if (!AudioDataStorage.AudioStorage.TryGetValue(name, out AudioData cachedAudio))
             {
-                data = cachedAudio.Pcm;
-                TrackInfo = cachedAudio.TrackInfo;
+                Log.Error($"[CachedPcmSource] Audio with name '{name}' could not be retrieved from storage after adding.");
+                throw new InvalidOperationException($"Failed to retrieve '{name}' from storage after caching.");
             }
+
+            data = cachedAudio.Pcm;
+            TrackInfo = cachedAudio.TrackInfo;
         }
 
         /// <summary>

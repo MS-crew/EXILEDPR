@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------
-// <copyright file="AudioPcmCache.cs" company="ExMod Team">
+// <copyright file="AudioDataStorage.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
@@ -21,78 +21,78 @@ namespace Exiled.API.Features.Audio
     using UnityEngine.Networking;
 
     /// <summary>
-    /// Manages a global in-memory cache of decoded PCM audio data. Once cached, audio can be played using <see cref="PcmSources.CachedPcmSource"/>.
+    /// Manages a global in-memory storage of decoded PCM audio data. Once stored, audio can be played using <see cref="PcmSources.CachedPcmSource"/>.
     /// </summary>
-    public static class AudioPcmCache
+    public static class AudioDataStorage
     {
-        static AudioPcmCache()
+        static AudioDataStorage()
         {
-            AudioCache = new();
+            AudioStorage = new();
             RoundRestart.OnRestartTriggered += OnRoundRestart;
         }
 
         /// <summary>
-        /// Gets the underlying cache store, keyed by name.
+        /// Gets the underlying storage, keyed by name.
         /// </summary>
-        public static ConcurrentDictionary<string, AudioData> AudioCache { get; }
+        public static ConcurrentDictionary<string, AudioData> AudioStorage { get; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the cache is automatically cleared when a round restart is triggered.
+        /// Gets or sets a value indicating whether the storage is automatically cleared when a round restart is triggered.
         /// </summary>
         public static bool ClearOnRoundRestart { get; set; } = true;
 
         /// <summary>
-        /// Loads and caches a local .wav file under the specified name.
+        /// Loads and stores a local .wav file under the specified name.
         /// </summary>
-        /// <param name="name">The unique cache key to assign to this audio.</param>
+        /// <param name="name">The unique storage key to assign to this audio.</param>
         /// <param name="path">The absolute path to the local .wav file.</param>
-        /// <returns><c>true</c> if the file was successfully loaded and cached; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if the file was successfully loaded and stored; otherwise, <c>false</c>.</returns>
         public static bool Add(string name, string path)
         {
             if (!ValidateName(name))
                 return false;
 
-            if (path.StartsWith("http"))
+            if (AudioStorage.ContainsKey(name))
             {
-                Log.Error($"[AudioCache] '{path}' is a URL. Use AudioCache.AddUrl() for web sources.");
+                Log.Warn($"[AudioDataStorage] An entry with the key '{name}' already exists. Skipping add.");
                 return false;
             }
 
-            if (AudioCache.ContainsKey(name))
+            if (path.StartsWith("http"))
             {
-                Log.Debug($"[AudioCache] Key '{name}' already exists. Skipping.");
+                Log.Error($"[AudioDataStorage] '{path}' is a URL. Use AudioDataStorage.AddUrl() for web sources.");
                 return false;
             }
 
             if (!File.Exists(path))
             {
-                Log.Error($"[AudioCache] Local file not found: '{path}'");
+                Log.Error($"[AudioDataStorage] Local file not found: '{path}'");
                 return false;
             }
 
             try
             {
                 AudioData parsed = WavUtility.WavToPcm(path);
-                return AudioCache.TryAdd(name, parsed);
+                return AudioStorage.TryAdd(name, parsed);
             }
             catch (Exception ex)
             {
-                Log.Error($"[AudioCache] Failed to load '{path}' into cache:\n{ex}");
+                Log.Error($"[AudioDataStorage] Failed to load '{path}' into storage:\n{ex}");
                 return false;
             }
         }
 
         /// <summary>
-        /// Caches raw PCM audio samples under the specified name.
+        /// Stores raw PCM audio samples under the specified name.
         /// </summary>
-        /// <param name="name">The unique cache key to assign.</param>
-        /// <param name="pcm">The raw PCM float array to cache.</param>
+        /// <param name="name">The unique storage key to assign.</param>
+        /// <param name="pcm">The raw PCM float array to store.</param>
         /// <returns><c>true</c> if successfully added; otherwise, <c>false</c>.</returns>
         public static bool Add(string name, float[] pcm)
         {
-            if (pcm == null || pcm.Length == 0)
+            if (pcm == null)
             {
-                Log.Error($"[AudioCache] Cannot cache null or empty PCM array for key '{name}'.");
+                Log.Error($"[AudioDataStorage] Cannot store null array for key '{name}'.");
                 return false;
             }
 
@@ -106,9 +106,9 @@ namespace Exiled.API.Features.Audio
         }
 
         /// <summary>
-        /// Caches a fully constructed <see cref="AudioData"/> under the specified name.
+        /// Stores a fully constructed <see cref="AudioData"/> under the specified name.
         /// </summary>
-        /// <param name="name">The unique cache key to assign.</param>
+        /// <param name="name">The unique storage key to assign.</param>
         /// <param name="audioData">The <see cref="AudioData"/> to store.</param>
         /// <returns><c>true</c> if successfully added; otherwise, <c>false</c>.</returns>
         public static bool Add(string name, AudioData audioData)
@@ -118,31 +118,31 @@ namespace Exiled.API.Features.Audio
 
             if (audioData.Pcm == null || audioData.Pcm.Length == 0)
             {
-                Log.Error($"[AudioCache] AudioData for key '{name}' has null or empty PCM.");
+                Log.Error($"[AudioDataStorage] AudioData for key '{name}' has null or empty PCM.");
                 return false;
             }
 
-            if (AudioCache.ContainsKey(name))
+            if (AudioStorage.ContainsKey(name))
             {
-                Log.Debug($"[AudioCache] Key '{name}' already exists. Skipping.");
+                Log.Warn($"[AudioDataStorage] An entry with the key '{name}' already exists. Skipping add.");
                 return false;
             }
 
-            return AudioCache.TryAdd(name, audioData);
+            return AudioStorage.TryAdd(name, audioData);
         }
 
         /// <summary>
-        /// Starts an asynchronous download of a .wav file from the specified URL and adds it to the cache.
+        /// Starts an asynchronous download of a .wav file from the specified URL and adds it to the  storage.
         /// </summary>
-        /// <param name="name">The unique cache key to assign.</param>
+        /// <param name="name">The unique storage key to assign.</param>
         /// <param name="url">The HTTP or HTTPS URL pointing to a valid .wav file.</param>
         /// <returns>A <see cref="CoroutineHandle"/> for the running download coroutine.</returns>
         public static CoroutineHandle AddUrl(string name, string url) => Timing.RunCoroutine(AddUrlCoroutine(name, url));
 
         /// <summary>
-        /// Starts an asynchronous download of a .wav file from the specified URL and adds it to the cache.
+        /// Starts an asynchronous download of a .wav file from the specified URL and adds it to the storage.
         /// </summary>
-        /// <param name="name">The unique cache key to assign.</param>
+        /// <param name="name">The unique storage key to assign.</param>
         /// <param name="url">The HTTP or HTTPS URL pointing to a valid .wav file.</param>
         /// <returns>A MEC-compatible <see cref="IEnumerator{T}"/> of <see cref="float"/>.</returns>
         public static IEnumerator<float> AddUrlCoroutine(string name, string url)
@@ -150,15 +150,15 @@ namespace Exiled.API.Features.Audio
             if (!ValidateName(name))
                 yield break;
 
-            if (string.IsNullOrEmpty(url) || !url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(url) || !url.StartsWith("http"))
             {
-                Log.Error($"[AudioCache] Invalid URL for key '{name}': '{url}'. Must start with http/https.");
+                Log.Error($"[AudioDataStorage] Invalid URL for key '{name}': '{url}'. Must start with http/https.");
                 yield break;
             }
 
-            if (AudioCache.ContainsKey(name))
+            if (AudioStorage.ContainsKey(name))
             {
-                Log.Debug($"[AudioCache] Key '{name}' already exists. Skipping URL download.");
+                Log.Warn($"[AudioDataStorage] An entry with the key '{name}' already exists. Skipping download.");
                 yield break;
             }
 
@@ -167,7 +167,7 @@ namespace Exiled.API.Features.Audio
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                Log.Error($"[AudioCache] Download failed for '{url}': {www.error}");
+                Log.Error($"[AudioDataStorage] Download failed for '{url}': {www.error}");
                 yield break;
             }
 
@@ -175,34 +175,32 @@ namespace Exiled.API.Features.Audio
             {
                 AudioData parsed = WavUtility.WavToPcm(www.downloadHandler.data);
                 parsed.TrackInfo.Path = url;
-
-                if (AudioCache.TryAdd(name, parsed))
-                    Log.Debug($"[AudioCache] Successfully cached '{url}' as '{name}'.");
+                AudioStorage.TryAdd(name, parsed);
             }
             catch (Exception ex)
             {
-                Log.Error($"[AudioCache] Failed to parse downloaded WAV from '{url}':\n{ex}");
+                Log.Error($"[AudioDataStorage] Failed to parse downloaded WAV from '{url}':\n{ex}");
             }
         }
 
         /// <summary>
-        /// Removes a cached audio entry by name.
+        /// Removes a stored audio entry by name.
         /// </summary>
-        /// <param name="name">The cache name/key to remove.</param>
+        /// <param name="name">The storage name/key to remove.</param>
         /// <returns><c>true</c> if the entry was found and removed; otherwise, <c>false</c>.</returns>
-        public static bool Remove(string name) => AudioCache.TryRemove(name, out _);
+        public static bool Remove(string name) => AudioStorage.TryRemove(name, out _);
 
         /// <summary>
-        /// Clears all entries from the audio cache, freeing all associated memory.
+        /// Clears all entries from the audio storage, freeing all associated memory.
         /// </summary>
-        public static void Clear() => AudioCache.Clear();
+        public static void Clear() => AudioStorage.Clear();
 
         private static bool ValidateName(string name)
         {
             if (!string.IsNullOrEmpty(name))
                 return true;
 
-            Log.Error("[AudioCache] Cache name (key) cannot be null or empty.");
+            Log.Error("[AudioDataStorage] Storage name (key) cannot be null or empty.");
             return false;
         }
 
