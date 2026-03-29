@@ -455,7 +455,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
-        /// <param name="path">The path/url to the wav file.</param>
+        /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="isSpatial">Whether the audio source is spatialized.</param>
@@ -463,16 +463,23 @@ namespace Exiled.API.Features.Toys
         /// <param name="minDistance">The minimum distance at which the audio reaches full volume.</param>
         /// <param name="maxDistance">The maximum distance at which the audio can be heard.</param>
         /// <param name="pitch">The playback pitch level of the audio source.</param>
+        /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played (Ignored for web URLs or if useCache is true).</param>
+        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
         /// <param name="playMode">The play mode determining how audio is sent to players.</param>
-        /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <param name="targetPlayer">The target player if PlayMode is Player.</param>
         /// <param name="targetPlayers">The list of target players if PlayMode is PlayerList.</param>
         /// <param name="predicate">The condition if PlayMode is Predicate.</param>
         /// <param name="filter">An optional audio filter to apply to the source.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, SpeakerPlayMode playMode = SpeakerPlayMode.Global, bool stream = false, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, bool isSpatial = DefaultSpatial, float volume = DefaultVolume, float minDistance = DefaultMinDistance, float maxDistance = DefaultMaxDistance, float pitch = 1f, bool stream = false, bool useCache = false, SpeakerPlayMode playMode = SpeakerPlayMode.Global, Player targetPlayer = null, HashSet<Player> targetPlayers = null, Func<Player, bool> predicate = null, IAudioFilter filter = null)
         {
-            if (!WavUtility.TryValidatePath(path, out string errorMessage))
+            if (string.IsNullOrEmpty(path))
+            {
+                Log.Error("[Speaker] Provided path/url or name cannot be null or empty!");
+                return false;
+            }
+
+            if (!useCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
                 return false;
@@ -481,7 +488,7 @@ namespace Exiled.API.Features.Toys
             IPcmSource source;
             try
             {
-                source = WavUtility.CreatePcmSource(path, stream);
+                source = WavUtility.CreatePcmSource(path, stream, useCache);
             }
             catch (Exception ex)
             {
@@ -582,13 +589,20 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Plays a local wav file or web URL through this speaker. (File must be 16-bit, mono, and 48kHz.)
         /// </summary>
-        /// <param name="path">The path/url to the wav file.</param>
+        /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
+        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool Play(string path, bool clearQueue = true, bool stream = false)
+        public bool Play(string path, bool clearQueue = true, bool stream = false, bool useCache = false)
         {
-            if (!WavUtility.TryValidatePath(path, out string errorMessage))
+            if (string.IsNullOrEmpty(path))
+            {
+                Log.Error("[Speaker] Provided path/url or name cannot be null or empty!");
+                return false;
+            }
+
+            if (!useCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
                 return false;
@@ -597,7 +611,7 @@ namespace Exiled.API.Features.Toys
             IPcmSource newSource;
             try
             {
-                newSource = WavUtility.CreatePcmSource(path, stream);
+                newSource = WavUtility.CreatePcmSource(path, stream, useCache);
             }
             catch (Exception ex)
             {
@@ -729,18 +743,25 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Helper method to easily queue a .wav file/url with stream support.
         /// </summary>
-        /// <param name="path">The absolute path to the .wav file.</param>
+        /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
+        /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimize playback.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueTrack(string path, bool isStream = false)
+        public bool QueueTrack(string path, bool isStream = false, bool useCache = false)
         {
-            if (!WavUtility.TryValidatePath(path, out string errorMessage))
+            if (string.IsNullOrEmpty(path))
+            {
+                Log.Error("[Speaker] Provided path or cache name cannot be null or empty!");
+                return false;
+            }
+
+            if (!useCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
                 return false;
             }
 
-            return QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream)));
+            return QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream, useCache)));
         }
 
         /// <summary>

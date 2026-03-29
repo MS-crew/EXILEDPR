@@ -31,13 +31,20 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         /// <param name="path">The local file path or web URL of the .wav file.</param>
         /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory (Ignored for web URLs).</param>
+        /// <param name="cache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for zero-latency memory playback.</param>
         /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
-        public static IPcmSource CreatePcmSource(string path, bool stream)
+        public static IPcmSource CreatePcmSource(string path, bool stream = false, bool cache = false)
         {
-            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (!cache && path.StartsWith("http"))
                 return new PreloadWebWavPcmSource(path);
 
-            return stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
+            if (cache)
+                return new CachedPcmSource(path, path);
+
+            if (stream)
+                return new WavStreamSource(path);
+
+            return new PreloadedPcmSource(path);
         }
 
         /// <summary>
@@ -245,7 +252,7 @@ namespace Exiled.API.Features.Audio
                 return false;
             }
 
-            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (path.StartsWith("http"))
                 return true;
 
             if (!File.Exists(path))
