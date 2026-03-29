@@ -488,7 +488,7 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            settings ??= new PlaybackSettings();
+            settings ??= PlaybackSettings.Default;
             if (!settings.UseCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
@@ -527,7 +527,7 @@ namespace Exiled.API.Features.Toys
 
             Speaker speaker = Rent(parent, position);
 
-            settings ??= new PlaybackSettings();
+            settings ??= PlaybackSettings.Default;
 
             speaker.Volume = settings.Volume;
             speaker.IsSpatial = settings.IsSpatial;
@@ -535,6 +535,7 @@ namespace Exiled.API.Features.Toys
             speaker.MaxDistance = settings.MaxDistance;
 
             speaker.Pitch = settings.Pitch;
+            speaker.Channel = settings.Channel;
             speaker.PlayMode = settings.PlayMode;
             speaker.Predicate = settings.Predicate;
             speaker.TargetPlayer = settings.TargetPlayer;

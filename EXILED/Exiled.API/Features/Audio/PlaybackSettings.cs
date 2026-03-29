@@ -15,6 +15,8 @@ namespace Exiled.API.Features.Audio
     using Exiled.API.Features.Toys;
     using Exiled.API.Interfaces.Audio;
 
+    using Mirror;
+
     /// <summary>
     /// Represents all configurable audio and network settings for play from pool method.
     /// </summary>
@@ -52,6 +54,7 @@ namespace Exiled.API.Features.Audio
 
         /// <summary>
         /// Gets or sets a value indicating whether the file should be streamed from disk.
+        /// Ignored for web URLs and cached sources.
         /// </summary>
         public bool Stream { get; set; } = false;
 
@@ -61,22 +64,27 @@ namespace Exiled.API.Features.Audio
         public bool UseCache { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets the Mirror network channel used for sending audio packets.
+        /// </summary>
+        public int Channel { get; set; } = Channels.ReliableOrdered2;
+
+        /// <summary>
         /// Gets or sets the play mode determining how the audio is sent to players.
         /// </summary>
         public SpeakerPlayMode PlayMode { get; set; } = SpeakerPlayMode.Global;
 
         /// <summary>
-        /// Gets or sets the target player (used when PlayMode is Player).
+        /// Gets or sets the target player (used when <see cref="PlayMode"/> is <see cref="SpeakerPlayMode.Player"/>).
         /// </summary>
         public Player TargetPlayer { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets the list of target players (used when PlayMode is PlayerList).
+        /// Gets or sets the list of target players (used when <see cref="PlayMode"/> is <see cref="SpeakerPlayMode.PlayerList"/>).
         /// </summary>
         public HashSet<Player> TargetPlayers { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets the condition used to determine which players hear the audio.
+        /// Gets or sets the condition used to determine which players hear the audio (used when <see cref="PlayMode"/> is <see cref="SpeakerPlayMode.Predicate"/>).
         /// </summary>
         public Func<Player, bool> Predicate { get; set; } = null;
 

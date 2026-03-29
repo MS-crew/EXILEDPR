@@ -77,6 +77,11 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <returns>The number of samples read.</returns>
         public int Read(float[] buffer, int offset, int count)
         {
+            count = Math.Min(count, buffer.Length - offset);
+
+            if (count <= 0)
+                return 0;
+
             int bytesNeeded = count * 2;
 
             if (internalBuffer.Length < bytesNeeded)
@@ -96,13 +101,10 @@ namespace Exiled.API.Features.Audio.PcmSources
             Span<byte> byteSpan = internalBuffer.AsSpan(0, bytesRead);
             Span<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
 
-            int samplesInDestination = buffer.Length - offset;
-            int samplesToWrite = Math.Min(shortSpan.Length, samplesInDestination);
-
-            for (int i = 0; i < samplesToWrite; i++)
+            for (int i = 0; i < shortSpan.Length; i++)
                 buffer[offset + i] = shortSpan[i] * Divide;
 
-            return samplesToWrite;
+            return shortSpan.Length;
         }
 
         /// <summary>
