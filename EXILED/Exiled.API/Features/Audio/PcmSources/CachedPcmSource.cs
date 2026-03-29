@@ -37,7 +37,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedPcmSource"/> class or local WAV files or fetches already cached audio, assigning a custom name to a specific local file path.
         /// </summary>
-        /// <para>NOTE: URLs cannot be loaded directly here. Use <see cref="AddUrlSource(string, string)"/> Coroutine first.</para>
+        /// <para>NOTE: URLs cannot be loaded directly here. Use <see cref="AddUrlSource(string, string)"/>.</para>
         /// <param name="name">The custom name/key to assign to this audio in the cache.</param>
         /// <param name="path">The absolute path to the local audio file.</param>
         public CachedPcmSource(string name, string path)
@@ -52,7 +52,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             {
                 data = cachedAudio.Pcm;
                 TrackInfo = cachedAudio.TrackInfo;
-                Log.Debug($"[CachedPcmSource] Loaded audio from cache for key '{name}'.");
+                Log.Info($"[CachedPcmSource] Loaded audio from cache for key '{name}'.");
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             {
                 data = cachedAudio.Pcm;
                 TrackInfo = cachedAudio.TrackInfo;
-                Log.Debug($"[CachedPcmSource] Loaded audio from cache for key '{name}'.");
+                Log.Info($"[CachedPcmSource] Loaded audio from cache for key '{name}'.");
                 return;
             }
 
@@ -100,7 +100,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             {
                 data = createdAudio.Pcm;
                 TrackInfo = createdAudio.TrackInfo;
-                Log.Debug($"[CachedPcmSource] Successfully cached raw PCM data as '{name}'.");
+                Log.Info($"[CachedPcmSource] Successfully cached raw PCM data as '{name}'.");
             }
         }
 
@@ -174,7 +174,6 @@ namespace Exiled.API.Features.Audio.PcmSources
             {
                 AudioData parsedData = WavUtility.WavToPcm(path);
                 AudioCache.TryAdd(name, parsedData);
-                Log.Debug($"[CachedPcmSource] Successfully cached local file: '{path}' with name: '{name}'");
                 return true;
             }
             catch (Exception ex)
@@ -227,7 +226,15 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <param name="name">The custom name/key to assign.</param>
         /// <param name="url">The HTTP/HTTPS URL to the Wav file.</param>
         /// <returns>A float IEnumerator for MEC execution.</returns>
-        public static IEnumerator<float> AddUrlSource(string name, string url)
+        public static CoroutineHandle AddUrlSource(string name, string url) => Timing.RunCoroutine(AddUrlSourceCoroutine(name, url));
+
+        /// <summary>
+        /// Asynchronously downloads a Web URL and adds it to the cache.
+        /// </summary>
+        /// <param name="name">The custom name/key to assign.</param>
+        /// <param name="url">The HTTP/HTTPS URL to the Wav file.</param>
+        /// <returns>A float IEnumerator for MEC execution.</returns>
+        public static IEnumerator<float> AddUrlSourceCoroutine(string name, string url)
         {
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(url))
             {
@@ -264,7 +271,6 @@ namespace Exiled.API.Features.Audio.PcmSources
                 parsedData.TrackInfo.Path = url;
 
                 AudioCache.TryAdd(name, parsedData);
-                Log.Debug($"[CachedPcmSource] Successfully downloaded and cached URL: '{name}'");
             }
             catch (Exception ex)
             {
