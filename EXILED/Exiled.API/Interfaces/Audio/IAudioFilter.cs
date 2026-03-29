@@ -5,7 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Interfaces
+namespace Exiled.API.Interfaces.Audio
 {
     /// <summary>
     /// Represents a custom filter for the speaker.

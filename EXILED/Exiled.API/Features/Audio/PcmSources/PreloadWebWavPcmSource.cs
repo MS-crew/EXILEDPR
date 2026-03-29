@@ -11,8 +11,8 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System.Collections.Generic;
 
     using Exiled.API.Features;
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using MEC;
 
@@ -122,11 +122,11 @@ namespace Exiled.API.Features.Audio.PcmSources
             try
             {
                 byte[] rawBytes = www.downloadHandler.data;
-                (float[] pcmData, TrackData trackInfo) = WavUtility.WavToPcm(rawBytes);
-                trackInfo.Path = url;
+                AudioData audioData = WavUtility.WavToPcm(rawBytes);
+                audioData.TrackInfo.Path = url;
 
-                internalSource = new PreloadedPcmSource(pcmData);
-                TrackInfo = trackInfo;
+                internalSource = new PreloadedPcmSource(audioData.Pcm);
+                TrackInfo = audioData.TrackInfo;
                 isReady = true;
             }
             catch (Exception e)

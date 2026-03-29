@@ -10,9 +10,8 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System;
 
     using Exiled.API.Features.Audio;
-
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using VoiceChat;
 
@@ -30,8 +29,8 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <param name="path">The path to the audio file.</param>
         public PreloadedPcmSource(string path)
         {
-            (float[] PcmData, TrackData TrackInfo) result = WavUtility.WavToPcm(path);
-            data = result.PcmData;
+            AudioData result = WavUtility.WavToPcm(path);
+            data = result.Pcm;
             TrackInfo = result.TrackInfo;
         }
 

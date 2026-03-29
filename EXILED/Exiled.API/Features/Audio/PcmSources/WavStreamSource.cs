@@ -13,9 +13,8 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System.Runtime.InteropServices;
 
     using Exiled.API.Features.Audio;
-
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using VoiceChat;
 

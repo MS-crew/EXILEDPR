@@ -9,7 +9,7 @@ namespace Exiled.API.Features.Audio.Filters
 {
     using System;
 
-    using Exiled.API.Interfaces;
+    using Exiled.API.Interfaces.Audio;
 
     using UnityEngine;
 

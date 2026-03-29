@@ -17,7 +17,8 @@ namespace Exiled.API.Features.Toys
 
     using Exiled.API.Features.Audio;
     using Exiled.API.Features.Audio.PcmSources;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using HarmonyLib;
 

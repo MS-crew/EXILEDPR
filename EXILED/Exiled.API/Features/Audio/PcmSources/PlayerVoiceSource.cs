@@ -12,8 +12,8 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System.Collections.Concurrent;
 
     using Exiled.API.Features;
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using LabApi.Events.Arguments.PlayerEvents;
 
@@ -23,7 +23,7 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// <summary>
     /// Provides a <see cref="IPcmSource"/> that captures and decodes live microphone input from a specific player.
     /// </summary>
-    public sealed class PlayerVoiceSource : IPcmSource
+    public sealed class PlayerVoiceSource : IPcmSource, ILiveSource
     {
         private readonly Player sourcePlayer;
         private readonly OpusDecoder decoder;

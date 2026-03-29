@@ -14,8 +14,8 @@ namespace Exiled.API.Features.Audio
     using System.Runtime.InteropServices;
 
     using Exiled.API.Features.Audio.PcmSources;
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using VoiceChat;
 
@@ -27,7 +27,7 @@ namespace Exiled.API.Features.Audio
         private const float Divide = 1f / 32768f;
 
         /// <summary>
-        /// Evaluates the given path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
+        /// Evaluates the given local path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
         /// </summary>
         /// <param name="path">The local file path or web URL of the .wav file.</param>
         /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory (Ignored for web URLs).</param>
@@ -44,8 +44,8 @@ namespace Exiled.API.Features.Audio
         /// Converts a WAV file at the specified path to a PCM float array.
         /// </summary>
         /// <param name="path">The file path of the WAV file to convert.</param>
-        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) WavToPcm(string path)
+        /// <returns>A <see cref="AudioData"/> containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static AudioData WavToPcm(string path)
         {
             if (!File.Exists(path))
             {
@@ -69,7 +69,7 @@ namespace Exiled.API.Features.Audio
                 int bytesRead = fs.Read(rentedBuffer, 0, length);
                 using MemoryStream ms = new(rentedBuffer, 0, bytesRead);
 
-                (float[] PcmData, TrackData TrackInfo) result = ParseWavSpanToPcm(ms, rentedBuffer.AsSpan(0, bytesRead));
+                AudioData result = ParseWavSpanToPcm(ms, rentedBuffer.AsSpan(0, bytesRead));
                 result.TrackInfo.Path = path;
 
                 return result;
@@ -84,8 +84,8 @@ namespace Exiled.API.Features.Audio
         /// Converts a WAV byte array to a PCM float array.
         /// </summary>
         /// <param name="data">The raw bytes of the WAV file.</param>
-        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) WavToPcm(byte[] data)
+        /// <returns>A <see cref="AudioData"/> containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static AudioData WavToPcm(byte[] data)
         {
             using MemoryStream ms = new(data, 0, data.Length);
 
@@ -98,7 +98,7 @@ namespace Exiled.API.Features.Audio
         /// <param name="stream">The stream used to read and skip the WAV header.</param>
         /// <param name="audioData">The complete span of WAV audio data including the header.</param>
         /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) ParseWavSpanToPcm(Stream stream, ReadOnlySpan<byte> audioData)
+        public static AudioData ParseWavSpanToPcm(Stream stream, ReadOnlySpan<byte> audioData)
         {
             TrackData metaData = SkipHeader(stream);
 
@@ -112,7 +112,7 @@ namespace Exiled.API.Features.Audio
             for (int i = 0; i < samples.Length; i++)
                 pcm[i] = samples[i] * Divide;
 
-            return (pcm, metaData);
+            return new(pcm, metaData);
         }
 
         /// <summary>
