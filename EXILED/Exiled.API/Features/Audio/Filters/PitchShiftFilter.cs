@@ -101,6 +101,24 @@ namespace Exiled.API.Features.Audio.Filters
             Array.Copy(outputBuffer, frame, frame.Length);
         }
 
+        /// <inheritdoc/>
+        public void Reset()
+        {
+            Array.Clear(gInFIFO, 0, gInFIFO.Length);
+            Array.Clear(gOutFIFO, 0, gOutFIFO.Length);
+            Array.Clear(gFFTworksp, 0, gFFTworksp.Length);
+            Array.Clear(gLastPhase, 0, gLastPhase.Length);
+            Array.Clear(gSumPhase, 0, gSumPhase.Length);
+            Array.Clear(gOutputAccum, 0, gOutputAccum.Length);
+            Array.Clear(gAnaFreq, 0, gAnaFreq.Length);
+            Array.Clear(gAnaMagn, 0, gAnaMagn.Length);
+            Array.Clear(gSynFreq, 0, gSynFreq.Length);
+            Array.Clear(gSynMagn, 0, gSynMagn.Length);
+            Array.Clear(outputBuffer, 0, outputBuffer.Length);
+
+            gRover = 0;
+        }
+
         private static float[] BuildHannWindow()
         {
             float[] window = new float[FftFrameSize];

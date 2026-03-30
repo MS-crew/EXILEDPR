@@ -253,6 +253,7 @@ namespace Exiled.API.Features.Toys
                 resampleBufferFilled = 0;
 
                 ResetEncoder();
+                Filter?.Reset();
                 UpdateNextScheduledEventIndex();
             }
         }
@@ -718,6 +719,8 @@ namespace Exiled.API.Features.Toys
             StopFade();
             ResetEncoder();
             ClearScheduledEvents();
+
+            Filter?.Reset();
             CurrentSource?.Dispose();
             CurrentSource = null;
         }
@@ -1206,6 +1209,7 @@ namespace Exiled.API.Features.Toys
                         nextScheduledEventIndex = 0;
 
                         ResetEncoder();
+                        Filter?.Reset();
                         CurrentSource.Reset();
 
                         OnPlaybackLooped?.Invoke();

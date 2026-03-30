@@ -17,5 +17,10 @@ namespace Exiled.API.Interfaces.Audio
         /// </summary>
         /// <param name="frame">The array of PCM audio samples.</param>
         void Process(float[] frame);
+
+        /// <summary>
+        /// Resets the internal state and buffers of the filter.
+        /// </summary>
+        void Reset();
     }
 }

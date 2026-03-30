@@ -149,6 +149,14 @@ namespace Exiled.API.Features.Audio.Filters
             }
         }
 
+        /// <inheritdoc/>
+        public void Reset()
+        {
+            Array.Clear(delayBuffer, 0, delayBuffer.Length);
+            writeIndex = 0;
+            x1 = x2 = y1 = y2 = 0f;
+        }
+
         /// <summary>
         /// Calculates the Robert Bristow-Johnson (RBJ) Audio EQ parameters for the low-pass filter.
         /// </summary>
