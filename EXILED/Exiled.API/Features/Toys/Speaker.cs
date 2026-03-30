@@ -8,7 +8,11 @@
 namespace Exiled.API.Features.Toys
 {
     using System;
+    using System.Buffers;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     using AdminToys;
 
@@ -89,6 +93,9 @@ namespace Exiled.API.Features.Toys
 
         private CoroutineHandle playBackRoutine;
         private CoroutineHandle fadeRoutine;
+
+        private CancellationTokenSource cancelTokenSource;
+        private ConcurrentQueue<(byte[] Data, int Length, bool IsEndOfTrack)> packetQueue;
 
         private double resampleTime;
         private int resampleBufferFilled;
@@ -634,7 +641,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="delayInSeconds">The broadcast delay in seconds.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <returns><c>true</c> if the playback started successfully; otherwise, <c>false</c>.</returns>
-        public bool PlayLiveVoice(Player player, bool blockOriginalVoice = false, float delayInSeconds = 0f, bool clearQueue = true)
+        public bool PlayLiveVoice(Player player, bool blockOriginalVoice = false, bool clearQueue = true)
         {
             if (player == null)
             {
@@ -645,7 +652,7 @@ namespace Exiled.API.Features.Toys
             PlayerVoiceSource source;
             try
             {
-                source = new PlayerVoiceSource(player, blockOriginalVoice, delayInSeconds);
+                source = new PlayerVoiceSource(player, blockOriginalVoice);
             }
             catch (Exception ex)
             {
@@ -688,6 +695,22 @@ namespace Exiled.API.Features.Toys
         {
             if (!isPlayBackInitialized)
                 return;
+
+            if (cancelTokenSource != null)
+            {
+                cancelTokenSource.Cancel();
+                cancelTokenSource.Dispose();
+                cancelTokenSource = null;
+            }
+
+            if (packetQueue != null)
+            {
+                while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
+                {
+                    if (oldFrame.Data != null)
+                        ArrayPool<byte>.Shared.Return(oldFrame.Data);
+                }
+            }
 
             if (playBackRoutine.IsRunning)
             {
@@ -787,16 +810,12 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public void SkipTrack()
         {
+            Stop(clearQueue: false);
+
             if (TrySwitchToNextTrack())
             {
                 IsPaused = false;
-
-                if (!playBackRoutine.IsRunning)
-                    playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
-            }
-            else
-            {
-                Stop();
+                playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             }
         }
 
@@ -993,6 +1012,7 @@ namespace Exiled.API.Features.Toys
 
             isPlayBackInitialized = true;
 
+            packetQueue = new();
             frame = new float[FrameSize];
             resampleBuffer = Array.Empty<float>();
             encoder = new(OpusApplicationType.Audio);
@@ -1152,36 +1172,20 @@ namespace Exiled.API.Features.Toys
             OnPlaybackStopped = null;
         }
 
-        private IEnumerator<float> PlayBackCoroutine()
+        private void ProducerWorker(CancellationToken token)
         {
-            if (needsSyncWait)
+            try
             {
-                int framesPassed = Time.frameCount - idChangeFrame;
-
-                while (framesPassed < 2)
+                while (!token.IsCancellationRequested)
                 {
-                    yield return Timing.WaitForOneFrame;
-                    framesPassed = Time.frameCount - idChangeFrame;
-                }
+                    if (packetQueue.Count > 15)
+                    {
+                        Thread.Sleep(5);
+                        continue;
+                    }
 
-                needsSyncWait = false;
-            }
-
-            OnPlaybackStarted?.Invoke();
-            SpeakerEvents.OnPlaybackStarted(this);
-
-            resampleTime = 0.0;
-            resampleBufferFilled = 0;
-
-            float timeAccumulator = 0f;
-
-            while (true)
-            {
-                timeAccumulator += Time.deltaTime;
-
-                while (timeAccumulator >= FrameTime)
-                {
-                    timeAccumulator -= FrameTime;
+                    if (CurrentSource == null)
+                        break;
 
                     if (isPitchDefault)
                     {
@@ -1199,9 +1203,78 @@ namespace Exiled.API.Features.Toys
                     int len = encoder.Encode(frame, encoded);
 
                     if (len > 2)
-                        SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
+                    {
+                        byte[] pooled = ArrayPool<byte>.Shared.Rent(len);
+                        Buffer.BlockCopy(encoded, 0, pooled, 0, len);
+                        packetQueue.Enqueue((pooled, len, CurrentSource.Ended));
+                    }
+                    else
+                    {
+                        packetQueue.Enqueue((null, 0, CurrentSource.Ended));
+                    }
 
-                    if (!CurrentSource.Ended)
+                    if (CurrentSource.Ended)
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"[Speaker] Async audio producer safely aborted: {ex.Message}");
+            }
+        }
+
+        private IEnumerator<float> PlayBackCoroutine()
+        {
+            if (needsSyncWait)
+            {
+                int framesPassed = Time.frameCount - idChangeFrame;
+                while (framesPassed < 2)
+                {
+                    yield return Timing.WaitForOneFrame;
+                    framesPassed = Time.frameCount - idChangeFrame;
+                }
+
+                needsSyncWait = false;
+            }
+
+            OnPlaybackStarted?.Invoke();
+            SpeakerEvents.OnPlaybackStarted(this);
+
+            resampleTime = 0.0;
+            resampleBufferFilled = 0;
+
+            while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
+            {
+                if (oldFrame.Data != null)
+                    ArrayPool<byte>.Shared.Return(oldFrame.Data);
+            }
+
+            cancelTokenSource = new CancellationTokenSource();
+            Task.Run(() => ProducerWorker(cancelTokenSource.Token));
+
+            float timeAccumulator = 0f;
+
+            while (true)
+            {
+                timeAccumulator += Time.deltaTime;
+
+                while (timeAccumulator >= FrameTime)
+                {
+                    timeAccumulator -= FrameTime;
+
+                    if (!packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) encoded))
+                    {
+                        timeAccumulator = 0f;
+                        break;
+                    }
+
+                    if (encoded.Length > 2 && encoded.Data != null)
+                    {
+                        SendAudioMessage(new AudioMessage(ControllerId, encoded.Data, encoded.Length));
+                        ArrayPool<byte>.Shared.Return(encoded.Data);
+                    }
+
+                    if (!encoded.IsEndOfTrack)
                         continue;
 
                     OnPlaybackFinished?.Invoke();
@@ -1217,7 +1290,17 @@ namespace Exiled.API.Features.Toys
                         nextScheduledEventIndex = 0;
 
                         ResetEncoder();
-                        CurrentSource.Reset();
+                        CurrentSource?.Reset();
+
+                        while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
+                        {
+                            if (oldFrame.Data != null)
+                                ArrayPool<byte>.Shared.Return(oldFrame.Data);
+                        }
+
+                        cancelTokenSource.Cancel();
+                        cancelTokenSource = new CancellationTokenSource();
+                        Task.Run(() => ProducerWorker(cancelTokenSource.Token));
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
@@ -1227,6 +1310,11 @@ namespace Exiled.API.Features.Toys
                     if (TrySwitchToNextTrack())
                     {
                         timeAccumulator = 0f;
+
+                        cancelTokenSource?.Cancel();
+                        cancelTokenSource = new CancellationTokenSource();
+                        Task.Run(() => ProducerWorker(cancelTokenSource.Token));
+
                         continue;
                     }
 
@@ -1248,7 +1336,7 @@ namespace Exiled.API.Features.Toys
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"[Speaker] Failed to execute scheduled time event at {ScheduledEvents[nextScheduledEventIndex].Time:F2}s.\nException Details: {ex}");
+                        Log.Error($"[Speaker] Failed to execute scheduled time event: {ex}");
                     }
 
                     nextScheduledEventIndex++;
