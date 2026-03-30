@@ -327,6 +327,19 @@ namespace Exiled.API.Features.Toys
             get;
             set
             {
+                if (field == value)
+                    return;
+
+                if (CurrentSource is ILiveSource)
+                {
+                    field = 1.0f;
+                    isPitchDefault = true;
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                    Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default (1.0).");
+                    return;
+                }
+
                 field = Mathf.Max(0.1f, Mathf.Abs(value));
                 isPitchDefault = Mathf.Abs(field - 1.0f) < 0.0001f;
                 if (isPitchDefault)
@@ -638,7 +651,6 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="player">The player whose voice will be broadcasted.</param>
         /// <param name="blockOriginalVoice">If <c>true</c>, prevents the player's original voice message's from being heard while broadcasting.</param>
-        /// <param name="delayInSeconds">The broadcast delay in seconds.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <returns><c>true</c> if the playback started successfully; otherwise, <c>false</c>.</returns>
         public bool PlayLiveVoice(Player player, bool blockOriginalVoice = false, bool clearQueue = true)
@@ -682,6 +694,9 @@ namespace Exiled.API.Features.Toys
 
             CurrentSource = customSource;
             LastTrackInfo = CurrentSource.TrackInfo;
+
+            if (CurrentSource is ILiveSource)
+                Pitch = 1.0f;
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             return true;
@@ -1048,6 +1063,9 @@ namespace Exiled.API.Features.Toys
                 CurrentSource?.Dispose();
                 CurrentSource = newSource;
 
+                if (CurrentSource is ILiveSource)
+                    Pitch = 1.0f;
+
                 LastTrackInfo = CurrentSource.TrackInfo;
 
                 ResetEncoder();
@@ -1170,57 +1188,6 @@ namespace Exiled.API.Features.Toys
             OnTrackSwitching = null;
             OnPlaybackFinished = null;
             OnPlaybackStopped = null;
-        }
-
-        private void ProducerWorker(CancellationToken token)
-        {
-            try
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    if (packetQueue.Count > 15)
-                    {
-                        Thread.Sleep(5);
-                        continue;
-                    }
-
-                    if (CurrentSource == null)
-                        break;
-
-                    if (isPitchDefault)
-                    {
-                        int read = CurrentSource.Read(frame, 0, FrameSize);
-                        if (read < FrameSize)
-                            Array.Clear(frame, read, FrameSize - read);
-                    }
-                    else
-                    {
-                        ResampleFrame();
-                    }
-
-                    Filter?.Process(frame);
-
-                    int len = encoder.Encode(frame, encoded);
-
-                    if (len > 2)
-                    {
-                        byte[] pooled = ArrayPool<byte>.Shared.Rent(len);
-                        Buffer.BlockCopy(encoded, 0, pooled, 0, len);
-                        packetQueue.Enqueue((pooled, len, CurrentSource.Ended));
-                    }
-                    else
-                    {
-                        packetQueue.Enqueue((null, 0, CurrentSource.Ended));
-                    }
-
-                    if (CurrentSource.Ended)
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"[Speaker] Async audio producer safely aborted: {ex.Message}");
-            }
         }
 
         private IEnumerator<float> PlayBackCoroutine()
