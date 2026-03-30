@@ -8,11 +8,7 @@
 namespace Exiled.API.Features.Toys
 {
     using System;
-    using System.Buffers;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     using AdminToys;
 
@@ -93,9 +89,6 @@ namespace Exiled.API.Features.Toys
 
         private CoroutineHandle playBackRoutine;
         private CoroutineHandle fadeRoutine;
-
-        private CancellationTokenSource cancelTokenSource;
-        private ConcurrentQueue<(byte[] Data, int Length, bool IsEndOfTrack)> packetQueue;
 
         private double resampleTime;
         private int resampleBufferFilled;
@@ -711,22 +704,6 @@ namespace Exiled.API.Features.Toys
             if (!isPlayBackInitialized)
                 return;
 
-            if (cancelTokenSource != null)
-            {
-                cancelTokenSource.Cancel();
-                cancelTokenSource.Dispose();
-                cancelTokenSource = null;
-            }
-
-            if (packetQueue != null)
-            {
-                while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
-                {
-                    if (oldFrame.Data != null)
-                        ArrayPool<byte>.Shared.Return(oldFrame.Data);
-                }
-            }
-
             if (playBackRoutine.IsRunning)
             {
                 playBackRoutine.IsRunning = false;
@@ -825,12 +802,30 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public void SkipTrack()
         {
+            if (TrackQueue.Count == 0)
+            {
+                Stop();
+                return;
+            }
+
             Stop(clearQueue: false);
 
-            if (TrySwitchToNextTrack())
+            QueuedTrack nextTrack = TrackQueue[0];
+            TrackQueue.RemoveAt(0);
+
+            try
             {
-                IsPaused = false;
-                playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
+                IPcmSource newSource = nextTrack.SourceProvider.Invoke();
+
+                OnTrackSwitching?.Invoke(nextTrack);
+                SpeakerEvents.OnTrackSwitching(this, nextTrack);
+
+                Play(newSource, clearQueue: false);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[Speaker] Playlist next track failed: '{nextTrack}'.\n{ex}");
+                SkipTrack();
             }
         }
 
@@ -1027,7 +1022,6 @@ namespace Exiled.API.Features.Toys
 
             isPlayBackInitialized = true;
 
-            packetQueue = new();
             frame = new float[FrameSize];
             resampleBuffer = Array.Empty<float>();
             encoder = new(OpusApplicationType.Audio);
@@ -1037,48 +1031,6 @@ namespace Exiled.API.Features.Toys
             OpusWrapper.SetEncoderSetting(encoder._handle, OpusCtlSetRequest.Signal, 3002);
 
             AdminToyBase.OnRemoved += OnToyRemoved;
-        }
-
-        private bool TrySwitchToNextTrack()
-        {
-            while (TrackQueue.Count > 0)
-            {
-                QueuedTrack nextTrack = TrackQueue[0];
-                OnTrackSwitching?.Invoke(nextTrack);
-                SpeakerEvents.OnTrackSwitching(this, nextTrack);
-
-                TrackQueue.RemoveAt(0);
-
-                IPcmSource newSource;
-                try
-                {
-                    newSource = nextTrack.SourceProvider.Invoke();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"[Speaker] Playlist next track failed: '{nextTrack}'.\n{ex}");
-                    continue;
-                }
-
-                CurrentSource?.Dispose();
-                CurrentSource = newSource;
-
-                if (CurrentSource is ILiveSource)
-                    Pitch = 1.0f;
-
-                LastTrackInfo = CurrentSource.TrackInfo;
-
-                ResetEncoder();
-                ClearScheduledEvents();
-                resampleTime = 0.0;
-                resampleBufferFilled = 0;
-
-                OnPlaybackStarted?.Invoke();
-                SpeakerEvents.OnPlaybackStarted(this);
-                return true;
-            }
-
-            return false;
         }
 
         private void UpdateNextScheduledEventIndex()
@@ -1210,15 +1162,6 @@ namespace Exiled.API.Features.Toys
             resampleTime = 0.0;
             resampleBufferFilled = 0;
 
-            while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
-            {
-                if (oldFrame.Data != null)
-                    ArrayPool<byte>.Shared.Return(oldFrame.Data);
-            }
-
-            cancelTokenSource = new CancellationTokenSource();
-            Task.Run(() => ProducerWorker(cancelTokenSource.Token));
-
             float timeAccumulator = 0f;
 
             while (true)
@@ -1229,19 +1172,25 @@ namespace Exiled.API.Features.Toys
                 {
                     timeAccumulator -= FrameTime;
 
-                    if (!packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) encoded))
+                    if (isPitchDefault)
                     {
-                        timeAccumulator = 0f;
-                        break;
+                        int read = CurrentSource.Read(frame, 0, FrameSize);
+                        if (read < FrameSize)
+                            Array.Clear(frame, read, FrameSize - read);
+                    }
+                    else
+                    {
+                        ResampleFrame();
                     }
 
-                    if (encoded.Length > 2 && encoded.Data != null)
-                    {
-                        SendAudioMessage(new AudioMessage(ControllerId, encoded.Data, encoded.Length));
-                        ArrayPool<byte>.Shared.Return(encoded.Data);
-                    }
+                    Filter?.Process(frame);
 
-                    if (!encoded.IsEndOfTrack)
+                    int len = encoder.Encode(frame, encoded);
+
+                    if (len > 2)
+                        SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
+
+                    if (!CurrentSource.Ended)
                         continue;
 
                     OnPlaybackFinished?.Invoke();
@@ -1257,32 +1206,18 @@ namespace Exiled.API.Features.Toys
                         nextScheduledEventIndex = 0;
 
                         ResetEncoder();
-                        CurrentSource?.Reset();
-
-                        while (packetQueue.TryDequeue(out (byte[] Data, int Length, bool IsEndOfTrack) oldFrame))
-                        {
-                            if (oldFrame.Data != null)
-                                ArrayPool<byte>.Shared.Return(oldFrame.Data);
-                        }
-
-                        cancelTokenSource.Cancel();
-                        cancelTokenSource = new CancellationTokenSource();
-                        Task.Run(() => ProducerWorker(cancelTokenSource.Token));
+                        CurrentSource.Reset();
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
                         continue;
                     }
 
-                    if (TrySwitchToNextTrack())
+                    if (TrackQueue.Count > 0)
                     {
-                        timeAccumulator = 0f;
-
-                        cancelTokenSource?.Cancel();
-                        cancelTokenSource = new CancellationTokenSource();
-                        Task.Run(() => ProducerWorker(cancelTokenSource.Token));
-
-                        continue;
+                        playBackRoutine.IsRunning = false;
+                        SkipTrack();
+                        yield break;
                     }
 
                     if (ReturnToPoolAfter)
@@ -1303,7 +1238,7 @@ namespace Exiled.API.Features.Toys
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"[Speaker] Failed to execute scheduled time event: {ex}");
+                        Log.Error($"[Speaker] Failed to execute scheduled time event at {ScheduledEvents[nextScheduledEventIndex].Time:F2}s.\nException Details: {ex}");
                     }
 
                     nextScheduledEventIndex++;
