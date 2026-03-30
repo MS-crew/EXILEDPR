@@ -249,9 +249,12 @@ namespace Exiled.API.Features.DamageHandlers
                 case DamageType.SnowBall:
                     Base = new SnowballDamageHandler(attacker.Footprint, damage, Vector3.forward);
                     break;
+                case DamageType.Marshmallow:
+                    Base = new MarshmallowDamageHandler(attacker.Footprint, damage);
+                    break;
+
                 case DamageType.Custom:
                 case DamageType.Unknown:
-                case DamageType.Marshmallow:
                 default:
                     Base = new CustomReasonDamageHandler(damageText ?? genericDamageText, damage, cassieAnnouncement.Announcement);
                     break;
