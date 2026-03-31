@@ -5,6 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+#pragma warning disable SA1129 // Do not use default value type constructor
 namespace Exiled.API.Features.Toys
 {
     using System;
@@ -494,7 +495,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, PlaybackSettings settings = null)
+        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -502,8 +503,8 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            settings ??= PlaybackSettings.Default;
-            if (!settings.UseCache && !WavUtility.TryValidatePath(path, out string errorMessage))
+            PlaybackSettings settingsFull = settings ?? new PlaybackSettings();
+            if (!settingsFull.UseCache && !WavUtility.TryValidatePath(path, out string errorMessage))
             {
                 Log.Error($"[Speaker] {errorMessage}");
                 return false;
@@ -512,7 +513,7 @@ namespace Exiled.API.Features.Toys
             IPcmSource source;
             try
             {
-                source = WavUtility.CreatePcmSource(path, settings.Stream, settings.UseCache);
+                source = WavUtility.CreatePcmSource(path, settingsFull.Stream, settingsFull.UseCache);
             }
             catch (Exception ex)
             {
@@ -520,7 +521,7 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            return PlayFromPool(source, position, parent, settings);
+            return PlayFromPool(source, position, parent, settingsFull);
         }
 
         /// <summary>
@@ -531,7 +532,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the source is valid and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, PlaybackSettings settings = null)
+        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
         {
             if (source == null)
             {
@@ -541,20 +542,20 @@ namespace Exiled.API.Features.Toys
 
             Speaker speaker = Rent(parent, position);
 
-            settings ??= PlaybackSettings.Default;
+            PlaybackSettings settingsFull = settings ?? new PlaybackSettings();
 
-            speaker.Volume = settings.Volume;
-            speaker.IsSpatial = settings.IsSpatial;
-            speaker.MinDistance = settings.MinDistance;
-            speaker.MaxDistance = settings.MaxDistance;
+            speaker.Volume = settingsFull.Volume;
+            speaker.IsSpatial = settingsFull.IsSpatial;
+            speaker.MinDistance = settingsFull.MinDistance;
+            speaker.MaxDistance = settingsFull.MaxDistance;
 
-            speaker.Pitch = settings.Pitch;
-            speaker.Channel = settings.Channel;
-            speaker.PlayMode = settings.PlayMode;
-            speaker.Predicate = settings.Predicate;
-            speaker.TargetPlayer = settings.TargetPlayer;
-            speaker.TargetPlayers = settings.TargetPlayers;
-            speaker.Filter = settings.Filter;
+            speaker.Pitch = settingsFull.Pitch;
+            speaker.Channel = settingsFull.Channel;
+            speaker.PlayMode = settingsFull.PlayMode;
+            speaker.Predicate = settingsFull.Predicate;
+            speaker.TargetPlayer = settingsFull.TargetPlayer;
+            speaker.TargetPlayers = settingsFull.TargetPlayers;
+            speaker.Filter = settingsFull.Filter;
 
             speaker.ReturnToPoolAfter = true;
 

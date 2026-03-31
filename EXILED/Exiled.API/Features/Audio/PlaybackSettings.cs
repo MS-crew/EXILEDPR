@@ -20,12 +20,14 @@ namespace Exiled.API.Features.Audio
     /// <summary>
     /// Represents all configurable audio and network settings for play from pool method.
     /// </summary>
-    public class PlaybackSettings
+    public struct PlaybackSettings
     {
         /// <summary>
-        /// Gets a global, read-only instance of <see cref="PlaybackSettings"/> with all default values.
+        /// Initializes a new instance of the <see cref="PlaybackSettings"/> struct.
         /// </summary>
-        public static readonly PlaybackSettings Default = new();
+        public PlaybackSettings()
+        {
+        }
 
         /// <summary>
         /// Gets or sets the volume level.
