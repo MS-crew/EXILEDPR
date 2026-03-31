@@ -671,6 +671,51 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Creates a <see cref="MixerSource"/> from the provided paths/URLs and starts playing it mixed.
+        /// </summary>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <param name="paths">An array of paths or URLs to the audio files to mix and play.</param>
+        /// <returns><c>true</c> if at least one valid source was found and playback started; otherwise, <c>false</c>.</returns>
+        public bool PlayMixed(bool clearQueue = true, params string[] paths)
+        {
+            if (paths == null || paths.Length == 0)
+            {
+                Log.Error("[Speaker] No paths provided for PlayMixed!");
+                return false;
+            }
+
+            if (clearQueue)
+                TrackQueue.Clear();
+
+            bool added = false;
+
+            foreach (string path in paths)
+            {
+                if (!WavUtility.TryValidatePath(path, out string errorMessage))
+                {
+                    Log.Error($"[Speaker] Invalid path skipped for mixing: '{path}' | Reason: {errorMessage}");
+                    continue;
+                }
+
+                try
+                {
+                    IPcmSource newSource = WavUtility.CreatePcmSource(path, false, false);
+                    if (newSource != null)
+                    {
+                        if (AddMixed(newSource))
+                            added = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[Speaker] Failed to mix path '{path}'. Exception: {ex.Message}");
+                }
+            }
+
+            return added;
+        }
+
+        /// <summary>
         /// Plays audio directly from a provided PCM source.
         /// </summary>
         /// <param name="customSource">The custom IPcmSource to play.</param>
@@ -695,6 +740,45 @@ namespace Exiled.API.Features.Toys
 
             playBackRoutine = Timing.RunCoroutine(PlayBackCoroutine().CancelWith(GameObject));
             return true;
+        }
+
+        /// <summary>
+        /// Dynamically mixes a new audio source into the currently playing audio without interrupting it.
+        /// </summary>
+        /// <param name="extraSource">The additional <see cref="IPcmSource"/> to mix with the current playback.</param>
+        /// <returns><c>true</c> if the source was successfully mixed or started; otherwise, <c>false</c>.</returns>
+        public bool AddMixed(IPcmSource extraSource)
+        {
+            if (extraSource == null)
+            {
+                Log.Error("[Speaker] Provided extra IPcmSource for mixing is null!");
+                return false;
+            }
+
+            if (!playBackRoutine.IsRunning || CurrentSource == null || CurrentSource.Ended)
+                return Play(extraSource, false);
+
+            if (extraSource is ILiveSource)
+                Pitch = 1.0f;
+
+            if (CurrentSource is MixerSource currentMixer)
+            {
+                currentMixer.AddSource(extraSource);
+                return true;
+            }
+
+            try
+            {
+                IPcmSource oldSource = CurrentSource;
+                MixerSource newMixer = new(oldSource, extraSource);
+                CurrentSource = newMixer;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[Speaker] Failed to transition to MixerSource on the fly!\nException Details: {ex}");
+                return false;
+            }
         }
 
         /// <summary>
