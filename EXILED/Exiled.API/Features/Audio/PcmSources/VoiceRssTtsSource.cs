@@ -9,6 +9,7 @@ namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using Exiled.API.Features;
     using Exiled.API.Interfaces.Audio;
@@ -42,6 +43,19 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <param name="voice"> Optional specific voice name for the selected language.(See <see href="https://www.voicerss.org/api/"/> for available voices per language.)</param>
         /// <param name="rate"> Speech rate from -10 (slowest) to 10 (fastest). Defaults to 0 (normal speed).</param>
         public VoiceRssTtsSource(string text, string apiKey, string language = "en-us", string voice = null, int rate = 0)
+            : this(text, new[] { apiKey }, language, voice, rate)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VoiceRssTtsSource"/> class.
+        /// </summary>
+        /// <param name="text"> The text to convert to speech.(Length limited by 100KB).</param>
+        /// <param name="apiKeys"> Your VoiceRSS API keys. Get a free key at <see href="https://www.voicerss.org/registration.aspx"/>.</param>
+        /// <param name="language"> The language and locale code for the TTS voice. See <see href="https://www.voicerss.org/api/"/> for all supported language codes.</param>
+        /// <param name="voice"> Optional specific voice name for the selected language.(See <see href="https://www.voicerss.org/api/"/> for available voices per language.)</param>
+        /// <param name="rate"> Speech rate from -10 (slowest) to 10 (fastest). Defaults to 0 (normal speed).</param>
+        public VoiceRssTtsSource(string text, IEnumerable<string> apiKeys, string language = "en-us", string voice = null, int rate = 0)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -50,15 +64,15 @@ namespace Exiled.API.Features.Audio.PcmSources
                 throw new ArgumentException("Text cannot be null or empty.", nameof(text));
             }
 
-            if (string.IsNullOrEmpty(apiKey))
+            if (apiKeys == null || !apiKeys.Any())
             {
                 isFailed = true;
-                Log.Error("[VoiceRssTtsSource] API key cannot be null or empty. Get a free key at https://www.voicerss.org/registration.aspx");
-                throw new ArgumentException("API key cannot be null or empty. Get a free key at https://www.voicerss.org/registration.aspx", nameof(apiKey));
+                Log.Error("[VoiceRssTtsSource] At least one API key must be provided.");
+                throw new ArgumentException("API key collection cannot be null or empty.", nameof(apiKeys));
             }
 
             TrackInfo = new TrackData { Path = $"VoiceRssTts: {text}", Duration = 0.0 };
-            downloadRoutine = Timing.RunCoroutine(DownloadRoutine(text, apiKey, language, voice, rate));
+            downloadRoutine = Timing.RunCoroutine(DownloadRoutine(text, apiKeys, language, voice, rate));
         }
 
         /// <summary>
@@ -138,46 +152,64 @@ namespace Exiled.API.Features.Audio.PcmSources
             internalSource?.Dispose();
         }
 
-        private IEnumerator<float> DownloadRoutine(string text, string apiKey, string language, string voice, int rate)
+        private IEnumerator<float> DownloadRoutine(string text, IEnumerable<string> apiKeys, string language, string voice, int rate)
         {
             webRequest = null;
+
             string clampedRate = Math.Clamp(rate, -10, 10).ToString();
-            string url = $"{ApiEndpoint}?key={Uri.EscapeDataString(apiKey)}&hl={Uri.EscapeDataString(language)}&c=WAV&f={AudioFormat}&r={clampedRate}&src={Uri.EscapeDataString(text)}";
+            string textEscaped = Uri.EscapeDataString(text);
+            string langEscaped = Uri.EscapeDataString(language);
+            string voiceEscaped = string.IsNullOrEmpty(voice) ? string.Empty : $"&v={Uri.EscapeDataString(voice)}";
 
-            if (!string.IsNullOrEmpty(voice))
-                url += $"&v={Uri.EscapeDataString(voice)}";
+            bool successfulDownload = false;
 
-            try
+            foreach (string apiKey in apiKeys)
             {
+                if (string.IsNullOrWhiteSpace(apiKey))
+                    continue;
+
+                string url = $"{ApiEndpoint}?key={Uri.EscapeDataString(apiKey)}&hl={langEscaped}&c=WAV&f={AudioFormat}&r={clampedRate}&src={textEscaped}{voiceEscaped}";
+
+                webRequest?.Dispose();
                 webRequest = UnityWebRequest.Get(url);
+
+                yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
+
+                if (webRequest.result != UnityWebRequest.Result.Success)
+                {
+                    Log.Error($"[VoiceRssTtsSource] Network Error: {webRequest.error}.");
+                    break;
+                }
+
+                string responseText = webRequest.downloadHandler.text;
+                if (!string.IsNullOrEmpty(responseText) && responseText.StartsWith("ERROR: "))
+                {
+                    string errorMessage = responseText[7..].Trim();
+
+                    if (errorMessage.Contains("limit") || errorMessage.Contains("expired") || errorMessage.Contains("inactive") || errorMessage.Contains("API key"))
+                    {
+                        Log.Warn($"[VoiceRssTtsSource] Key issue, key: '{apiKey}', Error : {errorMessage}. Switching to another key...");
+                        continue;
+                    }
+                    else
+                    {
+                        Log.Error($"[VoiceRssTtsSource] API Error: {errorMessage}");
+                        break;
+                    }
+                }
+
+                successfulDownload = true;
+                break;
             }
-            catch (Exception ex)
+
+            if (!successfulDownload)
             {
-                Log.Error($"[VoiceRssTtsSource] Failed to start web request! URL: {url} | Error: {ex.Message}");
                 isFailed = true;
                 yield break;
             }
 
-            yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
-
             try
             {
-                if (webRequest.result != UnityWebRequest.Result.Success)
-                {
-                    Log.Error($"[VoiceRssTtsSource] Download failed! Error: {webRequest.error}");
-                    isFailed = true;
-                    yield break;
-                }
-
-                string contentType = webRequest.GetResponseHeader("Content-Type") ?? string.Empty;
-                if (!contentType.Contains("audio") && !contentType.Contains("wav") && !contentType.Contains("octet-stream"))
-                {
-                    string apiError = webRequest.downloadHandler.text;
-                    Log.Error($"[VoiceRssTtsSource] API Error: {apiError}");
-                    isFailed = true;
-                    yield break;
-                }
-
                 byte[] rawBytes = webRequest.downloadHandler.data;
                 AudioData audioData = WavUtility.WavToPcm(rawBytes);
                 audioData.TrackInfo.Path = $"VoiceRSS: {text}";
@@ -188,7 +220,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             }
             catch (Exception e)
             {
-                Log.Error($"[VoiceRssTtsSource] Parsing Error! Ensure the API returns a valid PCM16 WAV.\nDetails: {e.Message}");
+                Log.Error($"[VoiceRssTtsSource] Parsing Error! \nDetails: {e.Message}");
                 isFailed = true;
             }
             finally
