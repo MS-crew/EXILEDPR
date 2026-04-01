@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------
-// <copyright file="PreloadWebWavPcmSource.cs" company="ExMod Team">
+// <copyright file="WebWavPcmSource.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
@@ -9,6 +9,7 @@ namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using Exiled.API.Features;
     using Exiled.API.Interfaces.Audio;
@@ -21,20 +22,20 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// <summary>
     /// Provides a <see cref="IPcmSource"/> that downloads a .wav file from a URL and preloads it for playback.
     /// </summary>
-    public sealed class PreloadWebWavPcmSource : IPcmSource
+    public sealed class WebWavPcmSource : IPcmSource, IAsyncPcmSource
     {
         private IPcmSource internalSource;
         private UnityWebRequest webRequest;
         private CoroutineHandle downloadRoutine;
 
-        private bool isReady = false;
-        private bool isFailed = false;
+        private volatile bool isReady = false;
+        private volatile bool isFailed = false;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PreloadWebWavPcmSource"/> class.
+        /// Initializes a new instance of the <see cref="WebWavPcmSource"/> class.
         /// </summary>
         /// <param name="url">The direct URL to the .wav file.</param>
-        public PreloadWebWavPcmSource(string url)
+        public WebWavPcmSource(string url)
         {
             TrackInfo = default;
             downloadRoutine = Timing.RunCoroutine(Download(url));
@@ -63,6 +64,11 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// Gets a value indicating whether the end of the playback has been reached.
         /// </summary>
         public bool Ended => isFailed || (isReady && internalSource != null && internalSource.Ended);
+
+        /// <summary>
+        /// Gets a value indicating whether the source failed to load.
+        /// </summary>
+        public bool IsFailed => isFailed;
 
         /// <summary>
         /// Reads PCM data from the audio source into the specified buffer.
@@ -105,7 +111,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="PreloadWebWavPcmSource"/>.
+        /// Releases all resources used by the <see cref="WebWavPcmSource"/>.
         /// </summary>
         public void Dispose()
         {
@@ -119,47 +125,59 @@ namespace Exiled.API.Features.Audio.PcmSources
 
         private IEnumerator<float> Download(string url)
         {
-            webRequest = null;
-
             try
             {
                 webRequest = UnityWebRequest.Get(url);
+                webRequest.useHttpContinue = true;
             }
             catch (Exception ex)
             {
-                Log.Error($"[WebPreloadWavPcmSource] Failed to download audio! URL: {url} | Error: {ex.Message}");
+                Log.Error($"[WebWavPcmSource] Failed to download audio! URL: {url} | Error: {ex.Message}");
                 isFailed = true;
+                webRequest?.Dispose();
+                webRequest = null;
                 yield break;
             }
 
             yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
 
+            if (webRequest.result != UnityWebRequest.Result.Success)
+            {
+                Log.Error($"[WebWavPcmSource] Failed to download audio! URL: {url} | Error: {webRequest.error}");
+                isFailed = true;
+                webRequest?.Dispose();
+                webRequest = null;
+                yield break;
+            }
+
+            byte[] rawBytes = webRequest.downloadHandler.data;
+            webRequest.Dispose();
+            webRequest = null;
+
+            Task<AudioData> toPcmTask = Task.Run(() => WavUtility.WavToPcm(rawBytes));
+
+            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted);
+
+            if (toPcmTask.IsFaulted)
+            {
+                Log.Error($"[WebPreloadWavPcmSource] Failed to read the downloaded file! Ensure the link points to a valid .WAV file. Error: {toPcmTask.Exception?.InnerException?.Message ?? toPcmTask.Exception?.Message}");
+                isFailed = true;
+                yield break;
+            }
+
+            AudioData audioData = toPcmTask.Result;
+            audioData.TrackInfo.Path = url;
+
             try
             {
-                if (webRequest.result != UnityWebRequest.Result.Success)
-                {
-                    Log.Error($"[WebPreloadWavPcmSource] Failed to download audio! URL: {url} | Error: {webRequest.error}");
-                    isFailed = true;
-                    yield break;
-                }
-
-                byte[] rawBytes = webRequest.downloadHandler.data;
-                AudioData audioData = WavUtility.WavToPcm(rawBytes);
-                audioData.TrackInfo.Path = url;
-
                 internalSource = new PreloadedPcmSource(audioData.Pcm);
                 TrackInfo = audioData.TrackInfo;
                 isReady = true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Log.Error($"[WebPreloadWavPcmSource] Failed to read the downloaded file! Ensure the link points to a valid .WAV file.\nException Details: {e.Message}");
+                Log.Error($"[WebPreloadWavPcmSource] Failed to read the downloaded file! Ensure the link points to a valid .WAV file. Error:  {ex.InnerException?.Message ?? ex.Message}");
                 isFailed = true;
-            }
-            finally
-            {
-                webRequest?.Dispose();
-                webRequest = null;
             }
         }
     }

@@ -61,7 +61,7 @@ namespace Exiled.API.Features.Audio.PcmSources
 
             if (!AudioDataStorage.AudioStorage.ContainsKey(name))
             {
-                if (!AudioDataStorage.Add(name, path))
+                if (!AudioDataStorage.AddWav(name, path))
                 {
                     Log.Error($"[CachedPcmSource] Failed to load local file '{path}' into cache under the name '{name}'.");
                     throw new FileNotFoundException($"Failed to cache and load '{path}'.");

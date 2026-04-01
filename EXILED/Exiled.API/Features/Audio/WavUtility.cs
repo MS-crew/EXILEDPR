@@ -39,7 +39,7 @@ namespace Exiled.API.Features.Audio
                 return new CachedPcmSource(path, path);
 
             if (path.StartsWith("http"))
-                return new PreloadWebWavPcmSource(path);
+                return new WebWavPcmSource(path);
 
             if (stream)
                 return new WavStreamSource(path);
@@ -131,6 +131,12 @@ namespace Exiled.API.Features.Audio
         {
             TrackData trackData = new();
 
+            if (stream.Length < 12)
+            {
+                Log.Error("[WavUtility] WAV file is too short to contain a valid header.");
+                throw new InvalidDataException("WAV file is too short to contain a valid header.");
+            }
+
             Span<byte> headerBuffer = stackalloc byte[12];
             stream.Read(headerBuffer);
 
@@ -141,6 +147,12 @@ namespace Exiled.API.Features.Audio
             Span<byte> chunkHeader = stackalloc byte[8];
             while (true)
             {
+                if (stream.Position + 8 > stream.Length)
+                {
+                    Log.Error("[WavUtility] WAV file ended prematurely while parsing chunks.");
+                    throw new InvalidDataException("WAV file ended prematurely while parsing chunks.");
+                }
+
                 int read = stream.Read(chunkHeader);
                 if (read < 8)
                     break;

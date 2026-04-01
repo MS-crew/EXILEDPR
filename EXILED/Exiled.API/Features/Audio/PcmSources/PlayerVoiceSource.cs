@@ -8,7 +8,6 @@
 namespace Exiled.API.Features.Audio.PcmSources
 {
     using System.Buffers;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
 
     using Exiled.API.Features;

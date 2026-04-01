@@ -47,7 +47,7 @@ namespace Exiled.API.Features.Audio
         /// <param name="name">The unique storage key to assign to this audio.</param>
         /// <param name="path">The absolute path to the local .wav file.</param>
         /// <returns><c>true</c> if the file was successfully loaded and stored; otherwise, <c>false</c>.</returns>
-        public static bool Add(string name, string path)
+        public static bool AddWav(string name, string path)
         {
             if (!ValidateName(name))
                 return false;
@@ -137,7 +137,7 @@ namespace Exiled.API.Features.Audio
         /// <param name="name">The unique storage key to assign.</param>
         /// <param name="url">The HTTP or HTTPS URL pointing to a valid .wav file.</param>
         /// <returns>A <see cref="CoroutineHandle"/> for the running download coroutine.</returns>
-        public static CoroutineHandle AddUrl(string name, string url) => Timing.RunCoroutine(AddUrlCoroutine(name, url));
+        public static CoroutineHandle AddWavUrl(string name, string url) => Timing.RunCoroutine(AddUrlCoroutine(name, url));
 
         /// <summary>
         /// Starts an asynchronous download of a .wav file from the specified URL and adds it to the storage.

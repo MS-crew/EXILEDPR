@@ -32,7 +32,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// Initializes a new instance of the <see cref="MixerSource"/> class with the specified initial sources.
         /// </summary>
         /// <param name="initialSources">An array of <see cref="IPcmSource"/> instances to mix.</param>
-        public MixerSource(params IPcmSource[] initialSources)
+        public MixerSource(IEnumerable<IPcmSource> initialSources)
         {
             if (initialSources != null)
                 sources.AddRange(initialSources.Where(s => s != null));

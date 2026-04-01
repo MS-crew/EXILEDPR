@@ -10,6 +10,8 @@ namespace Exiled.API.Features.Toys
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using AdminToys;
 
@@ -87,6 +89,7 @@ namespace Exiled.API.Features.Toys
         private float[] frame;
         private byte[] encoded;
         private float[] resampleBuffer;
+        private Func<int> encode;
 
         private CoroutineHandle playBackRoutine;
         private CoroutineHandle fadeRoutine;
@@ -491,11 +494,11 @@ namespace Exiled.API.Features.Toys
         /// Rents a speaker from the pool, plays a local wav file or web stream one time, and automatically returns it to the pool afterwards. (File must be 16 bit, mono and 48khz.)
         /// </summary>
         /// <param name="path">The path/url or custom name/key (if <paramref name="settings"/> has <see cref="PlaybackSettings.UseCache"/> set to true) to the wav file.</param>
-        /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
+        /// <param name="position">The local position of the speaker.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayWavFromPool(string path, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
+        public static bool PlayWavFromPool(string path, Transform parent = null, Vector3? position = null, in PlaybackSettings? settings = null)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -521,18 +524,18 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            return PlayFromPool(source, position, parent, settingsFull);
+            return PlayFromPool(source, parent, position, settingsFull);
         }
 
         /// <summary>
         /// Rents a speaker from the pool, plays a custom PCM source one time, and automatically returns it to the pool afterwards.
         /// </summary>
         /// <param name="source">The custom IPcmSource to play.</param>
-        /// <param name="position">The local position of the speaker.</param>
         /// <param name="parent">The parent transform, if any.</param>
+        /// <param name="position">The local position of the speaker.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the source is valid and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(IPcmSource source, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
+        public static bool PlayFromPool(IPcmSource source, Transform parent = null, Vector3? position = null, in PlaybackSettings? settings = null)
         {
             if (source == null)
             {
@@ -642,6 +645,56 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Converts provided paths/URLs to sources and plays them mixed together.
+        /// </summary>
+        /// <param name="paths">The collection of paths or URLs to the audio files.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <param name="stream">If <c>true</c>, streams local files from disk. (Ignored for web URLs).</param>
+        /// <param name="useCache">If <c>true</c>, utilizes <see cref="CachedPcmSource"/> for the sources.</param>
+        /// <returns><c>true</c> if at least one valid path was loaded and started; otherwise, <c>false</c>.</returns>
+        public bool PlayMixedWav(IEnumerable<string> paths, bool clearQueue = true, bool stream = false, bool useCache = false)
+        {
+            if (paths == null || !paths.Any())
+            {
+                Log.Error("[Speaker] No paths provided for PlayMixedWav!");
+                return false;
+            }
+
+            List<IPcmSource> createdSources = new();
+
+            foreach (string path in paths)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    Log.Warn("[Speaker] One of the provided paths for PlayMixedWav is null or empty. Skipping this entry.");
+                    continue;
+                }
+
+                if (!WavUtility.TryValidatePath(path, out string error))
+                {
+                    Log.Error($"[Speaker] Skipping invalid path in mix: {path}. Reason: {error}");
+                    continue;
+                }
+
+                try
+                {
+                    IPcmSource source = WavUtility.CreatePcmSource(path, stream, useCache);
+                    if (source != null)
+                        createdSources.Add(source);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[Speaker] Failed to create source for mix from '{path}': {ex.Message}");
+                }
+            }
+
+            if (createdSources.Count == 0)
+                return false;
+
+            return PlayMixed(createdSources, clearQueue);
+        }
+
+        /// <summary>
         /// Plays the live voice of a specific player through this speaker.
         /// </summary>
         /// <param name="player">The player whose voice will be broadcasted.</param>
@@ -668,51 +721,6 @@ namespace Exiled.API.Features.Toys
             }
 
             return Play(source, clearQueue);
-        }
-
-        /// <summary>
-        /// Creates a <see cref="MixerSource"/> from the provided paths/URLs and starts playing it mixed.
-        /// </summary>
-        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
-        /// <param name="paths">An array of paths or URLs to the audio files to mix and play.</param>
-        /// <returns><c>true</c> if at least one valid source was found and playback started; otherwise, <c>false</c>.</returns>
-        public bool PlayMixedWav(bool clearQueue = true, params string[] paths)
-        {
-            if (paths == null || paths.Length == 0)
-            {
-                Log.Error("[Speaker] No paths provided for PlayMixed!");
-                return false;
-            }
-
-            if (clearQueue)
-                TrackQueue.Clear();
-
-            bool added = false;
-
-            foreach (string path in paths)
-            {
-                if (!WavUtility.TryValidatePath(path, out string errorMessage))
-                {
-                    Log.Error($"[Speaker] Invalid path skipped for mixing: '{path}' | Reason: {errorMessage}");
-                    continue;
-                }
-
-                try
-                {
-                    IPcmSource newSource = WavUtility.CreatePcmSource(path, false, false);
-                    if (newSource != null)
-                    {
-                        if (AddMixed(newSource))
-                            added = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"[Speaker] Failed to mix path '{path}'. Exception: {ex.Message}");
-                }
-            }
-
-            return added;
         }
 
         /// <summary>
@@ -743,6 +751,37 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Plays multiple <see cref="IPcmSource"/> instances mixed together.
+        /// </summary>
+        /// <param name="sources">The collection of PCM sources to mix and play.</param>
+        /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
+        /// <returns><c>true</c> if at least one source was successfully mixed; otherwise, <c>false</c>.</returns>
+        public bool PlayMixed(IEnumerable<IPcmSource> sources, bool clearQueue = true)
+        {
+            if (sources == null || !sources.Any())
+            {
+                Log.Error("[Speaker] No sources provided for PlayMixed!");
+                return false;
+            }
+
+            if (clearQueue)
+                TrackQueue.Clear();
+
+            bool anyAdded = false;
+
+            foreach (IPcmSource source in sources)
+            {
+                if (source == null)
+                    continue;
+
+                if (AddMixed(source))
+                    anyAdded = true;
+            }
+
+            return anyAdded;
+        }
+
+        /// <summary>
         /// Dynamically mixes a new audio source into the currently playing audio without interrupting it.
         /// </summary>
         /// <param name="extraSource">The additional <see cref="IPcmSource"/> to mix with the current playback.</param>
@@ -770,7 +809,7 @@ namespace Exiled.API.Features.Toys
             try
             {
                 IPcmSource oldSource = CurrentSource;
-                MixerSource newMixer = new(oldSource, extraSource);
+                MixerSource newMixer = new([oldSource, extraSource]);
                 CurrentSource = newMixer;
                 return true;
             }
@@ -1111,6 +1150,7 @@ namespace Exiled.API.Features.Toys
             isPlayBackInitialized = true;
 
             frame = new float[FrameSize];
+            encode = ProcessAndEncodeFrame;
             resampleBuffer = Array.Empty<float>();
             encoder = new(OpusApplicationType.Audio);
             encoded = new byte[VoiceChatSettings.MaxEncodedSize];
@@ -1230,6 +1270,26 @@ namespace Exiled.API.Features.Toys
             OnPlaybackStopped = null;
         }
 
+        private void ReadNextFrame()
+        {
+            if (isPitchDefault)
+            {
+                int read = CurrentSource.Read(frame, 0, FrameSize);
+                if (read < FrameSize)
+                    Array.Clear(frame, read, FrameSize - read);
+            }
+            else
+            {
+                ResampleFrame();
+            }
+        }
+
+        private int ProcessAndEncodeFrame()
+        {
+            Filter?.Process(frame);
+            return encoder.Encode(frame, encoded);
+        }
+
         private IEnumerator<float> PlayBackCoroutine()
         {
             if (needsSyncWait)
@@ -1252,6 +1312,9 @@ namespace Exiled.API.Features.Toys
 
             float timeAccumulator = 0f;
 
+            ReadNextFrame();
+            Task<int> encodeTask = Task.Run(encode);
+
             while (true)
             {
                 timeAccumulator += Time.deltaTime;
@@ -1260,33 +1323,29 @@ namespace Exiled.API.Features.Toys
                 {
                     timeAccumulator -= FrameTime;
 
-                    if (isPitchDefault)
-                    {
-                        int read = CurrentSource.Read(frame, 0, FrameSize);
-                        if (read < FrameSize)
-                            Array.Clear(frame, read, FrameSize - read);
-                    }
-                    else
-                    {
-                        ResampleFrame();
-                    }
-
-                    Filter?.Process(frame);
-
-                    int len = encoder.Encode(frame, encoded);
+                    int len = encodeTask.Result;
 
                     if (len > 2)
                         SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
 
                     if (!CurrentSource.Ended)
+                    {
+                        ReadNextFrame();
+                        encodeTask = Task.Run(encode);
                         continue;
+                    }
 
-                    OnPlaybackFinished?.Invoke();
-                    SpeakerEvents.OnPlaybackFinished(this);
+                    bool trackFailed = CurrentSource is IAsyncPcmSource asyncSource && asyncSource.IsFailed;
+
+                    if (!trackFailed)
+                    {
+                        OnPlaybackFinished?.Invoke();
+                        SpeakerEvents.OnPlaybackFinished(this);
+                    }
 
                     yield return Timing.WaitForOneFrame;
 
-                    if (Loop)
+                    if (Loop && !trackFailed)
                     {
                         resampleTime = 0;
                         timeAccumulator = 0;
@@ -1299,6 +1358,9 @@ namespace Exiled.API.Features.Toys
 
                         OnPlaybackLooped?.Invoke();
                         SpeakerEvents.OnPlaybackLooped(this);
+
+                        ReadNextFrame();
+                        encodeTask = Task.Run(encode);
                         continue;
                     }
 

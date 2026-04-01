@@ -10,6 +10,7 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Exiled.API.Features;
     using Exiled.API.Interfaces.Audio;
@@ -22,17 +23,19 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// <summary>
     /// Provides a <see cref="IPcmSource"/> that converts text to speech using the <see href="https://www.voicerss.org/">VoiceRSS</see> Text-to-Speech API.
     /// </summary>
-    public sealed class VoiceRssTtsSource : IPcmSource
+    public sealed class VoiceRssTtsSource : IPcmSource, IAsyncPcmSource
     {
         private const string ApiEndpoint = "https://api.voicerss.org/";
         private const string AudioFormat = "48khz_16bit_mono";
+
+        private static readonly Dictionary<string, DateTime> BlacklistKeys = new();
 
         private IPcmSource internalSource;
         private UnityWebRequest webRequest;
         private CoroutineHandle downloadRoutine;
 
-        private bool isReady = false;
-        private bool isFailed = false;
+        private volatile bool isReady = false;
+        private volatile bool isFailed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VoiceRssTtsSource"/> class.
@@ -100,6 +103,11 @@ namespace Exiled.API.Features.Audio.PcmSources
         public bool Ended => isFailed || (isReady && internalSource != null && internalSource.Ended);
 
         /// <summary>
+        /// Gets a value indicating whether the source failed to load.
+        /// </summary>
+        public bool IsFailed => isFailed;
+
+        /// <summary>
         /// Reads PCM data from the audio source into the specified buffer.
         /// </summary>
         /// <param name="buffer">The buffer to fill with PCM data.</param>
@@ -154,8 +162,6 @@ namespace Exiled.API.Features.Audio.PcmSources
 
         private IEnumerator<float> DownloadRoutine(string text, IEnumerable<string> apiKeys, string language, string voice, int rate)
         {
-            webRequest = null;
-
             string clampedRate = Math.Clamp(rate, -10, 10).ToString();
             string textEscaped = Uri.EscapeDataString(text);
             string langEscaped = Uri.EscapeDataString(language);
@@ -168,10 +174,26 @@ namespace Exiled.API.Features.Audio.PcmSources
                 if (string.IsNullOrWhiteSpace(apiKey))
                     continue;
 
+                if (BlacklistKeys.TryGetValue(apiKey, out DateTime exhaustedAt))
+                {
+                    if (DateTime.UtcNow.Day == exhaustedAt.Day)
+                        continue;
+
+                    BlacklistKeys.Remove(apiKey);
+                }
+
                 string url = $"{ApiEndpoint}?key={Uri.EscapeDataString(apiKey)}&hl={langEscaped}&c=WAV&f={AudioFormat}&r={clampedRate}&src={textEscaped}{voiceEscaped}";
 
                 webRequest?.Dispose();
-                webRequest = UnityWebRequest.Get(url);
+                try
+                {
+                    webRequest = UnityWebRequest.Get(url);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[VoiceRssTtsSource] Failed to get Url '{url}. Error: {ex.Message}");
+                    break;
+                }
 
                 yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
 
@@ -189,6 +211,7 @@ namespace Exiled.API.Features.Audio.PcmSources
                     if (errorMessage.Contains("limit") || errorMessage.Contains("expired") || errorMessage.Contains("inactive") || errorMessage.Contains("API key"))
                     {
                         Log.Warn($"[VoiceRssTtsSource] Key issue, key: '{apiKey}', Error : {errorMessage}. Switching to another key...");
+                        BlacklistKeys[apiKey] = DateTime.UtcNow;
                         continue;
                     }
                     else
@@ -205,28 +228,39 @@ namespace Exiled.API.Features.Audio.PcmSources
             if (!successfulDownload)
             {
                 isFailed = true;
+                webRequest?.Dispose();
+                webRequest = null;
                 yield break;
             }
 
+            byte[] rawBytes = webRequest.downloadHandler.data;
+            webRequest.Dispose();
+            webRequest = null;
+
+            Task<AudioData> toPcmTask = Task.Run(() => WavUtility.WavToPcm(rawBytes));
+
+            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted);
+
+            if (toPcmTask.IsFaulted)
+            {
+                Log.Error($"[VoiceRssTtsSource] Error read the downloaded file! \nError: {toPcmTask.Exception?.InnerException?.Message ?? toPcmTask.Exception?.Message}");
+                isFailed = true;
+                yield break;
+            }
+
+            AudioData audioData = toPcmTask.Result;
+            audioData.TrackInfo.Path = $"VoiceRSS: {text}";
+
             try
             {
-                byte[] rawBytes = webRequest.downloadHandler.data;
-                AudioData audioData = WavUtility.WavToPcm(rawBytes);
-                audioData.TrackInfo.Path = $"VoiceRSS: {text}";
-
                 internalSource = new PreloadedPcmSource(audioData.Pcm);
                 TrackInfo = audioData.TrackInfo;
                 isReady = true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Log.Error($"[VoiceRssTtsSource] Parsing Error! \nDetails: {e.Message}");
+                Log.Error($"[VoiceRssTtsSource] Failed to create internal source! \nError: {ex.InnerException?.Message ?? ex.Message}");
                 isFailed = true;
-            }
-            finally
-            {
-                webRequest?.Dispose();
-                webRequest = null;
             }
         }
     }
