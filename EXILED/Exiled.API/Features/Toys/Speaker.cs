@@ -495,7 +495,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="parent">The parent transform, if any.</param>
         /// <param name="settings">The optional audio and network settings. If null, default settings are used.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public static bool PlayFromPool(string path, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
+        public static bool PlayWavFromPool(string path, Vector3 position, Transform parent = null, in PlaybackSettings? settings = null)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -613,7 +613,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="stream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimized playback.</param>
         /// <returns><c>true</c> if the audio file was successfully found, loaded, and playback started; otherwise, <c>false</c>.</returns>
-        public bool Play(string path, bool clearQueue = true, bool stream = false, bool useCache = false)
+        public bool PlayWav(string path, bool clearQueue = true, bool stream = false, bool useCache = false)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -648,7 +648,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="blockOriginalVoice">If <c>true</c>, prevents the player's original voice message's from being heard while broadcasting.</param>
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <returns><c>true</c> if the playback started successfully; otherwise, <c>false</c>.</returns>
-        public bool PlayLiveVoice(Player player, bool blockOriginalVoice = false, bool clearQueue = true)
+        public bool PlayFromPlayer(Player player, bool blockOriginalVoice = false, bool clearQueue = true)
         {
             if (player == null)
             {
@@ -676,7 +676,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="clearQueue">If <c>true</c>, clears the upcoming tracks in the playlist before starting playback.</param>
         /// <param name="paths">An array of paths or URLs to the audio files to mix and play.</param>
         /// <returns><c>true</c> if at least one valid source was found and playback started; otherwise, <c>false</c>.</returns>
-        public bool PlayMixed(bool clearQueue = true, params string[] paths)
+        public bool PlayMixedWav(bool clearQueue = true, params string[] paths)
         {
             if (paths == null || paths.Length == 0)
             {
@@ -854,7 +854,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimized playback.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueTrack(string path, bool isStream = false, bool useCache = false)
+        public bool QueueWavTrack(string path, bool isStream = false, bool useCache = false)
         {
             if (string.IsNullOrEmpty(path))
             {
