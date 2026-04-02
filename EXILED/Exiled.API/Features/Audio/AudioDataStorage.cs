@@ -34,7 +34,7 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Gets the underlying storage, keyed by name.
         /// </summary>
-        public static ConcurrentDictionary<string, AudioData> AudioStorage { get; }
+        public static Dictionary<string, AudioData> AudioStorage { get; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the storage is automatically cleared when a round restart is triggered.
