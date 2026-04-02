@@ -34,7 +34,7 @@ namespace Exiled.API.Features.Audio
         /// <summary>
         /// Gets the underlying storage, keyed by name.
         /// </summary>
-        public static ConcurrentDictionary<string, AudioData> AudioStorage { get; }
+        public static Dictionary<string, AudioData> AudioStorage { get; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the storage is automatically cleared when a round restart is triggered.
@@ -188,7 +188,7 @@ namespace Exiled.API.Features.Audio
         /// </summary>
         /// <param name="name">The storage name/key to remove.</param>
         /// <returns><c>true</c> if the entry was found and removed; otherwise, <c>false</c>.</returns>
-        public static bool Remove(string name) => AudioStorage.TryRemove(name, out _);
+        public static bool Remove(string name) => AudioStorage.Remove(name, out _);
 
         /// <summary>
         /// Clears all entries from the audio storage, freeing all associated memory.
