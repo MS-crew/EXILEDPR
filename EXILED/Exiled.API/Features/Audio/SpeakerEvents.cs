@@ -9,7 +9,7 @@ namespace Exiled.API.Features.Audio
 {
     using System;
 
-    using Exiled.API.Structs;
+    using Exiled.API.Structs.Audio;
 
     using Toys;
 

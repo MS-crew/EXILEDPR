@@ -5,11 +5,11 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Interfaces
+namespace Exiled.API.Interfaces.Audio
 {
     using System;
 
-    using Exiled.API.Structs;
+    using Exiled.API.Structs.Audio;
 
     /// <summary>
     /// Represents a source of PCM audio data.

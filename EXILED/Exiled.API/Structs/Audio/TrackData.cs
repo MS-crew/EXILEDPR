@@ -5,7 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Structs
+namespace Exiled.API.Structs.Audio
 {
     using System;
 

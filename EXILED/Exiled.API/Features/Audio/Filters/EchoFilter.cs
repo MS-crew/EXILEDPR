@@ -9,7 +9,7 @@ namespace Exiled.API.Features.Audio.Filters
 {
     using System;
 
-    using Exiled.API.Interfaces;
+    using Exiled.API.Interfaces.Audio;
 
     using UnityEngine;
 
@@ -147,6 +147,14 @@ namespace Exiled.API.Features.Audio.Filters
 
                 frame[i] = output / (1f + Mathf.Abs(output));
             }
+        }
+
+        /// <inheritdoc/>
+        public void Reset()
+        {
+            Array.Clear(delayBuffer, 0, delayBuffer.Length);
+            writeIndex = 0;
+            x1 = x2 = y1 = y2 = 0f;
         }
 
         /// <summary>

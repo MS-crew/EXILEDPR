@@ -5,7 +5,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Interfaces
+namespace Exiled.API.Interfaces.Audio
 {
     /// <summary>
     /// Represents a custom filter for the speaker.
@@ -17,5 +17,10 @@ namespace Exiled.API.Interfaces
         /// </summary>
         /// <param name="frame">The array of PCM audio samples.</param>
         void Process(float[] frame);
+
+        /// <summary>
+        /// Resets the internal state and buffers of the filter.
+        /// </summary>
+        void Reset();
     }
 }

@@ -7,13 +7,12 @@
 
 namespace Exiled.API.Features.Audio.PcmSources
 {
-    using System;
     using System.Buffers;
-    using System.Collections.Concurrent;
+    using System.Collections.Generic;
 
     using Exiled.API.Features;
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using LabApi.Events.Arguments.PlayerEvents;
 
@@ -23,32 +22,26 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// <summary>
     /// Provides a <see cref="IPcmSource"/> that captures and decodes live microphone input from a specific player.
     /// </summary>
-    public sealed class PlayerVoiceSource : IPcmSource
+    public sealed class PlayerVoiceSource : IPcmSource, ILiveSource
     {
-        private readonly int sourcePlayerId;
         private readonly Player sourcePlayer;
         private readonly OpusDecoder decoder;
-        private readonly ConcurrentQueue<float> pcmQueue;
+        private readonly Queue<float> pcmQueue;
 
         private float[] decodeBuffer;
-        private DateTime lastPacketTime;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PlayerVoiceSource"/> class.
         /// </summary>
         /// <param name="player">The player whose voice will be captured.</param>
         /// <param name="blockOriginalVoice">If <c>true</c>, prevents the player's original voice message's from being heard while broadcasting.</param>
-        /// <param name="delay">The broadcast delay in seconds.</param>
-        public PlayerVoiceSource(Player player, bool blockOriginalVoice = false, float delay = 0f)
+        public PlayerVoiceSource(Player player, bool blockOriginalVoice = false)
         {
             sourcePlayer = player;
-            sourcePlayerId = player.Id;
-
-            Delay = delay;
             BlockOriginalVoice = blockOriginalVoice;
 
             decoder = new OpusDecoder();
-            pcmQueue = new ConcurrentQueue<float>();
+            pcmQueue = new Queue<float>();
             decodeBuffer = ArrayPool<float>.Shared.Rent(VoiceChatSettings.PacketSizePerChannel);
 
             TrackInfo = new TrackData
@@ -57,21 +50,8 @@ namespace Exiled.API.Features.Audio.PcmSources
                 Duration = double.PositiveInfinity,
             };
 
-            FillDelayBuffer();
-            lastPacketTime = DateTime.UtcNow;
-
             LabApi.Events.Handlers.PlayerEvents.SendingVoiceMessage += OnVoiceChatting;
         }
-
-        /// <summary>
-        /// Gets or sets the broadcast delay in seconds.
-        /// </summary>
-        public float Delay { get; set; }
-
-        /// <summary>
-        /// Gets or sets the threshold in seconds of silence required before the delay buffer is refilled.
-        /// </summary>
-        public double SilenceThreshold { get; set; } = 0.5;
 
         /// <summary>
         /// Gets or sets a value indicating whether the player's original voice chat should be blocked while being broadcasted by this source.
@@ -100,7 +80,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <summary>
         /// Gets a value indicating whether the end of the stream has been reached.
         /// </summary>
-        public bool Ended => sourcePlayer == null || !sourcePlayer.IsConnected;
+        public bool Ended => sourcePlayer?.GameObject == null;
 
         /// <summary>
         /// Reads PCM data from the stream into the specified buffer.
@@ -150,21 +130,9 @@ namespace Exiled.API.Features.Audio.PcmSources
             }
         }
 
-        private void FillDelayBuffer()
-        {
-            if (Delay <= 0)
-                return;
-
-            int delaySamples = (int)(Delay * VoiceChatSettings.SampleRate);
-            for (int i = 0; i < delaySamples; i++)
-            {
-                pcmQueue.Enqueue(0f);
-            }
-        }
-
         private void OnVoiceChatting(PlayerSendingVoiceMessageEventArgs ev)
         {
-            if (ev.Player.PlayerId != sourcePlayerId)
+            if (ev.Player != sourcePlayer)
                 return;
 
             if (ev.Message.DataLength <= 2)
@@ -172,11 +140,6 @@ namespace Exiled.API.Features.Audio.PcmSources
 
             if (BlockOriginalVoice)
                 ev.IsAllowed = false;
-
-            if ((DateTime.UtcNow - lastPacketTime).TotalSeconds > SilenceThreshold)
-                FillDelayBuffer();
-
-            lastPacketTime = DateTime.UtcNow;
 
             int decodedSamples = decoder.Decode(ev.Message.Data, ev.Message.DataLength, decodeBuffer);
 

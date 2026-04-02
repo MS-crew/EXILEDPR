@@ -14,8 +14,8 @@ namespace Exiled.API.Features.Audio
     using System.Runtime.InteropServices;
 
     using Exiled.API.Features.Audio.PcmSources;
-    using Exiled.API.Interfaces;
-    using Exiled.API.Structs;
+    using Exiled.API.Interfaces.Audio;
+    using Exiled.API.Structs.Audio;
 
     using VoiceChat;
 
@@ -27,35 +27,42 @@ namespace Exiled.API.Features.Audio
         private const float Divide = 1f / 32768f;
 
         /// <summary>
-        /// Evaluates the given path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
+        /// Evaluates the given local path or URL and returns the appropriate <see cref="IPcmSource"/> for .wav playback.
         /// </summary>
         /// <param name="path">The local file path or web URL of the .wav file.</param>
-        /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory. (Ignored for web URLs).</param>
+        /// <param name="stream">If <c>true</c>, streams local files directly from disk. If <c>false</c>, preloads them into memory (Ignored for web URLs).</param>
+        /// <param name="cache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for zero-latency memory playback.</param>
         /// <returns>An initialized <see cref="IPcmSource"/>.</returns>
-        public static IPcmSource CreatePcmSource(string path, bool stream)
+        public static IPcmSource CreatePcmSource(string path, bool stream = false, bool cache = false)
         {
-            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                return new PreloadWebWavPcmSource(path);
+            if (cache)
+                return new CachedPcmSource(path, path);
 
-            return stream ? new WavStreamSource(path) : new PreloadedPcmSource(path);
+            if (path.StartsWith("http"))
+                return new WebWavPcmSource(path);
+
+            if (stream)
+                return new WavStreamSource(path);
+
+            return new PreloadedPcmSource(path);
         }
 
         /// <summary>
         /// Converts a WAV file at the specified path to a PCM float array.
         /// </summary>
         /// <param name="path">The file path of the WAV file to convert.</param>
-        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) WavToPcm(string path)
+        /// <returns>A <see cref="AudioData"/> containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static AudioData WavToPcm(string path)
         {
             if (!File.Exists(path))
             {
-                Log.Error($"[Speaker] The specified local file does not exist, path: `{path}`");
+                Log.Error($"[WavUtility] The specified local file does not exist, path: `{path}`");
                 throw new FileNotFoundException("File does not exist");
             }
 
             if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
             {
-                Log.Error($"[Speaker] The file type '{Path.GetExtension(path)}' is not supported for wav utility. Please use .wav file.");
+                Log.Error($"[WavUtility] The file type '{Path.GetExtension(path)}' is not supported for wav utility. Please use .wav file.");
                 throw new InvalidDataException("Unsupported WAV format.");
             }
 
@@ -69,7 +76,7 @@ namespace Exiled.API.Features.Audio
                 int bytesRead = fs.Read(rentedBuffer, 0, length);
                 using MemoryStream ms = new(rentedBuffer, 0, bytesRead);
 
-                (float[] PcmData, TrackData TrackInfo) result = ParseWavSpanToPcm(ms, rentedBuffer.AsSpan(0, bytesRead));
+                AudioData result = ParseWavSpanToPcm(ms, rentedBuffer.AsSpan(0, bytesRead));
                 result.TrackInfo.Path = path;
 
                 return result;
@@ -84,8 +91,8 @@ namespace Exiled.API.Features.Audio
         /// Converts a WAV byte array to a PCM float array.
         /// </summary>
         /// <param name="data">The raw bytes of the WAV file.</param>
-        /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) WavToPcm(byte[] data)
+        /// <returns>A <see cref="AudioData"/> containing an array of floats representing the PCM data and its TrackData.</returns>
+        public static AudioData WavToPcm(byte[] data)
         {
             using MemoryStream ms = new(data, 0, data.Length);
 
@@ -98,7 +105,7 @@ namespace Exiled.API.Features.Audio
         /// <param name="stream">The stream used to read and skip the WAV header.</param>
         /// <param name="audioData">The complete span of WAV audio data including the header.</param>
         /// <returns>A tuple containing an array of floats representing the PCM data and its TrackData.</returns>
-        public static (float[] PcmData, TrackData TrackInfo) ParseWavSpanToPcm(Stream stream, ReadOnlySpan<byte> audioData)
+        public static AudioData ParseWavSpanToPcm(Stream stream, ReadOnlySpan<byte> audioData)
         {
             TrackData metaData = SkipHeader(stream);
 
@@ -112,7 +119,7 @@ namespace Exiled.API.Features.Audio
             for (int i = 0; i < samples.Length; i++)
                 pcm[i] = samples[i] * Divide;
 
-            return (pcm, metaData);
+            return new(pcm, metaData);
         }
 
         /// <summary>
@@ -124,6 +131,12 @@ namespace Exiled.API.Features.Audio
         {
             TrackData trackData = new();
 
+            if (stream.Length < 12)
+            {
+                Log.Error("[WavUtility] WAV file is too short to contain a valid header.");
+                throw new InvalidDataException("WAV file is too short to contain a valid header.");
+            }
+
             Span<byte> headerBuffer = stackalloc byte[12];
             stream.Read(headerBuffer);
 
@@ -134,6 +147,12 @@ namespace Exiled.API.Features.Audio
             Span<byte> chunkHeader = stackalloc byte[8];
             while (true)
             {
+                if (stream.Position + 8 > stream.Length)
+                {
+                    Log.Error("[WavUtility] WAV file ended prematurely while parsing chunks.");
+                    throw new InvalidDataException("WAV file ended prematurely while parsing chunks.");
+                }
+
                 int read = stream.Read(chunkHeader);
                 if (read < 8)
                     break;
@@ -154,7 +173,7 @@ namespace Exiled.API.Features.Audio
 
                     if (format != 1 || channels != 1 || rate != VoiceChatSettings.SampleRate || bits != 16)
                     {
-                        Log.Error($"[Speaker] Invalid WAV format (format={format}, channels={channels}, rate={rate}, bits={bits}). Expected PCM16, mono and {VoiceChatSettings.SampleRate}Hz.");
+                        Log.Error($"[WavUtility] Invalid WAV format (format={format}, channels={channels}, rate={rate}, bits={bits}). Expected PCM16, mono and {VoiceChatSettings.SampleRate}Hz.");
                         throw new InvalidDataException("Unsupported WAV format.");
                     }
 
@@ -222,7 +241,7 @@ namespace Exiled.API.Features.Audio
 
                 if (stream.Position >= stream.Length)
                 {
-                    Log.Error("[Speaker] WAV file does not contain a 'data' chunk.");
+                    Log.Error("[WavUtility] WAV file does not contain a 'data' chunk.");
                     throw new InvalidDataException("Missing 'data' chunk in WAV file.");
                 }
             }
@@ -245,7 +264,7 @@ namespace Exiled.API.Features.Audio
                 return false;
             }
 
-            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (path.StartsWith("http"))
                 return true;
 
             if (!File.Exists(path))

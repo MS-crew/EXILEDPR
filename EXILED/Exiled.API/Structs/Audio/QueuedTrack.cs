@@ -5,11 +5,11 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.API.Structs
+namespace Exiled.API.Structs.Audio
 {
     using System;
 
-    using Exiled.API.Interfaces;
+    using Exiled.API.Interfaces.Audio;
 
     /// <summary>
     /// Represents a track waiting in the queue, along with its specific playback options.
