@@ -117,6 +117,7 @@ namespace Exiled.API.Features.Audio.Filters
             Array.Clear(outputBuffer, 0, outputBuffer.Length);
 
             gRover = 0;
+            cachedOversample = -1;
         }
 
         private static float[] BuildHannWindow()
