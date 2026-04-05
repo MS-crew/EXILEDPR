@@ -89,7 +89,7 @@ namespace Exiled.API.Features.Toys
         private float[] frame;
         private byte[] encoded;
         private float[] resampleBuffer;
-        private Func<int> encode;
+        private Func<int> processNextFrame;
 
         private CoroutineHandle playBackRoutine;
         private CoroutineHandle fadeRoutine;
@@ -889,11 +889,12 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Helper method to easily queue a .wav file/url with stream support.
         /// </summary>
+        /// <param name="name">An optional name or identifier for this track in the queue. This is only used for reference.</param>
         /// <param name="path">The path/url or custom name(if <paramref name="useCache"/> is true) to the wav file.</param>
         /// <param name="isStream">If <c>true</c>, the file will be streamed from disk when played; otherwise, it will be loaded into memory (Ignored for web URLs).</param>
         /// <param name="useCache">If <c>true</c>, loads the audio via <see cref="CachedPcmSource"/> for optimized playback.</param>
         /// <returns><c>true</c> if successfully queued or started.</returns>
-        public bool QueueWavTrack(string path, bool isStream = false, bool useCache = false)
+        public bool QueueWavTrack(string name, string path, bool isStream = false, bool useCache = false)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -907,7 +908,7 @@ namespace Exiled.API.Features.Toys
                 return false;
             }
 
-            return QueueTrack(new QueuedTrack(path, () => WavUtility.CreatePcmSource(path, isStream, useCache)));
+            return QueueTrack(new QueuedTrack(name, () => WavUtility.CreatePcmSource(path, isStream, useCache)));
         }
 
         /// <summary>
@@ -1150,7 +1151,7 @@ namespace Exiled.API.Features.Toys
             isPlayBackInitialized = true;
 
             frame = new float[FrameSize];
-            encode = ProcessAndEncodeFrame;
+            processNextFrame = ProcessNextFrame;
             resampleBuffer = Array.Empty<float>();
             encoder = new(OpusApplicationType.Audio);
             encoded = new byte[VoiceChatSettings.MaxEncodedSize];
@@ -1159,6 +1160,25 @@ namespace Exiled.API.Features.Toys
             OpusWrapper.SetEncoderSetting(encoder._handle, OpusCtlSetRequest.Signal, 3002);
 
             AdminToyBase.OnRemoved += OnToyRemoved;
+        }
+
+        private void OnToyRemoved(AdminToyBase toy)
+        {
+            if (toy != Base)
+                return;
+
+            AdminToyBase.OnRemoved -= OnToyRemoved;
+
+            Stop();
+            encoder?.Dispose();
+
+            OnPlaybackStarted = null;
+            OnPlaybackPaused = null;
+            OnPlaybackResumed = null;
+            OnPlaybackLooped = null;
+            OnTrackSwitching = null;
+            OnPlaybackFinished = null;
+            OnPlaybackStopped = null;
         }
 
         private void UpdateNextScheduledEventIndex()
@@ -1179,6 +1199,168 @@ namespace Exiled.API.Features.Toys
                 // 4028 => OPUS_RESET_STATE (https://github.com/xiph/opus/blob/2d862ea14b233e5a3f3afaf74d96050691af3cd5/include/opus_defines.h#L710)
                 OpusWrapper.SetEncoderSetting(encoder._handle, (OpusCtlSetRequest)4028, 0);
             }
+        }
+
+        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, bool linear, Action onComplete)
+        {
+            float timePassed = 0f;
+            bool isFadeOut = startVolume > targetVolume;
+
+            while (timePassed < duration)
+            {
+                timePassed += Time.deltaTime;
+                float t = timePassed / duration;
+
+                if (!linear)
+                    t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
+
+                Base.NetworkVolume = Mathf.Lerp(startVolume, targetVolume, t);
+                yield return Timing.WaitForOneFrame;
+            }
+
+            Base.NetworkVolume = targetVolume;
+            onComplete?.Invoke();
+        }
+
+        private IEnumerator<float> PlayBackCoroutine()
+        {
+            if (needsSyncWait)
+            {
+                int framesPassed = Time.frameCount - idChangeFrame;
+                while (framesPassed < 2)
+                {
+                    yield return Timing.WaitForOneFrame;
+                    framesPassed = Time.frameCount - idChangeFrame;
+                }
+
+                needsSyncWait = false;
+            }
+
+            OnPlaybackStarted?.Invoke();
+            SpeakerEvents.OnPlaybackStarted(this);
+
+            resampleTime = 0.0;
+            resampleBufferFilled = 0;
+
+            float timeAccumulator = 0f;
+
+            ReadNextFrame();
+            int firstLen = processNextFrame();
+
+            if (firstLen > 2)
+                SendAudioMessage(new AudioMessage(ControllerId, encoded, firstLen));
+
+            if (CurrentSource.Ended)
+            {
+                OnPlaybackFinished?.Invoke();
+                SpeakerEvents.OnPlaybackFinished(this);
+                EndingPlayBack();
+                yield break;
+            }
+
+            Task<int> encodeTask = PrepareNextFrameAsync();
+
+            while (true)
+            {
+                timeAccumulator += Time.deltaTime;
+
+                while (timeAccumulator >= FrameTime)
+                {
+                    timeAccumulator -= FrameTime;
+
+                    if (encodeTask.IsFaulted)
+                    {
+                        Log.Error($"[Speaker] An error occurred during audio encoding.\nException Details: {encodeTask.Exception}");
+                        Stop();
+                        yield break;
+                    }
+
+                    int len = encodeTask.Result;
+
+                    if (len > 2)
+                        SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
+
+                    if (!CurrentSource.Ended)
+                    {
+                        encodeTask = PrepareNextFrameAsync();
+                        continue;
+                    }
+
+                    bool trackFailed = CurrentSource is IAsyncPcmSource asyncSource && asyncSource.IsFailed;
+
+                    if (!trackFailed)
+                    {
+                        OnPlaybackFinished?.Invoke();
+                        SpeakerEvents.OnPlaybackFinished(this);
+
+                        yield return Timing.WaitForOneFrame;
+
+                        if (Loop)
+                        {
+                            resampleTime = 0.0;
+                            timeAccumulator = 0;
+                            resampleBufferFilled = 0;
+                            nextScheduledEventIndex = 0;
+
+                            ResetEncoder();
+                            Filter?.Reset();
+                            CurrentSource.Reset();
+
+                            OnPlaybackLooped?.Invoke();
+                            SpeakerEvents.OnPlaybackLooped(this);
+
+                            encodeTask = PrepareNextFrameAsync();
+                            continue;
+                        }
+                    }
+
+                    EndingPlayBack();
+
+                    yield break;
+                }
+
+                while (nextScheduledEventIndex < ScheduledEvents.Count && CurrentTime >= ScheduledEvents[nextScheduledEventIndex].Time)
+                {
+                    try
+                    {
+                        ScheduledEvents[nextScheduledEventIndex].Action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"[Speaker] Failed to execute scheduled time event at {ScheduledEvents[nextScheduledEventIndex].Time:F2}s.\nException Details: {ex}");
+                    }
+
+                    nextScheduledEventIndex++;
+                }
+
+                yield return Timing.WaitForOneFrame;
+            }
+        }
+
+        private void ReadNextFrame()
+        {
+            if (isPitchDefault)
+            {
+                int read = CurrentSource.Read(frame, 0, FrameSize);
+                if (read < FrameSize)
+                    Array.Clear(frame, read, FrameSize - read);
+            }
+            else
+            {
+                ResampleFrame();
+            }
+        }
+
+        private int ProcessNextFrame()
+        {
+            Filter?.Process(frame);
+            return encoder.Encode(frame, encoded);
+        }
+
+        private Task<int> PrepareNextFrameAsync()
+        {
+            ReadNextFrame();
+            return Task.Run(processNextFrame);
         }
 
         private void ResampleFrame()
@@ -1251,173 +1433,25 @@ namespace Exiled.API.Features.Toys
             }
         }
 
-        private void OnToyRemoved(AdminToyBase toy)
+        private void EndingPlayBack()
         {
-            if (toy != Base)
-                return;
-
-            AdminToyBase.OnRemoved -= OnToyRemoved;
-
-            Stop();
-            encoder?.Dispose();
-
-            OnPlaybackStarted = null;
-            OnPlaybackPaused = null;
-            OnPlaybackResumed = null;
-            OnPlaybackLooped = null;
-            OnTrackSwitching = null;
-            OnPlaybackFinished = null;
-            OnPlaybackStopped = null;
-        }
-
-        private void ReadNextFrame()
-        {
-            if (isPitchDefault)
+            if (TrackQueue.Count > 0)
             {
-                int read = CurrentSource.Read(frame, 0, FrameSize);
-                if (read < FrameSize)
-                    Array.Clear(frame, read, FrameSize - read);
+                playBackRoutine.IsRunning = false;
+                SkipTrack();
+            }
+            else if (ReturnToPoolAfter)
+            {
+                ReturnToPool();
+            }
+            else if (DestroyAfter)
+            {
+                Destroy();
             }
             else
             {
-                ResampleFrame();
+                Stop();
             }
-        }
-
-        private int ProcessAndEncodeFrame()
-        {
-            Filter?.Process(frame);
-            return encoder.Encode(frame, encoded);
-        }
-
-        private IEnumerator<float> PlayBackCoroutine()
-        {
-            if (needsSyncWait)
-            {
-                int framesPassed = Time.frameCount - idChangeFrame;
-                while (framesPassed < 2)
-                {
-                    yield return Timing.WaitForOneFrame;
-                    framesPassed = Time.frameCount - idChangeFrame;
-                }
-
-                needsSyncWait = false;
-            }
-
-            OnPlaybackStarted?.Invoke();
-            SpeakerEvents.OnPlaybackStarted(this);
-
-            resampleTime = 0.0;
-            resampleBufferFilled = 0;
-
-            float timeAccumulator = 0f;
-
-            ReadNextFrame();
-            Task<int> encodeTask = Task.Run(encode);
-
-            while (true)
-            {
-                timeAccumulator += Time.deltaTime;
-
-                while (timeAccumulator >= FrameTime)
-                {
-                    timeAccumulator -= FrameTime;
-
-                    int len = encodeTask.Result;
-
-                    if (len > 2)
-                        SendAudioMessage(new AudioMessage(ControllerId, encoded, len));
-
-                    if (!CurrentSource.Ended)
-                    {
-                        ReadNextFrame();
-                        encodeTask = Task.Run(encode);
-                        continue;
-                    }
-
-                    bool trackFailed = CurrentSource is IAsyncPcmSource asyncSource && asyncSource.IsFailed;
-
-                    if (!trackFailed)
-                    {
-                        OnPlaybackFinished?.Invoke();
-                        SpeakerEvents.OnPlaybackFinished(this);
-                    }
-
-                    yield return Timing.WaitForOneFrame;
-
-                    if (Loop && !trackFailed)
-                    {
-                        resampleTime = 0;
-                        timeAccumulator = 0;
-                        resampleBufferFilled = 0;
-                        nextScheduledEventIndex = 0;
-
-                        ResetEncoder();
-                        Filter?.Reset();
-                        CurrentSource.Reset();
-
-                        OnPlaybackLooped?.Invoke();
-                        SpeakerEvents.OnPlaybackLooped(this);
-
-                        ReadNextFrame();
-                        encodeTask = Task.Run(encode);
-                        continue;
-                    }
-
-                    if (TrackQueue.Count > 0)
-                    {
-                        playBackRoutine.IsRunning = false;
-                        SkipTrack();
-                        yield break;
-                    }
-
-                    if (ReturnToPoolAfter)
-                        ReturnToPool();
-                    else if (DestroyAfter)
-                        Destroy();
-                    else
-                        Stop();
-
-                    yield break;
-                }
-
-                while (nextScheduledEventIndex < ScheduledEvents.Count && CurrentTime >= ScheduledEvents[nextScheduledEventIndex].Time)
-                {
-                    try
-                    {
-                        ScheduledEvents[nextScheduledEventIndex].Action?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"[Speaker] Failed to execute scheduled time event at {ScheduledEvents[nextScheduledEventIndex].Time:F2}s.\nException Details: {ex}");
-                    }
-
-                    nextScheduledEventIndex++;
-                }
-
-                yield return Timing.WaitForOneFrame;
-            }
-        }
-
-        private IEnumerator<float> FadeCoroutine(float startVolume, float targetVolume, float duration, bool linear, Action onComplete)
-        {
-            float timePassed = 0f;
-            bool isFadeOut = startVolume > targetVolume;
-
-            while (timePassed < duration)
-            {
-                timePassed += Time.deltaTime;
-                float t = timePassed / duration;
-
-                if (!linear)
-                    t = isFadeOut ? 1f - ((1f - t) * (1f - t)) : t * t;
-
-                Base.NetworkVolume = Mathf.Lerp(startVolume, targetVolume, t);
-                yield return Timing.WaitForOneFrame;
-            }
-
-            Base.NetworkVolume = targetVolume;
-            onComplete?.Invoke();
         }
     }
 }
