@@ -128,7 +128,6 @@ namespace Exiled.API.Features.Audio.PcmSources
             try
             {
                 webRequest = UnityWebRequest.Get(url);
-                webRequest.useHttpContinue = true;
             }
             catch (Exception ex)
             {
