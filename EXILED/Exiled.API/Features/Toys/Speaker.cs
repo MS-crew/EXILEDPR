@@ -444,8 +444,6 @@ namespace Exiled.API.Features.Toys
             if (spawn)
                 speaker.Spawn();
 
-            Application.targetFrameRate = 30;
-
             return speaker;
         }
 
