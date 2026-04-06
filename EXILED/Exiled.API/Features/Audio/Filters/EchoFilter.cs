@@ -62,7 +62,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float Delay
         {
-            get => field;
+            get;
             set => field = Mathf.Clamp(value, 10f, MaxDelayMs);
         }
 
@@ -71,7 +71,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float Feedback
         {
-            get => field;
+            get;
             set => field = Mathf.Clamp01(value);
         }
 
@@ -80,7 +80,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float DryMix
         {
-            get => field;
+            get;
             set => field = Mathf.Clamp01(value);
         }
 
@@ -89,7 +89,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float WetMix
         {
-            get => field;
+            get;
             set => field = Mathf.Clamp01(value);
         }
 
@@ -98,7 +98,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float Damping
         {
-            get => field;
+            get;
             set
             {
                 field = Mathf.Clamp01(value);

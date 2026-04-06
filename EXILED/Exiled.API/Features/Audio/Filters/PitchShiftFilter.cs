@@ -70,7 +70,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public float Pitch
         {
-            get => field;
+            get;
             set => field = Mathf.Clamp(value, 0.1f, 4.0f);
         }
 
@@ -81,7 +81,7 @@ namespace Exiled.API.Features.Audio.Filters
         /// </summary>
         public int Oversample
         {
-            get => field;
+            get;
             set
             {
                 field = Mathf.Clamp(value, 2, 32);
