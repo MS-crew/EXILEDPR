@@ -76,10 +76,6 @@ namespace Exiled.API.Features.Toys
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
-        /// <summary>
-        /// A queue used for object pooling of <see cref="Speaker"/> instances.
-        /// Reusing idle speakers instead of constantly creating and destroying them significantly improves server performance, especially for frequent audio events.
-        /// </summary>
         private static readonly Queue<Speaker> Pool;
 
         private static readonly Vector3 SpeakerParkPosition = Vector3.down * 999;
