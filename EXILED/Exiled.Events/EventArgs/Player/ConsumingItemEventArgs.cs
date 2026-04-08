@@ -29,7 +29,7 @@ namespace Exiled.Events.EventArgs.Player
         }
 
         /// <summary>
-        /// Gets the consumable item being used.
+        /// Gets the consumable item to be consumed.
         /// </summary>
         public Consumable Consumable { get; }
 
