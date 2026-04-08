@@ -21,7 +21,7 @@ namespace Exiled.Events.EventArgs.Player
         /// Initializes a new instance of the <see cref="ConsumingItemEventArgs" /> class.
         /// </summary>
         /// <param name="hub">The player who is consuming the item.</param>
-        /// <param name="item">The consumable item being used.</param>
+        /// <param name="item">The consumable item to be consumed.</param>
         public ConsumingItemEventArgs(ReferenceHub hub, InventorySystem.Items.Usables.Consumable item)
         {
             Player = Player.Get(hub);
