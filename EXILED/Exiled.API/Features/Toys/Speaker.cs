@@ -324,9 +324,9 @@ namespace Exiled.API.Features.Toys
                 if (field == value)
                     return;
 
-                if (CurrentSource is ILiveSource)
+                if (value != 1f && CurrentSource is ILiveSource)
                 {
-                    field = 1.0f;
+                    field = 1f;
                     isPitchDefault = true;
                     resampleTime = 0.0;
                     resampleBufferFilled = 0;
@@ -343,6 +343,8 @@ namespace Exiled.API.Features.Toys
                 }
             }
         }
+
+        = 1f;
 
         /// <summary>
         /// Gets or sets the volume of the audio source.
