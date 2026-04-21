@@ -162,7 +162,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Gets or sets the network channel used for sending audio packets from this speaker <see cref="Channels"/>.
         /// </summary>
-        public int Channel { get; set; } = Channels.ReliableOrdered2;
+        public int Channel { get; set; } = Channels.Unreliable;
 
         /// <summary>
         /// Gets or sets a value indicating whether the audio playback should loop when it reaches the end.
