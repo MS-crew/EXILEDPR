@@ -87,10 +87,11 @@ namespace Exiled.API.Features.Audio.PcmSources
             set => Seek(value);
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the source failed to load.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsFailed => isFailed;
+
+        /// <inheritdoc/>
+        public bool IsReady => isReady;
 
         /// <summary>
         /// Reads a sequence of PCM samples from the preloaded buffer into the specified array.

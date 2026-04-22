@@ -102,10 +102,11 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// </summary>
         public bool Ended => isFailed || (isReady && internalSource != null && internalSource.Ended);
 
-        /// <summary>
-        /// Gets a value indicating whether the source failed to load.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsFailed => isFailed;
+
+        /// <inheritdoc/>
+        public bool IsReady => isReady;
 
         /// <summary>
         /// Reads PCM data from the audio source into the specified buffer.

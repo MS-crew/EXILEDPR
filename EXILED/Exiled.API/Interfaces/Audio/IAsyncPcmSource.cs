@@ -13,6 +13,11 @@ namespace Exiled.API.Interfaces.Audio
     public interface IAsyncPcmSource
     {
         /// <summary>
+        /// Gets a value indicating whether the asynchronous source has finished loading/buffering and is ready to be played.
+        /// </summary>
+        bool IsReady { get; }
+
+        /// <summary>
         /// Gets a value indicating whether the source failed to load.
         /// </summary>
         bool IsFailed { get; }
