@@ -324,7 +324,7 @@ namespace Exiled.API.Features.Toys
                 if (field == value)
                     return;
 
-                if (value != 1f && CurrentSource is ILiveSource)
+                if (Mathf.Abs(value - 1f) > 0.0001f && CurrentSource is ILiveSource)
                 {
                     field = 1f;
                     isPitchDefault = true;
