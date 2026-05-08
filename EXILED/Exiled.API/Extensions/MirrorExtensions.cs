@@ -724,14 +724,16 @@ namespace Exiled.API.Extensions
             if (identity == null || identity.netId == 0 || !players.Any())
                 return;
 
-            ObjectDestroyMessage destroyMessage = new ObjectDestroyMessage() { netId = identity.netId };
+            using NetworkWriterPooled writer = NetworkWriterPool.Get();
+            NetworkMessages.Pack(new ObjectDestroyMessage() { netId = identity.netId }, writer);
+            ArraySegment<byte> segment = writer.ToArraySegment();
 
             foreach (Player player in players)
             {
                 if (!player.IsConnected)
                     continue;
 
-                player.Connection.Send(destroyMessage);
+                player.Connection.Send(segment);
             }
         }
 
