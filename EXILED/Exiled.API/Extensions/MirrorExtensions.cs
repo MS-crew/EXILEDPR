@@ -400,7 +400,7 @@ namespace Exiled.API.Extensions
                 if (target != player || !isRisky)
                     target.Connection.Send(writer.ToArraySegment());
                 else
-                    Log.Error($"Prevent Seld-Desync of {player.Nickname} with {type}");
+                    Log.Error($"Prevent Self-Desync of {player.Nickname} with {type}");
             }
 
             NetworkWriterPool.Return(writer);
@@ -539,27 +539,6 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
-        /// Moves object for the player.
-        /// </summary>
-        /// <param name="player">Target to send.</param>
-        /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to move.</param>
-        /// <param name="pos">The position to change.</param>
-        public static void MoveNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 pos)
-        {
-            if (identity == null)
-                return;
-
-            identity.gameObject.transform.position = pos;
-            ObjectDestroyMessage objectDestroyMessage = new()
-            {
-                netId = identity.netId,
-            };
-
-            player.Connection.Send(objectDestroyMessage, 0);
-            SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
-        }
-
-        /// <summary>
         /// Sends to the player a Fake Change Scene.
         /// </summary>
         /// <param name="player">The player to send the Scene.</param>
@@ -589,6 +568,47 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
+        /// Sends a spawn message for the specified <see cref="NetworkIdentity"/> to the given <see cref="Player"/>.
+        /// </summary>
+        /// <param name="player">The player who should receive the spawn message.</param>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to spawn.</param>
+        public static void SpawnNetworkIdentity(this Player player, NetworkIdentity identity) => SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
+
+        /// <summary>
+        /// Sends a destroy message for the specified <see cref="NetworkIdentity"/> to the given <see cref="Player"/>.
+        /// </summary>
+        /// <param name="player">The player who should receive the destroy message.</param>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to destroy.</param>
+        public static void DestroyNetworkIdentity(this Player player, NetworkIdentity identity) => player.DestroyNetworkId(identity.netId);
+
+        /// <summary>
+        /// Sends a destroy message for the specified network ID to the given <see cref="Player"/>.
+        /// </summary>
+        /// <param name="player">The player who should receive the destroy message.</param>
+        /// <param name="netId">The network ID of the object to destroy.</param>
+        public static void DestroyNetworkId(this Player player, uint netId) => player.Connection.Send(new ObjectDestroyMessage() { netId = netId });
+
+        /// <summary>
+        /// Moves object for the player.
+        /// </summary>
+        /// <param name="player">Target to send.</param>
+        /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to move.</param>
+        /// <param name="pos">The position to change.</param>
+        public static void MoveNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 pos)
+        {
+            if (identity == null)
+                return;
+
+            Vector3 originalPosition = identity.transform.position;
+            identity.transform.position = pos;
+
+            player.DestroyNetworkIdentity(identity);
+            player.SpawnNetworkIdentity(identity);
+
+            identity.transform.position = originalPosition;
+        }
+
+        /// <summary>
         /// Scales an object for the specified player.
         /// </summary>
         /// <param name="player">Target to send.</param>
@@ -599,14 +619,33 @@ namespace Exiled.API.Extensions
             if (identity == null)
                 return;
 
-            identity.gameObject.transform.localScale = scale;
-            ObjectDestroyMessage objectDestroyMessage = new()
-            {
-                netId = identity.netId,
-            };
+            Vector3 originalScale = identity.transform.localScale;
+            identity.transform.localScale = scale;
 
-            player.Connection.Send(objectDestroyMessage, 0);
-            SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
+            player.DestroyNetworkIdentity(identity);
+            player.SpawnNetworkIdentity(identity);
+
+            identity.transform.localScale = originalScale;
+        }
+
+        /// <summary>
+        /// Edit <see cref="NetworkIdentity"/>'s parameter and sync.
+        /// </summary>
+        /// <param name="player">Target to send.</param>
+        /// <param name="identity">Target object.</param>
+        /// <param name="customAction">Edit function.</param>
+        /// <param name="resetAction">Reback function for reset object to original state.</param>
+        public static void EditNetworkObject(this Player player, NetworkIdentity identity, Action<NetworkIdentity> customAction, Action<NetworkIdentity> resetAction)
+        {
+            if (identity == null)
+                return;
+
+            customAction.Invoke(identity);
+
+            player.DestroyNetworkIdentity(identity);
+            player.SpawnNetworkIdentity(identity);
+
+            resetAction?.Invoke(identity);
         }
 
         /// <summary>
@@ -619,7 +658,8 @@ namespace Exiled.API.Extensions
             if (identity == null)
                 return;
 
-            identity.gameObject.transform.position = pos;
+            identity.transform.position = pos;
+
             NetworkServer.UnSpawn(identity.gameObject);
             NetworkServer.Spawn(identity.gameObject);
         }
@@ -634,7 +674,21 @@ namespace Exiled.API.Extensions
             if (identity == null)
                 return;
 
-            identity.gameObject.transform.localScale = scale;
+            identity.transform.localScale = scale;
+
+            NetworkServer.UnSpawn(identity.gameObject);
+            NetworkServer.Spawn(identity.gameObject);
+        }
+
+        /// <summary>
+        /// Edit <see cref="NetworkIdentity"/>'s parameter and sync.
+        /// </summary>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to edit.</param>
+        /// <param name="customAction">Edit function.</param>
+        public static void EditNetworkObject(this NetworkIdentity identity, Action<NetworkIdentity> customAction)
+        {
+            customAction.Invoke(identity);
+
             NetworkServer.UnSpawn(identity.gameObject);
             NetworkServer.Spawn(identity.gameObject);
         }
@@ -761,19 +815,6 @@ namespace Exiled.API.Extensions
             target.ReferenceHub.networkIdentity.connectionToClient.Send(new EntityStateMessage() { netId = behaviorOwner.netId, payload = writer.ToArraySegment() });
             NetworkWriterPool.Return(writer);
             NetworkWriterPool.Return(writer2);
-        }
-
-        /// <summary>
-        /// Edit <see cref="NetworkIdentity"/>'s parameter and sync.
-        /// </summary>
-        /// <param name="identity">Target object.</param>
-        /// <param name="customAction">Edit function.</param>
-        public static void EditNetworkObject(NetworkIdentity identity, Action<NetworkIdentity> customAction)
-        {
-            customAction.Invoke(identity);
-
-            NetworkServer.UnSpawn(identity.gameObject);
-            NetworkServer.Spawn(identity.gameObject);
         }
 
         // Get components index in identity.(private)
