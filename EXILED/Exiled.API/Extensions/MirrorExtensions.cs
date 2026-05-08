@@ -658,14 +658,14 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
-        /// Respawns the specified <see cref="NetworkIdentity"/> by respawning its underlying <see cref="GameObject"/> on the server.
-        /// This forces Mirror to reinitialize the network state for the object.
+        /// Sends a spawn message for the specified <see cref="NetworkIdentity"/> to a targeted collection of players.
         /// </summary>
-        /// <param name="identity">The <see cref="NetworkIdentity"/> to respawn.</param>
-        public static void RespawnNetworkIdentity(this NetworkIdentity identity)
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to serialize and spawn.</param>
+        /// <param name="players">The collection of <see cref="Player"/> who will receive the spawn message.</param>
+        public static void SendSpawnMessageForPlayers(this NetworkIdentity identity, IEnumerable<Player> players)
         {
-            ObjectDestroyMessage destroyMessage = new() { netId = identity.netId };
-            NetworkServer.SendToReady(destroyMessage);
+            if (identity == null || identity.netId == 0 || !players.Any())
+                return;
 
             using NetworkWriterPooled ownerWriter = NetworkWriterPool.Get();
             using NetworkWriterPooled observersWriter = NetworkWriterPool.Get();
@@ -688,9 +688,9 @@ namespace Exiled.API.Extensions
                 payload = observerPayload,
             };
 
-            foreach (Player player in Player.List)
+            foreach (Player player in players)
             {
-                if (player.Connection == null || !player.IsConnected)
+                if (!player.IsConnected)
                     continue;
 
                 bool isOwner = identity.connectionToClient == player.Connection;
@@ -712,6 +712,40 @@ namespace Exiled.API.Extensions
                     player.Connection.Send(spawnMessage);
                 }
             }
+        }
+
+        /// <summary>
+        /// Sends a destroy message for the specified <see cref="NetworkIdentity"/> to a targeted collection of players.
+        /// </summary>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to destroy on the clients.</param>
+        /// <param name="players">The collection of <see cref="Player"/> who will receive the destroy message.</param>
+        public static void DestroyNetworkIdentityForPlayers(this NetworkIdentity identity, IEnumerable<Player> players)
+        {
+            if (identity == null || identity.netId == 0 || !players.Any())
+                return;
+
+            ObjectDestroyMessage destroyMessage = new ObjectDestroyMessage() { netId = identity.netId };
+
+            foreach (Player player in players)
+            {
+                if (!player.IsConnected)
+                    continue;
+
+                player.Connection.Send(destroyMessage);
+            }
+        }
+
+        /// <summary>
+        /// Respawns the specified <see cref="NetworkIdentity"/> by respawning its underlying <see cref="GameObject"/> on the server.
+        /// </summary>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to respawn.</param>
+        public static void RespawnNetworkIdentity(this NetworkIdentity identity)
+        {
+            if (identity == null || identity.netId == 0)
+                return;
+
+            NetworkServer.SendToReady(new ObjectDestroyMessage() { netId = identity.netId });
+            identity.SendSpawnMessageForPlayers(Player.List);
         }
 
         /// <summary>
