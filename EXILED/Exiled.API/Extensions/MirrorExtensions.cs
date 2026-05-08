@@ -148,9 +148,9 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
-        /// Gets a <see cref="NetworkBehaviour.SetSyncVarDirtyBit(ulong)"/>'s <see cref="MethodInfo"/>.
+        /// Gets a NetworkIdentity.SerializeServer's <see cref="MethodInfo"/>.
         /// </summary>
-        public static MethodInfo SetDirtyBitsMethodInfo => field ??= typeof(NetworkBehaviour).GetMethod(nameof(NetworkBehaviour.SetSyncVarDirtyBit));
+        public static MethodInfo SerializeServerMethodInfo => field ??= typeof(NetworkIdentity).GetMethod("SerializeServer", BindingFlags.NonPublic | BindingFlags.Instance);
 
         /// <summary>
         /// Gets a NetworkServer.SendSpawnMessage's <see cref="MethodInfo"/>.
@@ -662,7 +662,57 @@ namespace Exiled.API.Extensions
         /// This forces Mirror to reinitialize the network state for the object.
         /// </summary>
         /// <param name="identity">The <see cref="NetworkIdentity"/> to respawn.</param>
-        public static void RespawnNetworkIdentity(this NetworkIdentity identity) => RespawnNetworkObject(identity.gameObject);
+        public static void RespawnNetworkIdentity(this NetworkIdentity identity)
+        {
+            ObjectDestroyMessage destroyMessage = new() { netId = identity.netId };
+            NetworkServer.SendToReady(destroyMessage);
+
+            using NetworkWriterPooled ownerWriter = NetworkWriterPool.Get();
+            using NetworkWriterPooled observersWriter = NetworkWriterPool.Get();
+
+            SerializeServerMethodInfo?.Invoke(identity, new object[] { true, ownerWriter, observersWriter });
+
+            ArraySegment<byte> ownerPayload = ownerWriter.ToArraySegment();
+            ArraySegment<byte> observerPayload = observersWriter.ToArraySegment();
+
+            SpawnMessage spawnMessage = new()
+            {
+                netId = identity.netId,
+                isLocalPlayer = false,
+                isOwner = false,
+                sceneId = identity.sceneId,
+                assetId = identity.assetId,
+                position = identity.transform.localPosition,
+                rotation = identity.transform.localRotation,
+                scale = identity.transform.localScale,
+                payload = observerPayload,
+            };
+
+            foreach (Player player in Player.List)
+            {
+                if (player.Connection == null || !player.IsConnected)
+                    continue;
+
+                bool isOwner = identity.connectionToClient == player.Connection;
+
+                if (isOwner)
+                {
+                    spawnMessage.isOwner = true;
+                    spawnMessage.isLocalPlayer = player.NetworkIdentity == identity;
+                    spawnMessage.payload = ownerPayload;
+
+                    player.Connection.Send(spawnMessage);
+
+                    spawnMessage.isOwner = false;
+                    spawnMessage.isLocalPlayer = false;
+                    spawnMessage.payload = observerPayload;
+                }
+                else
+                {
+                    player.Connection.Send(spawnMessage);
+                }
+            }
+        }
 
         /// <summary>
         /// Respawns a networked <see cref="GameObject"/> on the server by unspawning and respawning it.
@@ -773,7 +823,12 @@ namespace Exiled.API.Extensions
         {
             if (behaviorOwner == null)
                 return;
-            SetDirtyBitsMethodInfo.Invoke(behaviorOwner.gameObject.GetComponent(targetType), new object[] { SyncVarDirtyBits[$"{targetType.Name}.{propertyName}"] });
+
+            if (behaviorOwner.gameObject.GetComponent(targetType) is not NetworkBehaviour behaviour)
+                return;
+
+            ulong dirtyBit = SyncVarDirtyBits[$"{targetType.Name}.{propertyName}"];
+            behaviour.SetSyncVarDirtyBit(dirtyBit);
         }
 
         /// <summary>
