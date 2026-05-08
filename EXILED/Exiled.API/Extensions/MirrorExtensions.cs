@@ -16,23 +16,32 @@ namespace Exiled.API.Extensions
     using System.Text;
 
     using AdminToys;
+
     using AudioPooling;
+
     using Cassie;
+
     using CustomPlayerEffects;
+
     using Exiled.API.Enums;
     using Exiled.API.Features.Items;
     using Exiled.API.Features.Items.Keycards;
     using Exiled.API.Features.Pickups.Keycards;
+
     using Features;
     using Features.Pools;
+
     using InventorySystem;
     using InventorySystem.Items;
     using InventorySystem.Items.Autosync;
     using InventorySystem.Items.Firearms;
     using InventorySystem.Items.Firearms.Modules;
     using InventorySystem.Items.Keycards;
+
     using MEC;
+
     using Mirror;
+
     using PlayerRoles;
     using PlayerRoles.Blood;
     using PlayerRoles.FirstPersonControl;
@@ -40,9 +49,13 @@ namespace Exiled.API.Extensions
     using PlayerRoles.PlayableScps.Scp1507;
     using PlayerRoles.Spectating;
     using PlayerRoles.Voice;
+
     using RelativePositioning;
+
     using Respawning;
+
     using UnityEngine;
+
     using Utils.Networking;
 
     /// <summary>
@@ -688,6 +701,10 @@ namespace Exiled.API.Extensions
                 payload = observerPayload,
             };
 
+            using NetworkWriterPooled prepackedObserverWriter = NetworkWriterPool.Get();
+            NetworkMessages.Pack(spawnMessage, prepackedObserverWriter);
+            ArraySegment<byte> segment = prepackedObserverWriter.ToArraySegment();
+
             foreach (Player player in players)
             {
                 if (!player.IsConnected)
@@ -695,22 +712,18 @@ namespace Exiled.API.Extensions
 
                 bool isOwner = identity.connectionToClient == player.Connection;
 
-                if (isOwner)
+                if (!isOwner)
                 {
-                    spawnMessage.isOwner = true;
-                    spawnMessage.isLocalPlayer = player.NetworkIdentity == identity;
-                    spawnMessage.payload = ownerPayload;
-
-                    player.Connection.Send(spawnMessage);
-
-                    spawnMessage.isOwner = false;
-                    spawnMessage.isLocalPlayer = false;
-                    spawnMessage.payload = observerPayload;
+                    player.Connection.Send(segment);
+                    continue;
                 }
-                else
-                {
-                    player.Connection.Send(spawnMessage);
-                }
+
+                SpawnMessage ownerMessage = spawnMessage;
+                ownerMessage.isOwner = true;
+                ownerMessage.isLocalPlayer = player.NetworkIdentity == identity;
+                ownerMessage.payload = ownerPayload;
+
+                player.Connection.Send(ownerMessage);
             }
         }
 
@@ -924,7 +937,7 @@ namespace Exiled.API.Extensions
             NetworkWriterPooled writer = NetworkWriterPool.Get();
             NetworkWriterPooled writer2 = NetworkWriterPool.Get();
             MakeCustomSyncWriter(behaviorOwner, targetType, customAction, null, writer, writer2);
-            target.ReferenceHub.networkIdentity.connectionToClient.Send(new EntityStateMessage() { netId = behaviorOwner.netId, payload = writer.ToArraySegment() });
+            target.Connection.Send(new EntityStateMessage() { netId = behaviorOwner.netId, payload = writer.ToArraySegment() });
             NetworkWriterPool.Return(writer);
             NetworkWriterPool.Return(writer2);
         }
