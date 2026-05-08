@@ -589,6 +589,18 @@ namespace Exiled.API.Extensions
         public static void DestroyNetworkId(this Player player, uint netId) => player.Connection.Send(new ObjectDestroyMessage() { netId = netId });
 
         /// <summary>
+        /// Respawns the specified <see cref="NetworkIdentity"/> for the given <see cref="Player"/>.
+        /// This sends a destroy message followed by a spawn message to the player's client.
+        /// </summary>
+        /// <param name="player">The player who should receive the respawn messages.</param>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to respawn.</param>
+        public static void RespawnNetworkIdentity(this Player player, NetworkIdentity identity)
+        {
+            player.DestroyNetworkIdentity(identity);
+            player.SpawnNetworkIdentity(identity);
+        }
+
+        /// <summary>
         /// Moves object for the player.
         /// </summary>
         /// <param name="player">Target to send.</param>
@@ -602,8 +614,7 @@ namespace Exiled.API.Extensions
             Vector3 originalPosition = identity.transform.position;
             identity.transform.position = pos;
 
-            player.DestroyNetworkIdentity(identity);
-            player.SpawnNetworkIdentity(identity);
+            player.RespawnNetworkIdentity(identity);
 
             identity.transform.position = originalPosition;
         }
@@ -622,8 +633,7 @@ namespace Exiled.API.Extensions
             Vector3 originalScale = identity.transform.localScale;
             identity.transform.localScale = scale;
 
-            player.DestroyNetworkIdentity(identity);
-            player.SpawnNetworkIdentity(identity);
+            player.RespawnNetworkIdentity(identity);
 
             identity.transform.localScale = originalScale;
         }
@@ -640,12 +650,29 @@ namespace Exiled.API.Extensions
             if (identity == null)
                 return;
 
-            customAction.Invoke(identity);
+            customAction?.Invoke(identity);
 
-            player.DestroyNetworkIdentity(identity);
-            player.SpawnNetworkIdentity(identity);
+            player.RespawnNetworkIdentity(identity);
 
             resetAction?.Invoke(identity);
+        }
+
+        /// <summary>
+        /// Respawns the specified <see cref="NetworkIdentity"/> by respawning its underlying <see cref="GameObject"/> on the server.
+        /// This forces Mirror to reinitialize the network state for the object.
+        /// </summary>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to respawn.</param>
+        public static void RespawnNetworkIdentity(this NetworkIdentity identity) => RespawnNetworkObject(identity.gameObject);
+
+        /// <summary>
+        /// Respawns a networked <see cref="GameObject"/> on the server by unspawning and respawning it.
+        /// This forces Mirror to reinitialize the network state for the object.
+        /// </summary>
+        /// <param name="gameObject">The networked GameObject to respawn.</param>
+        public static void RespawnNetworkObject(this GameObject gameObject)
+        {
+            NetworkServer.UnSpawn(gameObject);
+            NetworkServer.Spawn(gameObject);
         }
 
         /// <summary>
@@ -659,9 +686,7 @@ namespace Exiled.API.Extensions
                 return;
 
             identity.transform.position = pos;
-
-            NetworkServer.UnSpawn(identity.gameObject);
-            NetworkServer.Spawn(identity.gameObject);
+            RespawnNetworkIdentity(identity);
         }
 
         /// <summary>
@@ -675,9 +700,7 @@ namespace Exiled.API.Extensions
                 return;
 
             identity.transform.localScale = scale;
-
-            NetworkServer.UnSpawn(identity.gameObject);
-            NetworkServer.Spawn(identity.gameObject);
+            RespawnNetworkIdentity(identity);
         }
 
         /// <summary>
@@ -688,9 +711,7 @@ namespace Exiled.API.Extensions
         public static void EditNetworkObject(this NetworkIdentity identity, Action<NetworkIdentity> customAction)
         {
             customAction.Invoke(identity);
-
-            NetworkServer.UnSpawn(identity.gameObject);
-            NetworkServer.Spawn(identity.gameObject);
+            RespawnNetworkIdentity(identity);
         }
 
         /// <summary>
