@@ -2544,6 +2544,20 @@ namespace Exiled.API.Features
         public void ClearBroadcasts() => Server.Broadcast.TargetClearElements(Connection);
 
         /// <summary>
+        /// Enables the specified <see cref="WearableElements"/> on the player.
+        /// </summary>
+        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to enable.</param>
+        /// <seealso cref="DisableWearables"/>
+        public void EnableWearables(WearableElements wearableElements) => ReferenceHub.EnableWearables(wearableElements);
+
+        /// <summary>
+        /// Disables the specified <see cref="WearableElements"/> on the player.
+        /// </summary>
+        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to disable.</param>
+        /// <seealso cref="EnableWearables"/>
+        public void DisableWearables(WearableElements wearableElements) => ReferenceHub.DisableWearables(wearableElements);
+
+        /// <summary>
         /// Adds the amount of a specified <see cref="AmmoType">ammo type</see> to the player's inventory.
         /// </summary>
         /// <param name="ammoType">The <see cref="AmmoType"/> to be added.</param>
@@ -2606,20 +2620,6 @@ namespace Exiled.API.Features
         /// <param name="ammoType">The <see cref="AmmoType"/> to be searched for in the player's inventory.</param>
         /// <returns>The specified <see cref="AmmoType">ammo</see> count.</returns>
         public ushort GetAmmo(AmmoType ammoType) => Inventory.GetCurAmmo(ammoType.GetItemType());
-
-        /// <summary>
-        /// Enables the specified <see cref="WearableElements"/> on the player.
-        /// </summary>
-        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to enable.</param>
-        /// <seealso cref="DisableWearables"/>
-        public void EnableWearables(WearableElements wearableElements) => ReferenceHub.EnableWearables(wearableElements);
-
-        /// <summary>
-        /// Disables the specified <see cref="WearableElements"/> on the player.
-        /// </summary>
-        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to disable.</param>
-        /// <seealso cref="EnableWearables"/>
-        public void DisableWearables(WearableElements wearableElements) => ReferenceHub.DisableWearables(wearableElements);
 
         /// <summary>
         /// Drops a specific <see cref="AmmoType"/> out of the player's inventory.
