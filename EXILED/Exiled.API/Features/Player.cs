@@ -14,10 +14,14 @@ namespace Exiled.API.Features
     using System.Runtime.CompilerServices;
 
     using Core;
+
     using CustomPlayerEffects;
     using CustomPlayerEffects.Danger;
+
     using DamageHandlers;
+
     using Enums;
+
     using Exiled.API.Features.Core.Interfaces;
     using Exiled.API.Features.CustomStats;
     using Exiled.API.Features.Doors;
@@ -28,11 +32,17 @@ namespace Exiled.API.Features
     using Exiled.API.Features.Roles;
     using Exiled.API.Interfaces;
     using Exiled.API.Structs;
+
     using Extensions;
+
     using Footprinting;
+
     using global::Scp914;
+
     using Hints;
+
     using Interactables.Interobjects;
+
     using InventorySystem;
     using InventorySystem.Disarming;
     using InventorySystem.Items;
@@ -42,24 +52,36 @@ namespace Exiled.API.Features
     using InventorySystem.Items.Firearms.ShotEvents;
     using InventorySystem.Items.Usables;
     using InventorySystem.Items.Usables.Scp330;
+
     using MapGeneration.Distributors;
     using MapGeneration.Rooms;
+
     using MEC;
+
     using Mirror;
     using Mirror.LiteNetLib4Mirror;
+
     using PlayerRoles;
     using PlayerRoles.FirstPersonControl;
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers;
+    using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
     using PlayerRoles.RoleAssign;
     using PlayerRoles.Spectating;
     using PlayerRoles.Voice;
+
     using PlayerStatsSystem;
+
     using RelativePositioning;
+
     using RemoteAdmin;
+
     using RoundRestarting;
+
     using UnityEngine;
+
     using Utils;
     using Utils.Networking;
+
     using VoiceChat;
     using VoiceChat.Playbacks;
 
@@ -832,6 +854,16 @@ namespace Exiled.API.Features
 
                 voiceRole.VoiceModule.CurrentChannel = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the player's wearable elements.
+        /// </summary>
+        /// <remarks>To add or remove individual elements without affecting others, use <see cref="EnableWearables"/> or <see cref="DisableWearables"/>.</remarks>
+        public WearableElements Wearables
+        {
+            get => WearableSync.GetFlags(ReferenceHub);
+            set => WearableSync.OverrideWearables(ReferenceHub, value);
         }
 
         /// <summary>
@@ -2574,6 +2606,20 @@ namespace Exiled.API.Features
         /// <param name="ammoType">The <see cref="AmmoType"/> to be searched for in the player's inventory.</param>
         /// <returns>The specified <see cref="AmmoType">ammo</see> count.</returns>
         public ushort GetAmmo(AmmoType ammoType) => Inventory.GetCurAmmo(ammoType.GetItemType());
+
+        /// <summary>
+        /// Enables the specified <see cref="WearableElements"/> on the player.
+        /// </summary>
+        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to enable.</param>
+        /// <seealso cref="DisableWearables"/>
+        public void EnableWearables(WearableElements wearableElements) => ReferenceHub.EnableWearables(wearableElements);
+
+        /// <summary>
+        /// Disables the specified <see cref="WearableElements"/> on the player.
+        /// </summary>
+        /// <param name="wearableElements">The <see cref="WearableElements"/> flags to disable.</param>
+        /// <seealso cref="EnableWearables"/>
+        public void DisableWearables(WearableElements wearableElements) => ReferenceHub.DisableWearables(wearableElements);
 
         /// <summary>
         /// Drops a specific <see cref="AmmoType"/> out of the player's inventory.
