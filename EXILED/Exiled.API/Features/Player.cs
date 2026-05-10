@@ -63,6 +63,7 @@ namespace Exiled.API.Features
 
     using PlayerRoles;
     using PlayerRoles.FirstPersonControl;
+    using PlayerRoles.FirstPersonControl.Thirdperson;
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers;
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
     using PlayerRoles.RoleAssign;
@@ -113,6 +114,11 @@ namespace Exiled.API.Features
         /// A dictionary of custom ammo limits.
         /// </summary>
         internal Dictionary<AmmoType, ushort> CustomAmmoLimits = new();
+
+        /// <summary>
+        /// An armor which will be sent as a wearable.
+        /// </summary>
+        internal ItemType DisplayedArmor = ItemType.None;
 #pragma warning restore SA1401
 
         private readonly HashSet<EActor> componentsInChildren = new();
@@ -860,10 +866,57 @@ namespace Exiled.API.Features
         /// Gets or sets the player's wearable elements.
         /// </summary>
         /// <remarks>To add or remove individual elements without affecting others, use <see cref="EnableWearables"/> or <see cref="DisableWearables"/>.</remarks>
-        public WearableElements Wearables
+        public WearableElementType Wearables
         {
-            get => WearableSync.GetFlags(ReferenceHub);
-            set => WearableSync.OverrideWearables(ReferenceHub, value);
+            get
+            {
+                if (!ReferenceHub.TryGetWearableSubcontroller(out WearableSubcontroller subcontroller))
+                    return WearableElementType.None;
+
+                WearableElements flags = WearableSync.GetFlags(ReferenceHub);
+                WearableElementType exiledFlags = WearableElementType.None;
+
+                if (flags.HasFlagFast(WearableElements.Armor))
+                {
+                    flags &= ~WearableElements.Armor;
+                    ItemType armor = subcontroller.DefinedWearables.OfType<WearableArmor>().FirstOrDefault()?.ServerCurArmor ?? ItemType.ArmorLight;
+
+                    exiledFlags = armor switch
+                    {
+                        ItemType.ArmorHeavy => WearableElementType.ArmorHeavy,
+                        ItemType.ArmorCombat => WearableElementType.ArmorCombat,
+                        _ => WearableElementType.ArmorLight,
+                    };
+                }
+
+                return (WearableElementType)((byte)exiledFlags | (byte)flags);
+            }
+
+            set
+            {
+                WearableElements flags = WearableElements.None;
+
+                if (value.HasFlagFast(WearableElementType.ArmorLight))
+                {
+                    DisplayedArmor = ItemType.ArmorLight;
+                    flags = WearableElements.Armor;
+                    value &= ~WearableElementType.ArmorLight;
+                }
+                else if (value.HasFlagFast(WearableElementType.ArmorCombat))
+                {
+                    DisplayedArmor = ItemType.ArmorCombat;
+                    flags = WearableElements.Armor;
+                    value &= ~WearableElementType.ArmorCombat;
+                }
+                else if (value.HasFlagFast(WearableElementType.ArmorHeavy))
+                {
+                    DisplayedArmor = ItemType.ArmorLight;
+                    flags = WearableElements.Armor;
+                    value &= ~WearableElementType.ArmorHeavy;
+                }
+
+                ReferenceHub.OverrideWearables(flags | (WearableElements)value);
+            }
         }
 
         /// <summary>
@@ -2548,14 +2601,14 @@ namespace Exiled.API.Features
         /// </summary>
         /// <param name="wearableElements">The <see cref="WearableElements"/> flags to enable.</param>
         /// <seealso cref="DisableWearables"/>
-        public void EnableWearables(WearableElements wearableElements) => ReferenceHub.EnableWearables(wearableElements);
+        public void EnableWearables(WearableElementType wearableElements) => Wearables |= wearableElements;
 
         /// <summary>
         /// Disables the specified <see cref="WearableElements"/> on the player.
         /// </summary>
         /// <param name="wearableElements">The <see cref="WearableElements"/> flags to disable.</param>
         /// <seealso cref="EnableWearables"/>
-        public void DisableWearables(WearableElements wearableElements) => ReferenceHub.DisableWearables(wearableElements);
+        public void DisableWearables(WearableElementType wearableElements) => Wearables &= ~wearableElements;
 
         /// <summary>
         /// Adds the amount of a specified <see cref="AmmoType">ammo type</see> to the player's inventory.
