@@ -162,8 +162,6 @@ namespace Exiled.API.Features
             ["SZ CAMERA TOY"] = CameraType.SzCameraToy,
         };
 
-        private Room room;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Camera"/> class.
         /// </summary>
@@ -225,7 +223,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets the camera's <see cref="Room"/>.
         /// </summary>
-        public Room Room => room ??= Room.Get(Base.Room);
+        public Room Room => field ??= Room.Get(Base.Room);
 
         /// <summary>
         /// Gets the camera's <see cref="ZoneType"/>.

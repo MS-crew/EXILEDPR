@@ -99,6 +99,11 @@ namespace Exiled.Events.Handlers
         public static Event<UsedItemEventArgs> UsedItem { get; set; } = new();
 
         /// <summary>
+        /// Invoked before a <see cref="API.Features.Player"/> consumes an <see cref="API.Features.Items.Consumable"/>. In other words, it is invoked before the consumable item logic are applied.
+        /// </summary>
+        public static Event<ConsumingItemEventArgs> ConsumingItem { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> has stopped the use of a <see cref="API.Features.Items.Usable"/>.
         /// </summary>
         public static Event<CancellingItemUseEventArgs> CancellingItemUse { get; set; } = new();
@@ -280,6 +285,16 @@ namespace Exiled.Events.Handlers
         public static Event<ShootingEventArgs> Shooting { get; set; } = new();
 
         /// <summary>
+        /// Invoked before a <see cref="API.Features.Player"/> sends a gun sound to nearby players.
+        /// </summary>
+        public static Event<SendingGunSoundEventArgs> SendingGunSound { get; set; } = new();
+
+        /// <summary>
+        /// Invoked before a <see cref="API.Features.Player"/> receives a gun sound.
+        /// </summary>
+        public static Event<ReceivingGunSoundEventArgs> ReceivingGunSound { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> enters the pocket dimension.
         /// </summary>
         public static Event<EnteringPocketDimensionEventArgs> EnteringPocketDimension { get; set; } = new();
@@ -337,6 +352,7 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> interacts with a door.
         /// </summary>
+        /// <seealso cref="Handlers.Item.KeycardInteracting"/>
         public static Event<InteractingDoorEventArgs> InteractingDoor { get; set; } = new();
 
         /// <summary>
@@ -713,6 +729,12 @@ namespace Exiled.Events.Handlers
         public static void OnUsedItem(UsedItemEventArgs ev) => UsedItem.InvokeSafely(ev);
 
         /// <summary>
+        /// Called before a <see cref="API.Features.Player"/> consumes a <see cref="API.Features.Items.Consumable"/> item.
+        /// </summary>
+        /// <param name="ev">The <see cref="ConsumingItemEventArgs"/> instance.</param>
+        public static void OnConsumingItem(ConsumingItemEventArgs ev) => ConsumingItem.InvokeSafely(ev);
+
+        /// <summary>
         /// Called before a <see cref="API.Features.Player"/> has stopped the use of a <see cref="API.Features.Items.Usable"/> item.
         /// </summary>
         /// <param name="ev">The <see cref="CancellingItemUseEventArgs"/> instance.</param>
@@ -898,6 +920,18 @@ namespace Exiled.Events.Handlers
         /// </summary>
         /// <param name="ev">The <see cref="ShootingEventArgs"/> instance.</param>
         public static void OnShooting(ShootingEventArgs ev) => Shooting.InvokeSafely(ev);
+
+        /// <summary>
+        /// Called before the server sends a gun sound to nearby players.
+        /// </summary>
+        /// <param name="ev">The <see cref="SendingGunSoundEventArgs"/> instance.</param>
+        public static void OnSendingGunSound(SendingGunSoundEventArgs ev) => SendingGunSound.InvokeSafely(ev);
+
+        /// <summary>
+        /// Called when a <see cref="API.Features.Player"/> receives a gun sound.
+        /// </summary>
+        /// <param name="ev">The <see cref="ReceivingGunSoundEventArgs"/> instance.</param>
+        public static void OnReceivingGunSound(ReceivingGunSoundEventArgs ev) => ReceivingGunSound.InvokeSafely(ev);
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> enters the pocket dimension.
