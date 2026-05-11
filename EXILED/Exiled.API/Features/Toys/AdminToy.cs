@@ -167,7 +167,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public bool IsStatic
         {
-            get => AdminToyBase.IsStatic;
+            get => AdminToyBase.NetworkIsStatic;
             set => AdminToyBase.NetworkIsStatic = value;
         }
 
