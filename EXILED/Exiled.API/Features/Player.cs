@@ -865,7 +865,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets or sets the player's wearable elements.
         /// </summary>
-        /// <remarks>To add or remove individual elements without affecting others, use <see cref="EnableWearables"/> or <see cref="DisableWearables"/>.</remarks>
+        /// <seealso cref="EnableWearables"/> <seealso cref="DisableWearables"/>
         public WearableElementType Wearables
         {
             get
