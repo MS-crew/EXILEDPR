@@ -104,13 +104,7 @@ namespace Exiled.Events.Patches.Events.Player
                 new(OpCodes.Ldloc, ev.LocalIndex),
                 new(OpCodes.Call, PropertyGetter(typeof(SpawningEventArgs), nameof(SpawningEventArgs.HorizontalRotation))),
                 new(OpCodes.Stloc_3),
-            });
 
-            offset = 1;
-            index = newInstructions.FindIndex(instr => instr.Calls(PropertySetter(typeof(Transform), nameof(Transform.position)))) + offset;
-
-            newInstructions.InsertRange(index, new CodeInstruction[]
-            {
                 // ApplyRotation(fpcRole, horizontalRotation)
                 new(OpCodes.Ldloc_0),
                 new(OpCodes.Ldloc_3),
