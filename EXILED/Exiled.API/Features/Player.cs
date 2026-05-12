@@ -77,7 +77,7 @@ namespace Exiled.API.Features
     using RemoteAdmin;
 
     using RoundRestarting;
-
+    using Unity.Collections.LowLevel.Unsafe;
     using UnityEngine;
 
     using Utils;
@@ -114,11 +114,6 @@ namespace Exiled.API.Features
         /// A dictionary of custom ammo limits.
         /// </summary>
         internal Dictionary<AmmoType, ushort> CustomAmmoLimits = new();
-
-        /// <summary>
-        /// An armor which will be sent as a wearable.
-        /// </summary>
-        internal ItemType DisplayedArmor = ItemType.None;
 #pragma warning restore SA1401
 
         private readonly HashSet<EActor> componentsInChildren = new();
@@ -870,52 +865,62 @@ namespace Exiled.API.Features
         {
             get
             {
-                if (!ReferenceHub.TryGetWearableSubcontroller(out WearableSubcontroller subcontroller))
+                if (!WearableSync.TryGetData(ReferenceHub, out WearableSyncMessage data))
                     return WearableElementType.None;
 
-                WearableElements flags = WearableSync.GetFlags(ReferenceHub);
+                WearableElements flags = data.Flags;
                 WearableElementType exiledFlags = WearableElementType.None;
 
-                if (flags.HasFlagFast(WearableElements.Armor))
+                if (flags.HasFlagFast(WearableElements.Armor) && data.Payload.Length is 1)
                 {
-                    flags &= ~WearableElements.Armor;
-                    ItemType armor = subcontroller.DefinedWearables.OfType<WearableArmor>().FirstOrDefault()?.ServerCurArmor ?? ItemType.ArmorLight;
+                    ItemType armor = (ItemType)UnsafeUtility.As<byte, sbyte>(ref data.Payload[0]);
 
                     exiledFlags = armor switch
                     {
-                        ItemType.ArmorHeavy => WearableElementType.ArmorHeavy,
+                        ItemType.ArmorLight => WearableElementType.ArmorLight,
                         ItemType.ArmorCombat => WearableElementType.ArmorCombat,
-                        _ => WearableElementType.ArmorLight,
+                        ItemType.ArmorHeavy => WearableElementType.ArmorHeavy,
+                        _ => WearableElementType.None,
                     };
                 }
 
-                return (WearableElementType)((byte)exiledFlags | (byte)flags);
+                return (WearableElementType)flags | exiledFlags;
             }
 
             set
             {
-                WearableElements flags = WearableElements.None;
+                if (value is WearableElementType.None)
+                {
+                    Log.Info("None");
 
-                if (value.HasFlagFast(WearableElementType.ArmorLight))
-                {
-                    DisplayedArmor = ItemType.ArmorLight;
-                    flags = WearableElements.Armor;
-                    value &= ~WearableElementType.ArmorLight;
-                }
-                else if (value.HasFlagFast(WearableElementType.ArmorCombat))
-                {
-                    DisplayedArmor = ItemType.ArmorCombat;
-                    flags = WearableElements.Armor;
-                    value &= ~WearableElementType.ArmorCombat;
-                }
-                else if (value.HasFlagFast(WearableElementType.ArmorHeavy))
-                {
-                    DisplayedArmor = ItemType.ArmorLight;
-                    flags = WearableElements.Armor;
-                    value &= ~WearableElementType.ArmorHeavy;
+                    WearableSyncMessage wearableSyncMessage = new(ReferenceHub);
+                    WearableSync.UpdateDatabaseEntry(wearableSyncMessage);
+                    NetworkServer.SendToAll(wearableSyncMessage, 0, false);
+                    return;
                 }
 
-                ReferenceHub.OverrideWearables(flags | (WearableElements)value);
+                WearableSync.PayloadWriter.Reset();
+                Log.Info("newWearables" + value);
+
+                if (value.HasFlagFast(WearableElementType.ArmorDefault))
+                {
+                    ItemType displayedArmor =
+                        value.HasFlagFast(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
+                        value.HasFlagFast(WearableElementType.ArmorCombat) ? ItemType.ArmorCombat :
+                        value.HasFlagFast(WearableElementType.ArmorHeavy) ? ItemType.ArmorHeavy :
+                        CurrentArmor?.Type ?? ItemType.None;
+                    if (displayedArmor is not ItemType.None)
+                        WearableSync.PayloadWriter.WriteSByte((sbyte)displayedArmor);
+                    else
+                        value &= ~WearableElementType.ArmorDefault;
+
+                    value &= ~WearableElementType.ArmorLight | WearableElementType.ArmorCombat | WearableElementType.ArmorHeavy;
+                    Log.Info("DiplayedArmor" + displayedArmor);
+                }
+
+                WearableSyncMessage wearableSyncMessage2 = new(ReferenceHub, (WearableElements)value, WearableSync.PayloadWriter);
+                WearableSync.UpdateDatabaseEntry(wearableSyncMessage2);
+                NetworkServer.SendToAll(wearableSyncMessage2, 0, false);
             }
         }
 

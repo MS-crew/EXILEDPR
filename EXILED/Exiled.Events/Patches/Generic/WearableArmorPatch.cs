@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // <copyright file="WearableArmorPatch.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
@@ -8,26 +8,26 @@
 namespace Exiled.Events.Patches.Generic
 {
 #pragma warning disable SA1313
-    using Exiled.API.Extensions;
-    using Exiled.API.Features;
+    using System.Collections.Generic;
+
     using HarmonyLib;
+    using Mirror;
+    using PlayerRoles.FirstPersonControl.Thirdperson;
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 
     /// <summary>
-    /// Patches <see cref="WearableArmor.ServerCurArmor"/> to implement <see cref="Player.DisplayedArmor"/>.
+    /// Patches <see cref="WearableArmor.ServerCurArmor"/>.
     /// </summary>
-    [HarmonyPatch(typeof(WearableArmor), nameof(WearableArmor.ServerCurArmor),  MethodType.Getter)]
+    [HarmonyPatch(typeof(WearableSync), nameof(WearableSync.OnHubAdded),  MethodType.Getter)]
     internal static class WearableArmorPatch
     {
-        private static bool Prefix(WearableArmor __instance, ref ItemType __result)
+        private static bool Prefix(ref ReferenceHub hub)
         {
-            if (!Player.TryGet(__instance.gameObject, out Player player))
-                return true;
+            foreach (KeyValuePair<uint, WearableSyncMessage> item in WearableSync.Database)
+            {
+                hub.connectionToClient.Send(item.Value);
+            }
 
-            if (player.DisplayedArmor == ItemType.None || !player.DisplayedArmor.IsArmor())
-                return true;
-
-            __result = player.DisplayedArmor;
             return false;
         }
     }

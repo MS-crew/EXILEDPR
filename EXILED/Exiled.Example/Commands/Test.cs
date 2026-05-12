@@ -8,10 +8,12 @@
 namespace Exiled.Example.Commands
 {
     using System;
+    using System.Linq;
 
     using CommandSystem;
+
+    using Exiled.API.Enums;
     using Exiled.API.Features;
-    using Exiled.API.Features.Pickups;
 
     /// <summary>
     /// This is an example of how commands should be made.
@@ -31,21 +33,13 @@ namespace Exiled.Example.Commands
         /// <inheritdoc/>
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
-            Player player = Player.Get(sender);
+            response = $"false!";
+            if (!Enum.TryParse(arguments.ElementAtOrDefault(0), out WearableElementType wearables))
+                return false;
 
-            Log.Warn($"{player.Items.Count} -- {player.Inventory.UserInventory.Items.Count}");
-
-            foreach (Player item in Player.List)
-                Log.Warn(item);
-
-            foreach (Pickup pickup in Pickup.List)
-                Log.Warn($"{pickup.Type} ({pickup.Serial}) -- {pickup.Position}");
-
-            foreach (PocketDimensionTeleport teleport in Map.PocketDimensionTeleports)
-                Log.Warn($"{teleport._type}");
-
-            player.ClearInventory();
-            response = $"{player.Nickname} sent the command!";
+            foreach (Player player in Player.List)
+                player.Wearables = wearables;
+            response = $"true !";
 
             // Return true if the command was executed successfully; otherwise, false.
             return true;

@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // <copyright file="WearableElementType.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
@@ -31,18 +31,24 @@ namespace Exiled.API.Enums
         Scp1344Goggles = 2,
 
         /// <summary>
-        /// Light armor wearable element.
+        /// Armor wearable element.
+        /// <remarks>if armor is not specified it's will choose the one from Inventory</remarks>
         /// </summary>
-        ArmorLight = 4,
+        ArmorDefault = 4,
 
         /// <summary>
-        /// Combat armor wearable element.
+        /// Force the Light armor wearable element.
         /// </summary>
-        ArmorCombat = 8,
+        ArmorLight = ArmorDefault | 8,
 
         /// <summary>
-        /// Heavy armor wearable element.
+        /// Force the Combat armor wearable element.
         /// </summary>
-        ArmorHeavy = 16,
+        ArmorCombat = ArmorDefault | 16,
+
+        /// <summary>
+        /// Force the Heavy armor wearable element.
+        /// </summary>
+        ArmorHeavy = ArmorDefault | 32,
     }
 }
