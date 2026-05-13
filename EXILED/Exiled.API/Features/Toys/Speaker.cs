@@ -1041,12 +1041,7 @@ namespace Exiled.API.Features.Toys
 
             Stop();
 
-            if (Transform.parent != null || AdminToyBase._clientParentId != 0)
-            {
-                Transform.parent = null;
-                Base.RpcChangeParent(0);
-            }
-
+            Transform.SetParent(null);
             LocalPosition = SpeakerParkPosition;
 
             Volume = DefaultVolume;
