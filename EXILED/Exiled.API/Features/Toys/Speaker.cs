@@ -73,6 +73,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public const bool DefaultSpatial = true;
 
+        private const int ResampleBufferPadding = 10;
         private const float PitchTolerance = 0.0001f;
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
@@ -1375,18 +1376,15 @@ namespace Exiled.API.Features.Toys
             {
                 if (resampleBufferFilled == 0)
                 {
-                    int toRead = resampleBuffer.Length - 4;
-                    int actualRead = CurrentSource.Read(resampleBuffer, 0, toRead);
+                    int actualRead = CurrentSource.Read(resampleBuffer, 0, resampleBuffer.Length - ResampleBufferPadding);
 
                     if (actualRead == 0)
                     {
-                        while (outputIdx < FrameSize)
-                            frame[outputIdx++] = 0f;
+                        Array.Clear(frame, outputIdx, FrameSize - outputIdx);
                         return;
                     }
 
                     resampleBufferFilled = actualRead;
-                    resampleTime = 0.0;
                 }
 
                 int currentSample = (int)resampleTime;
@@ -1397,13 +1395,11 @@ namespace Exiled.API.Features.Toys
                     {
                         resampleBuffer[0] = resampleBuffer[resampleBufferFilled - 1];
 
-                        int toRead = resampleBuffer.Length - 5;
-                        int actualRead = CurrentSource.Read(resampleBuffer, 1, toRead);
+                        int actualRead = CurrentSource.Read(resampleBuffer, 1, resampleBuffer.Length - ResampleBufferPadding - 1);
 
                         if (actualRead == 0)
                         {
-                            while (outputIdx < FrameSize)
-                                frame[outputIdx++] = 0f;
+                            Array.Clear(frame, outputIdx, FrameSize - outputIdx);
                             return;
                         }
 
