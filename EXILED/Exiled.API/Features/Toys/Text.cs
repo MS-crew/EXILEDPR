@@ -90,10 +90,8 @@ namespace Exiled.API.Features.Toys
                 LocalPosition = position ?? Vector3.zero,
                 LocalRotation = rotation ?? Quaternion.identity,
                 Scale = scale ?? Vector3.one,
+                TextFormat = text,
             };
-
-            if (!string.IsNullOrEmpty(text))
-                toy.TextFormat = text;
 
             if (spawn)
                 toy.Spawn();
