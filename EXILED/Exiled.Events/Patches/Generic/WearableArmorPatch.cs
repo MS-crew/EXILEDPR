@@ -16,7 +16,7 @@ namespace Exiled.Events.Patches.Generic
     /// <summary>
     /// Patches <see cref="WearableArmor.ServerCurArmor"/>.
     /// </summary>
-    [HarmonyPatch(typeof(WearableSync), nameof(WearableSync.OnHubAdded),  MethodType.Getter)]
+    [HarmonyPatch(typeof(WearableSync), nameof(WearableSync.OnHubAdded))]
     internal static class WearableArmorPatch
     {
         private static bool Prefix(ref ReferenceHub hub)

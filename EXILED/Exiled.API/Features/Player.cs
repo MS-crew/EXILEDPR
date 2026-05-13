@@ -898,20 +898,11 @@ namespace Exiled.API.Features
 
                 if (value.HasFlagFast(WearableElementType.ArmorDefault))
                 {
-                    /*
-                    ItemType displayedArmor = value switch
-                    {
-                        | WearableElementType.ArmorLight => ItemType.ArmorLight,
-                        | WearableElementType.ArmorCombat => ItemType.ArmorCombat,
-                        | WearableElementType.ArmorHeavy => ItemType.ArmorHeavy,
-
-                        _ => ItemType.None,
-                    };*/
-
                     ItemType displayedArmor = value.HasFlagFast(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
                         value.HasFlagFast(WearableElementType.ArmorCombat) ? ItemType.ArmorCombat :
                         value.HasFlagFast(WearableElementType.ArmorHeavy) ? ItemType.ArmorHeavy :
                         CurrentArmor?.Type ?? ItemType.None;
+
                     if (displayedArmor is not ItemType.None)
                         WearableSync.PayloadWriter.WriteSByte((sbyte)displayedArmor);
                     else
