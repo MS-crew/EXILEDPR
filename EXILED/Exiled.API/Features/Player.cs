@@ -78,6 +78,8 @@ namespace Exiled.API.Features
 
     using RoundRestarting;
 
+    using Unity.Collections.LowLevel.Unsafe;
+
     using UnityEngine;
 
     using Utils;
