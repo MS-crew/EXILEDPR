@@ -12,9 +12,8 @@ namespace Exiled.API.Features.Toys
     using System.Linq;
 
     using Enums;
-    using Exiled.API.Interfaces;
 
-    using Mirror;
+    using Exiled.API.Interfaces;
 
     using PlayerStatsSystem;
 
