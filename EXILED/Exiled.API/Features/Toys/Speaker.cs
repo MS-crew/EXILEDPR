@@ -73,6 +73,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public const bool DefaultSpatial = true;
 
+        private const float PitchTolerance = 0.0001f;
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
@@ -324,18 +325,17 @@ namespace Exiled.API.Features.Toys
                 if (field == value)
                     return;
 
-                if (Mathf.Abs(value - 1f) > 0.0001f && CurrentSource is ILiveSource)
+                field = Mathf.Max(0.1f, Mathf.Abs(value));
+                isPitchDefault = Mathf.Abs(field - 1f) < PitchTolerance;
+
+                if (!isPitchDefault && CurrentSource is ILiveSource)
                 {
                     field = 1f;
                     isPitchDefault = true;
-                    resampleTime = 0.0;
-                    resampleBufferFilled = 0;
-                    Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default (1.0).");
+                    Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default value (1).");
                     return;
                 }
 
-                field = Mathf.Max(0.1f, Mathf.Abs(value));
-                isPitchDefault = Mathf.Abs(field - 1.0f) < 0.0001f;
                 if (isPitchDefault)
                 {
                     resampleTime = 0.0;
