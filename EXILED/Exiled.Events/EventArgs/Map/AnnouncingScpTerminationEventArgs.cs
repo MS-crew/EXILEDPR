@@ -9,10 +9,9 @@ namespace Exiled.Events.EventArgs.Map
 {
     using System;
 
-    using Exiled.API.Features;
-    using Exiled.API.Features.DamageHandlers;
-    using Exiled.API.Features.Roles;
-
+    using API.Features;
+    using API.Features.DamageHandlers;
+    using API.Features.Roles;
     using Interfaces;
 
     /// <summary>

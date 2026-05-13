@@ -11,7 +11,6 @@ namespace Exiled.Events.Patches.Generic
 #pragma warning disable SA1402
 
     using HarmonyLib;
-
     using Interactables.Interobjects;
 
     /// <summary>

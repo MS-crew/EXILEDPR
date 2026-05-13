@@ -14,12 +14,9 @@ namespace Exiled.API.Features
 
     using Exiled.API.Enums;
     using Exiled.API.Features.Attributes;
-
     using MapGeneration.Distributors;
     using MapGeneration.RoomConnectors;
-
     using Mirror;
-
     using UnityEngine;
 
     /// <summary>
@@ -35,7 +32,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a <see cref="IReadOnlyDictionary{TKey,TValue}"/> of <see cref="PrefabType"/> and their corresponding <see cref="GameObject"/>.
         /// </summary>
-        public static IReadOnlyDictionary<PrefabType, (GameObject GameObject, Component Component)> PrefabToGameObjectAndComponent => Prefabs;
+        public static IReadOnlyDictionary<PrefabType, (GameObject, Component)> PrefabToGameObjectAndComponent => Prefabs;
 
         /// <summary>
         /// Gets a <see cref="IReadOnlyDictionary{TKey,TValue}"/> of <see cref="PrefabType"/> and their corresponding <see cref="GameObject"/>.
@@ -127,7 +124,7 @@ namespace Exiled.API.Features
                     PrefabType.HCZTwoSided => 0b00000000,
                     PrefabType.HCZOneSided => 0b00000001,
                     PrefabType.HCZBreakableDoor => 0b00000011,
-                    _ => 0,
+                    _ => 0
                 };
             }
 

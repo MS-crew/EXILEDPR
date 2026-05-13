@@ -14,7 +14,6 @@ namespace Exiled.API.Features.Core.UserSettings
 
     using Exiled.API.Features.Pools;
     using Exiled.API.Interfaces;
-
     using global::UserSettings.ServerSpecific;
 
     /// <summary>
@@ -206,7 +205,7 @@ namespace Exiled.API.Features.Core.UserSettings
             SSTwoButtonsSetting twoButtonsSetting => new TwoButtonsSetting(twoButtonsSetting),
             SSPlaintextSetting plainTextSetting => new UserTextInputSetting(plainTextSetting),
             SSSliderSetting sliderSetting => new SliderSetting(sliderSetting),
-            _ => new SettingBase(settingBase),
+            _ => new SettingBase(settingBase)
         };
 
         /// <summary>
@@ -420,7 +419,7 @@ namespace Exiled.API.Features.Core.UserSettings
 
             setting = list.Find(x => x.Id == settingBase.SettingId);
 
-        invoke:
+            invoke:
 
             if (setting.OriginalDefinition == null)
             {

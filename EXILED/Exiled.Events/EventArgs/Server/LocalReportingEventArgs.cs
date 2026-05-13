@@ -7,7 +7,7 @@
 
 namespace Exiled.Events.EventArgs.Server
 {
-    using Exiled.API.Features;
+    using API.Features;
 
     using Interfaces;
 

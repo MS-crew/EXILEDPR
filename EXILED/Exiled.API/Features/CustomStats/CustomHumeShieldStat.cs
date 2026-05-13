@@ -8,13 +8,9 @@
 namespace Exiled.API.Features.CustomStats
 {
     using Mirror;
-
     using PlayerRoles.PlayableScps.HumeShield;
-
     using PlayerStatsSystem;
-
     using UnityEngine;
-
     using Utils.Networking;
 
     /// <summary>

@@ -8,9 +8,7 @@
 namespace Exiled.Events.Patches.Generic.KeycardDetails
 {
     using Exiled.API.Features.Items.Keycards;
-
     using HarmonyLib;
-
     using InventorySystem.Items.Keycards;
 
     /// <summary>

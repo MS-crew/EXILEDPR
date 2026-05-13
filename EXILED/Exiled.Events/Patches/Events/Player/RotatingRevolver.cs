@@ -10,6 +10,7 @@ namespace Exiled.Events.Patches.Events.Player
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
+    using Exiled.API.Extensions;
     using Exiled.API.Features.Pools;
 
     using Exiled.Events.Attributes;
@@ -19,7 +20,6 @@ namespace Exiled.Events.Patches.Events.Player
     using Exiled.Events.Handlers;
 
     using HarmonyLib;
-
     using InventorySystem.Items.Firearms.Modules;
 
     using static HarmonyLib.AccessTools;
@@ -32,7 +32,7 @@ namespace Exiled.Events.Patches.Events.Player
     [HarmonyPatch(typeof(CylinderAmmoModule), nameof(CylinderAmmoModule.RotateCylinder))]
     internal class RotatingRevolver
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 

@@ -8,11 +8,8 @@
 namespace Exiled.Events.Patches.Generic.KeycardDetails
 {
     using Exiled.API.Features.Items.Keycards;
-
     using HarmonyLib;
-
     using InventorySystem.Items.Keycards;
-
     using UnityEngine;
 
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter

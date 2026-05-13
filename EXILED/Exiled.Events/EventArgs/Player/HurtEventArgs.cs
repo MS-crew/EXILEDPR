@@ -7,8 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.DamageHandlers;
+    using API.Features;
+    using API.Features.DamageHandlers;
 
     using Interfaces;
 

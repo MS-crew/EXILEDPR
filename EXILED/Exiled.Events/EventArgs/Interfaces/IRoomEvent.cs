@@ -7,7 +7,7 @@
 
 namespace Exiled.Events.EventArgs.Interfaces
 {
-    using Exiled.API.Features;
+    using API.Features;
 
     /// <summary>
     /// Event args used for all <see cref="API.Features.Room" /> related events.

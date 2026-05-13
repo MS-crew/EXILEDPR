@@ -11,14 +11,11 @@ namespace Exiled.Events.Patches.Fixes
     using System.Reflection;
     using System.Reflection.Emit;
 
+    using API.Features.Pools;
     using CustomPlayerEffects;
-
-    using Exiled.API.Features.Pools;
-
+    using Exiled.API.Features;
     using HarmonyLib;
-
     using InventorySystem.Items.Usables.Scp330;
-
     using PlayerRoles.PlayableScps.Scp049;
 
     using static HarmonyLib.AccessTools;
@@ -32,7 +29,7 @@ namespace Exiled.Events.Patches.Fixes
     [HarmonyPatch(typeof(StatusEffectBase), nameof(StatusEffectBase.ServerSetState))]
     internal class FixEffectOrder
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
@@ -74,7 +71,7 @@ namespace Exiled.Events.Patches.Fixes
             yield return Method(typeof(SugarCrave), nameof(SugarCrave.Disabled));
         }
 
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 

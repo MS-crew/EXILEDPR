@@ -9,13 +9,11 @@ namespace Exiled.Events.Patches.Events.Scp049
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features;
-    using Exiled.API.Features.Pools;
+    using API.Features;
+    using API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Scp049;
-
     using HarmonyLib;
-
     using PlayerRoles.PlayableScps.Scp049;
     using PlayerRoles.Ragdolls;
 

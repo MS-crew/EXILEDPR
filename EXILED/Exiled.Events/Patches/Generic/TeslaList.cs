@@ -7,7 +7,7 @@
 
 namespace Exiled.Events.Patches.Generic
 {
-    using Exiled.API.Features;
+    using API.Features;
 
     using HarmonyLib;
 

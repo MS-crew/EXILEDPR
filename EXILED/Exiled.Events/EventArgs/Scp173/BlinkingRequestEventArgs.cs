@@ -10,8 +10,7 @@ namespace Exiled.Events.EventArgs.Scp173
     using System.Collections.Generic;
     using System.Linq;
 
-    using Exiled.API.Features;
-
+    using API.Features;
     using Interfaces;
 
     using Scp173Role = API.Features.Roles.Scp173Role;
@@ -34,7 +33,7 @@ namespace Exiled.Events.EventArgs.Scp173
         {
             Player = player;
             Scp173 = player.Role.As<Scp173Role>();
-            Targets = targets.Select(Player.Get).ToList();
+            Targets = targets.Select(target => Player.Get(target)).ToList();
         }
 
         /// <summary>

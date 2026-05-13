@@ -7,6 +7,10 @@
 
 namespace Exiled.API.Enums
 {
+    using Features;
+
+    using PlayerRoles;
+
     /// <summary>
     /// Layers game respawn effects.
     /// </summary>

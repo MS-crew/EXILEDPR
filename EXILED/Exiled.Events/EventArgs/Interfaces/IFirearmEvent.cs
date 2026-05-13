@@ -7,7 +7,7 @@
 
 namespace Exiled.Events.EventArgs.Interfaces
 {
-    using Exiled.API.Features.Items;
+    using API.Features.Items;
 
     /// <summary>
     /// Event args used for all <see cref="API.Features.Items.Firearm" /> related events.

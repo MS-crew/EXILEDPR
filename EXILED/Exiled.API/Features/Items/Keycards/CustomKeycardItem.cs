@@ -14,13 +14,10 @@ namespace Exiled.API.Features.Items.Keycards
     using Exiled.API.Extensions;
     using Exiled.API.Features.Pools;
     using Exiled.API.Interfaces.Keycards;
-
     using Interactables.Interobjects.DoorUtils;
-
     using InventorySystem;
     using InventorySystem.Items;
     using InventorySystem.Items.Keycards;
-
     using UnityEngine;
 
     /// <summary>
@@ -202,10 +199,10 @@ namespace Exiled.API.Features.Items.Keycards
 
                 goto add;
 
-            cont:
+                cont:
                 continue;
 
-            add:
+                add:
                 matches.Add(type);
             }
 

@@ -7,9 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Scp106
 {
-    using Exiled.API.Features;
+    using API.Features;
     using Exiled.API.Features.Roles;
-
     using Interfaces;
 
     using UnityEngine;

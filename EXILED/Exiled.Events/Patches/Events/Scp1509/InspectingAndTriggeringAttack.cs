@@ -14,9 +14,7 @@ namespace Exiled.Events.Patches.Events.Scp1509
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Item;
     using Exiled.Events.EventArgs.Scp1509;
-
     using HarmonyLib;
-
     using InventorySystem.Items.Scp1509;
 
     using static HarmonyLib.AccessTools;

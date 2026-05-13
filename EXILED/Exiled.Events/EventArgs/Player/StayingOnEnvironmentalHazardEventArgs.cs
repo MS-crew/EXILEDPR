@@ -8,9 +8,7 @@
 namespace Exiled.Events.EventArgs.Player
 {
     using Exiled.API.Features.Hazards;
-
     using Hazards;
-
     using Interfaces;
 
     /// <summary>

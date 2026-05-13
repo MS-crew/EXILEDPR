@@ -15,15 +15,11 @@ namespace Exiled.API.Features.Doors
     using Exiled.API.Extensions;
     using Exiled.API.Features.Core;
     using Exiled.API.Interfaces;
-
     using Interactables.Interobjects;
     using Interactables.Interobjects.DoorButtons;
     using Interactables.Interobjects.DoorUtils;
-
     using MEC;
-
     using Mirror;
-
     using UnityEngine;
 
     using BaseBreakableDoor = Interactables.Interobjects.BreakableDoor;
@@ -425,7 +421,7 @@ namespace Exiled.API.Features.Doors
             {
                 door.IsOpen = false;
                 door.ChangeLock(lockType);
-                Timing.CallDelayed(duration, door.Unlock);
+                Timing.CallDelayed(duration, () => door.Unlock());
             }
         }
 
@@ -452,7 +448,7 @@ namespace Exiled.API.Features.Doors
             {
                 door.IsOpen = false;
                 door.ChangeLock(lockType);
-                Timing.CallDelayed(duration, door.Unlock);
+                Timing.CallDelayed(duration, () => door.Unlock());
             }
         }
 
@@ -597,7 +593,7 @@ namespace Exiled.API.Features.Doors
                 PryableDoor prbl => new Gate(prbl, rooms),
                 Interactables.Interobjects.BasicNonInteractableDoor nonInteractableDoor => new BasicNonInteractableDoor(nonInteractableDoor, rooms),
                 Interactables.Interobjects.BasicDoor basicDoor => new BasicDoor(basicDoor, rooms),
-                _ => new Door(doorVariant, rooms),
+                _ => new Door(doorVariant, rooms)
             };
         }
 

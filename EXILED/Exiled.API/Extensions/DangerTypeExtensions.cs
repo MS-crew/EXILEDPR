@@ -13,7 +13,6 @@ namespace Exiled.API.Extensions
     using System.Linq;
 
     using CustomPlayerEffects.Danger;
-
     using Exiled.API.Enums;
 
     /// <summary>

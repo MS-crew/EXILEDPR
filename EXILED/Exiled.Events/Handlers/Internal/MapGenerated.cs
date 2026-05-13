@@ -7,8 +7,10 @@
 
 namespace Exiled.Events.Handlers.Internal
 {
-    using Exiled.API.Features;
+    using System.Collections.Generic;
+    using System.Linq;
 
+    using API.Features;
     using Exiled.API.Features.Lockers;
 
     using MEC;

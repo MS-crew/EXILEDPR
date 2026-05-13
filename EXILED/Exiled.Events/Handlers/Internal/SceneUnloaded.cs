@@ -7,8 +7,8 @@
 
 namespace Exiled.Events.Handlers.Internal
 {
-    using Exiled.API.Features;
-
+    using API.Features;
+    using Exiled.API.Features.Toys;
     using UnityEngine.SceneManagement;
 
 #pragma warning disable SA1611 // Element parameters should be documented

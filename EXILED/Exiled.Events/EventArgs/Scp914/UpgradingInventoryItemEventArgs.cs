@@ -7,13 +7,10 @@
 
 namespace Exiled.Events.EventArgs.Scp914
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.Items;
-
+    using API.Features;
+    using API.Features.Items;
     using global::Scp914;
-
     using Interfaces;
-
     using InventorySystem.Items;
 
     /// <summary>

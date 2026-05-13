@@ -12,7 +12,6 @@ namespace Exiled.API.Features.Core.UserSettings
     using System.Linq;
 
     using Exiled.API.Interfaces;
-
     using global::UserSettings.ServerSpecific;
 
     /// <summary>

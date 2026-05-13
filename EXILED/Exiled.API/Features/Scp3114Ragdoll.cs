@@ -8,7 +8,6 @@
 namespace Exiled.API.Features
 {
     using Exiled.API.Interfaces;
-
     using PlayerRoles;
 
     using BaseScp3114Ragdoll = PlayerRoles.PlayableScps.Scp3114.Scp3114Ragdoll;

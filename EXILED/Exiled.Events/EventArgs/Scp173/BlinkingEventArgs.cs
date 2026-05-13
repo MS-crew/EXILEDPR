@@ -9,7 +9,7 @@ namespace Exiled.Events.EventArgs.Scp173
 {
     using System.Collections.Generic;
 
-    using Exiled.API.Features;
+    using API.Features;
 
     using Interfaces;
 

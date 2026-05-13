@@ -9,11 +9,8 @@ namespace Exiled.Events.EventArgs.Player
 {
     using Exiled.API.Features;
     using Exiled.API.Features.Doors;
-
     using Footprinting;
-
     using Interactables.Interobjects.DoorUtils;
-
     using Interfaces;
 
     /// <summary>

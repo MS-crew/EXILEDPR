@@ -14,23 +14,15 @@ namespace Exiled.API.Features
 
     using CommandSystem;
     using CommandSystem.Commands.RemoteAdmin.Dummies;
-
     using Exiled.API.Enums;
     using Exiled.API.Features.CustomStats;
     using Exiled.API.Features.Roles;
-
     using Footprinting;
-
     using MEC;
-
     using Mirror;
-
     using NetworkManagerUtils.Dummies;
-
     using PlayerRoles;
-
     using PlayerStatsSystem;
-
     using UnityEngine;
 
     /// <summary>
@@ -110,7 +102,7 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!value.HasValue)
+                if(!value.HasValue)
                     return;
 
                 if (!GameObject.TryGetComponent(out PlayerFollower follower))
@@ -139,7 +131,7 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!value.HasValue)
+                if(!value.HasValue)
                     return;
 
                 if (!GameObject.TryGetComponent(out PlayerFollower follower))
@@ -168,7 +160,7 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!value.HasValue)
+                if(!value.HasValue)
                     return;
 
                 if (!GameObject.TryGetComponent(out PlayerFollower follower))

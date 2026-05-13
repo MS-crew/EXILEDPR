@@ -16,8 +16,10 @@ namespace Exiled.API.Features.Lockers
     using Exiled.API.Features.Pickups;
     using Exiled.API.Interfaces;
 
+    using InventorySystem.Items.Pickups;
     using MapGeneration.Distributors;
 
+    using Mirror;
     using UnityEngine;
 
     using BaseLocker = MapGeneration.Distributors.Locker;

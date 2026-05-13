@@ -10,7 +10,6 @@ namespace Exiled.Events.EventArgs.Scp127
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
     using Exiled.Events.EventArgs.Interfaces;
-
     using InventorySystem.Items.Firearms.Modules.Scp127;
 
     /// <summary>

@@ -18,7 +18,6 @@ namespace Exiled.CustomItems.API.Features
     using Exiled.Events.EventArgs.Player;
 
     using InventorySystem.Items.Armor;
-
     using MEC;
 
     /// <summary>

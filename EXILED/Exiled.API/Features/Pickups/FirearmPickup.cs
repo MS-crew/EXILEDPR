@@ -10,7 +10,6 @@ namespace Exiled.API.Features.Pickups
     using System;
 
     using Exiled.API.Interfaces;
-
     using InventorySystem.Items;
     using InventorySystem.Items.Firearms;
     using InventorySystem.Items.Firearms.Attachments;
@@ -119,26 +118,6 @@ namespace Exiled.API.Features.Pickups
         }
 
         /// <summary>
-        /// Gets or sets the damage for this <see cref="FirearmPickup"/>.
-        /// </summary>
-        public float Damage { get; set; }
-
-        /// <summary>
-        /// Gets or sets the inaccuracy for this <see cref="FirearmPickup"/>.
-        /// </summary>
-        public float Inaccuracy { get; set; }
-
-        /// <summary>
-        /// Gets or sets the penetration for this <see cref="FirearmPickup"/>.
-        /// </summary>
-        public float Penetration { get; set; }
-
-        /// <summary>
-        /// Gets or sets how much fast the value drop over the distance.
-        /// </summary>
-        public float DamageFalloffDistance { get; set; }
-
-        /// <summary>
         /// Initializes the item as if it was spawned naturally by map generation.
         /// </summary>
         public void Distribute() => Base.OnDistributed();
@@ -156,10 +135,6 @@ namespace Exiled.API.Features.Pickups
             {
                 MaxAmmo = firearm.PrimaryMagazine.ConstantMaxAmmo;
                 AmmoDrain = firearm.AmmoDrain;
-                Damage = firearm.Damage;
-                Inaccuracy = firearm.Inaccuracy;
-                Penetration = firearm.Penetration;
-                DamageFalloffDistance = firearm.DamageFalloffDistance;
             }
 
             base.ReadItemInfo(item);

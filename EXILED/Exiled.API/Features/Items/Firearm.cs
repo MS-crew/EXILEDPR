@@ -7,11 +7,11 @@
 
 namespace Exiled.API.Features.Items
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
     using CameraShaking;
-
     using Enums;
 
     using Exiled.API.Features.Items.FirearmModules;
@@ -20,9 +20,7 @@ namespace Exiled.API.Features.Items
     using Exiled.API.Features.Pickups;
     using Exiled.API.Interfaces;
     using Exiled.API.Structs;
-
     using Extensions;
-
     using InventorySystem.Items.Autosync;
     using InventorySystem.Items.Firearms.Attachments;
     using InventorySystem.Items.Firearms.Attachments.Components;
@@ -111,7 +109,8 @@ namespace Exiled.API.Features.Items
             {
                 IEnumerable<KeyValuePair<Player, Dictionary<FirearmType, AttachmentIdentifier[]>>> playerPreferences =
                     AttachmentsServerHandler.PlayerPreferences.Where(
-                        kvp => kvp.Key is not null).Select(keyValuePair =>
+                        kvp => kvp.Key is not null).Select(
+                        (KeyValuePair<ReferenceHub, Dictionary<ItemType, uint>> keyValuePair) =>
                         {
                             return new KeyValuePair<Player, Dictionary<FirearmType, AttachmentIdentifier[]>>(
                                 Player.Get(keyValuePair.Key),
@@ -170,7 +169,12 @@ namespace Exiled.API.Features.Items
         public int BarrelAmmo
         {
             get => BarrelMagazine?.Ammo ?? 0;
-            set => BarrelMagazine?.Ammo = value;
+
+            set
+            {
+                if (BarrelMagazine != null)
+                    BarrelMagazine.Ammo = value;
+            }
         }
 
         /// <summary>
@@ -247,7 +251,12 @@ namespace Exiled.API.Features.Items
         public int MaxBarrelAmmo
         {
             get => BarrelMagazine?.MaxAmmo ?? 0;
-            set => BarrelMagazine?.MaxAmmo = value;
+
+            set
+            {
+                if (BarrelMagazine != null)
+                    BarrelMagazine.MaxAmmo = value;
+            }
         }
 
         /// <summary>
@@ -805,10 +814,6 @@ namespace Exiled.API.Features.Items
             {
                 PrimaryMagazine.MaxAmmo = firearmPickup.MaxAmmo;
                 AmmoDrain = firearmPickup.AmmoDrain;
-                Damage = firearmPickup.Damage;
-                Inaccuracy = firearmPickup.Inaccuracy;
-                Penetration = firearmPickup.Penetration;
-                DamageFalloffDistance = firearmPickup.DamageFalloffDistance;
             }
         }
     }

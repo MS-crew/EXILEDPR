@@ -9,9 +9,7 @@ namespace Exiled.API.Features.Objectives
 {
     using Exiled.API.Enums;
     using Exiled.API.Interfaces;
-
     using PlayerRoles;
-
     using Respawning.Objectives;
 
     using BaseObjective = Respawning.Objectives.EscapeObjective;

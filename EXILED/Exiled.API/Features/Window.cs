@@ -12,13 +12,10 @@ namespace Exiled.API.Features
     using System.Linq;
 
     using DamageHandlers;
-
     using Enums;
-
     using Exiled.API.Extensions;
     using Exiled.API.Features.Doors;
     using Exiled.API.Interfaces;
-
     using UnityEngine;
 
     /// <summary>

@@ -10,7 +10,6 @@ namespace Exiled.API.Features.Core.UserSettings
     using System;
 
     using Exiled.API.Interfaces;
-
     using global::UserSettings.ServerSpecific;
 
     /// <summary>

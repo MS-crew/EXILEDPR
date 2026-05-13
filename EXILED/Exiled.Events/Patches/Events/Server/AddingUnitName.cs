@@ -10,15 +10,12 @@ namespace Exiled.Events.Patches.Events.Server
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Pools;
-
+    using API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Server;
-
     using HarmonyLib;
-
     using PlayerRoles;
-
+    using Respawning;
     using Respawning.NamingRules;
 
     using static HarmonyLib.AccessTools;

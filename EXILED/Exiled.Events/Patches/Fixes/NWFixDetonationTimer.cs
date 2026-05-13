@@ -11,7 +11,6 @@ namespace Exiled.Events.Patches.Fixes
     using System.Linq;
 
     using GameCore;
-
     using HarmonyLib;
 
     /// <summary>

@@ -18,6 +18,8 @@ namespace Exiled.CustomItems.Commands
     using Exiled.Permissions.Extensions;
 
     using RemoteAdmin;
+    using UnityStandardAssets.Effects;
+    using Utils;
 
     /// <summary>
     /// The command to give a player an item.

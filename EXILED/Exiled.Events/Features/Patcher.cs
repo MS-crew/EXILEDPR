@@ -16,7 +16,6 @@ namespace Exiled.Events.Features
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Interfaces;
-
     using HarmonyLib;
 
     /// <summary>

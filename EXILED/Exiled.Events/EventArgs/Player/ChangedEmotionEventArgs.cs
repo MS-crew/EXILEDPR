@@ -9,7 +9,6 @@ namespace Exiled.Events.EventArgs.Player
 {
     using Exiled.API.Features;
     using Exiled.Events.EventArgs.Interfaces;
-
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers;
 
     /// <summary>

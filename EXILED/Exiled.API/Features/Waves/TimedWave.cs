@@ -11,9 +11,7 @@ namespace Exiled.API.Features.Waves
     using System.Linq;
 
     using Exiled.API.Enums;
-
     using PlayerRoles;
-
     using Respawning;
     using Respawning.Announcements;
     using Respawning.Waves;
@@ -69,7 +67,7 @@ namespace Exiled.API.Features.Waves
             Faction.FoundationStaff when IsMiniWave => SpawnableFaction.NtfMiniWave,
             Faction.FoundationStaff => SpawnableFaction.NtfWave,
             Faction.FoundationEnemy when IsMiniWave => SpawnableFaction.ChaosMiniWave,
-            _ => SpawnableFaction.ChaosWave,
+            _ => SpawnableFaction.ChaosWave
         };
 
         /// <summary>
@@ -98,7 +96,7 @@ namespace Exiled.API.Features.Waves
         public static bool TryGetTimedWaves(Faction faction, out List<TimedWave> waves)
         {
             List<SpawnableWaveBase> spawnableWaveBases = WaveManager.Waves.Where(w => w is TimeBasedWave wave && wave.TargetFaction == faction).ToList();
-            if (!spawnableWaveBases.Any())
+            if(!spawnableWaveBases.Any())
             {
                 waves = null;
                 return false;
@@ -117,7 +115,7 @@ namespace Exiled.API.Features.Waves
         public static bool TryGetTimedWaves(Team team, out List<TimedWave> waves)
         {
             List<SpawnableWaveBase> spawnableWaveBases = WaveManager.Waves.Where(w => w is TimeBasedWave wave && wave.TargetFaction.GetSpawnableTeam() == team).ToList();
-            if (!spawnableWaveBases.Any())
+            if(!spawnableWaveBases.Any())
             {
                 waves = null;
                 return false;

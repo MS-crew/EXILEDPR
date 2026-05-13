@@ -14,9 +14,7 @@ namespace Exiled.Events.Patches.Events.Scp939
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Scp939;
-
     using HarmonyLib;
-
     using PlayerRoles.PlayableScps.Scp939;
 
     using static HarmonyLib.AccessTools;
@@ -29,7 +27,7 @@ namespace Exiled.Events.Patches.Events.Scp939
     [HarmonyPatch(typeof(Scp939ClawAbility), nameof(Scp939ClawAbility.ServerProcessCmd))]
     internal class Clawed
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 

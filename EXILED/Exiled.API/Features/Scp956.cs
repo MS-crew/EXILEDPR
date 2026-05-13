@@ -12,7 +12,6 @@ namespace Exiled.API.Features
 
     using Exiled.API.Enums;
     using Exiled.API.Extensions;
-
     using UnityEngine;
 
     /// <summary>

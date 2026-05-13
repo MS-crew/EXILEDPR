@@ -8,7 +8,6 @@
 namespace Exiled.API.Structs
 {
     using AdminToys;
-
     using UnityEngine;
 
     /// <summary>

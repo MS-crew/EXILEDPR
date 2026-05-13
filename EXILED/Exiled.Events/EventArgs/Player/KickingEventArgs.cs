@@ -9,10 +9,8 @@ namespace Exiled.Events.EventArgs.Player
 {
     using System.Reflection;
 
+    using API.Features;
     using CommandSystem;
-
-    using Exiled.API.Features;
-
     using Interfaces;
 
     /// <summary>

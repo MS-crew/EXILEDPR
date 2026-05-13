@@ -7,9 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Scp0492
 {
-    using Exiled.API.Features;
+    using API.Features;
     using Exiled.API.Features.Roles;
-
     using Interfaces;
 
     using PlayerRoles.PlayableScps.Scp049.Zombies;

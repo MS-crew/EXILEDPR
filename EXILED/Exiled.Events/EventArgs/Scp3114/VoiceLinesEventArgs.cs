@@ -7,9 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Scp3114
 {
-    using Exiled.API.Features;
+    using API.Features;
     using Exiled.API.Features.Roles;
-
     using Interfaces;
 
     using static PlayerRoles.PlayableScps.Scp3114.Scp3114VoiceLines;

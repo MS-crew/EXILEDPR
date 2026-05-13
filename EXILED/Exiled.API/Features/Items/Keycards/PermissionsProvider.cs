@@ -8,11 +8,9 @@
 namespace Exiled.API.Features.Items.Keycards
 {
     using Interactables.Interobjects.DoorUtils;
-
     using InventorySystem.Items;
     using InventorySystem.Items.Autosync;
     using InventorySystem.Items.Keycards;
-
     using Mirror;
 
     /// <summary>

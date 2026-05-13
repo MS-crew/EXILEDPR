@@ -10,15 +10,12 @@ namespace Exiled.Events.Patches.Events.Scp106
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Pools;
+    using API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Scp106;
     using Exiled.Events.Handlers;
-
     using HarmonyLib;
-
     using PlayerRoles.PlayableScps.Scp106;
-
     using UnityEngine;
 
     using static HarmonyLib.AccessTools;

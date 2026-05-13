@@ -7,7 +7,7 @@
 
 namespace Exiled.Events.EventArgs.Warhead
 {
-    using Exiled.API.Features;
+    using API.Features;
 
     using Interfaces;
 

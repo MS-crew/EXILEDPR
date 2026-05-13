@@ -11,16 +11,22 @@ namespace Exiled.Events.Patches.Events.Player
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Pools;
-
+    using API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Player;
 
     using HarmonyLib;
-
+    using InventorySystem.Items.Autosync;
+    using InventorySystem.Items.Firearms;
     using InventorySystem.Items.Firearms.Modules;
+    using InventorySystem.Items.Firearms.Modules.Misc;
+    using InventorySystem.Searching;
+    using Mirror;
+    using UnityEngine;
 
     using static HarmonyLib.AccessTools;
+
+    using Player = API.Features.Player;
 
     /// <summary>
     /// Patches <see cref="AnimatorReloaderModuleBase" /> to add missing event handler to the

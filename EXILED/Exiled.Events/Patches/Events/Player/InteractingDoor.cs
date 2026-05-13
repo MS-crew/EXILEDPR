@@ -11,16 +11,11 @@ namespace Exiled.Events.Patches.Events.Player
     using System.Reflection;
     using System.Reflection.Emit;
 
+    using API.Features.Pools;
     using Attributes;
-
     using EventArgs.Player;
-
-    using Exiled.API.Features.Pools;
-
     using HarmonyLib;
-
     using Interactables.Interobjects.DoorUtils;
-
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Handlers;
 
@@ -176,7 +171,7 @@ namespace Exiled.Events.Patches.Events.Player
 #pragma warning disable SA1402
     internal static class ChangeNWLogic
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 

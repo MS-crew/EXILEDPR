@@ -11,9 +11,7 @@ namespace Exiled.Events.Patches.Generic
 
     using Exiled.API.Features;
     using Exiled.API.Features.Roles;
-
     using HarmonyLib;
-
     using InventorySystem;
 
     /// <summary>

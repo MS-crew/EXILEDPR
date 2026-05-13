@@ -8,7 +8,6 @@
 namespace Exiled.API.Features.Roles
 {
     using PlayerRoles;
-
     using UnityEngine;
 
     using FilmmakerGameRole = PlayerRoles.Filmmaker.FilmmakerRole;

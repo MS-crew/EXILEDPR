@@ -11,7 +11,6 @@ namespace Exiled.Events.Patches.Generic
 #pragma warning disable CS0618
 
     using Exiled.API.Features;
-
     using HarmonyLib;
 
     /// <summary>

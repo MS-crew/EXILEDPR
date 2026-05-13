@@ -10,7 +10,6 @@ namespace Exiled.Events.EventArgs.Map
     using Exiled.API.Features.Pickups;
     using Exiled.API.Features.Pickups.Projectiles;
     using Exiled.Events.EventArgs.Interfaces;
-
     using InventorySystem.Items.ThrowableProjectiles;
 
     /// <summary>

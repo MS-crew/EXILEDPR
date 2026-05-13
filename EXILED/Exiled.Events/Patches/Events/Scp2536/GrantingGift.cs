@@ -12,12 +12,10 @@ namespace Exiled.Events.Patches.Events.Scp2536
 
     using Christmas.Scp2536;
     using Christmas.Scp2536.Gifts;
-
     using Exiled.API.Features;
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Scp2536;
-
     using HarmonyLib;
 
     using static HarmonyLib.AccessTools;

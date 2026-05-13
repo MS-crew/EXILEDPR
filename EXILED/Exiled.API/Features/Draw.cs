@@ -8,6 +8,7 @@
 namespace Exiled.API.Features
 {
     using System;
+    using System.Buffers;
     using System.Collections.Generic;
 
     using DrawableLine;

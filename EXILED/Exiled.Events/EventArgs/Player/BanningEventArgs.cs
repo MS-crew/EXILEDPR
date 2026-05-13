@@ -9,9 +9,8 @@ namespace Exiled.Events.EventArgs.Player
 {
     using System.Reflection;
 
+    using API.Features;
     using CommandSystem;
-
-    using Exiled.API.Features;
 
     /// <summary>
     /// Contains all information before banning a player from the server.

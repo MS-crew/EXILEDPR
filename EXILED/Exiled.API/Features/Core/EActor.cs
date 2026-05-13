@@ -15,7 +15,6 @@ namespace Exiled.API.Features.Core
     using Exiled.API.Features.DynamicEvents;
     using Exiled.API.Features.Pools;
     using Exiled.API.Interfaces;
-
     using MEC;
 
     using UnityEngine;

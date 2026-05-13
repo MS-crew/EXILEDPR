@@ -13,7 +13,6 @@ namespace Exiled.Loader
 
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
-
     using MEC;
 
     using Log = API.Features.Log;

@@ -7,12 +7,14 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.Items;
+    using System;
 
+    using API.Features;
+    using API.Features.Items;
     using Interfaces;
 
     using InventorySystem.Items;
+    using InventorySystem.Items.MicroHID;
     using InventorySystem.Items.MicroHID.Modules;
 
     /// <summary>

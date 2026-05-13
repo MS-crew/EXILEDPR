@@ -1,4 +1,4 @@
-// -----------------------------------------------------------------------
+﻿// -----------------------------------------------------------------------
 // <copyright file="Generating.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
@@ -18,14 +18,10 @@ namespace Exiled.Events.Patches.Events.Map
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Map;
-
     using HarmonyLib;
-
     using LabApi.Events.Arguments.ServerEvents;
-
     using MapGeneration;
     using MapGeneration.Holidays;
-
     using UnityEngine;
 
     using static HarmonyLib.AccessTools;
@@ -525,7 +521,7 @@ namespace Exiled.Events.Patches.Events.Map
                     Spawned.Add(new AtlasZoneGenerator.SpawnedRoomData
                     {
                         ChosenCandidate = spawnableRoom,
-                        Instance = null,
+                        Instance = null!,
                         Interpretation = interpretation,
                     });
 
@@ -549,7 +545,7 @@ namespace Exiled.Events.Patches.Events.Map
                 Spawned.Add(new AtlasZoneGenerator.SpawnedRoomData
                 {
                     ChosenCandidate = room,
-                    Instance = null,
+                    Instance = null!,
                     Interpretation = interpretation,
                 });
 

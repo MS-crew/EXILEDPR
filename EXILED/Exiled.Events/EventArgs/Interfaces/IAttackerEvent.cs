@@ -7,8 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Interfaces
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.DamageHandlers;
+    using API.Features;
+    using API.Features.DamageHandlers;
 
     /// <summary>
     /// Event args for when a player is taking damage.

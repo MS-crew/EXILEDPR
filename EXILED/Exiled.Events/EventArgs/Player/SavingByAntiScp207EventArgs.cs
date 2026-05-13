@@ -8,7 +8,6 @@
 namespace Exiled.Events.EventArgs.Player
 {
     using CustomPlayerEffects;
-
     using Exiled.API.Features;
     using Exiled.API.Features.DamageHandlers;
     using Exiled.Events.EventArgs.Interfaces;

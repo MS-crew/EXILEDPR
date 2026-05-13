@@ -8,13 +8,9 @@
 namespace Exiled.API.Features.Hazards
 {
     using Exiled.API.Enums;
-
     using global::Hazards;
-
     using Mirror;
-
     using RelativePositioning;
-
     using UnityEngine;
 
     /// <summary>

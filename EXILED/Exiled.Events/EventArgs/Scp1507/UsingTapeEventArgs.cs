@@ -12,7 +12,6 @@ namespace Exiled.Events.EventArgs.Scp1507
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
     using Exiled.Events.EventArgs.Interfaces;
-
     using InventorySystem.Items;
 
     /// <summary>

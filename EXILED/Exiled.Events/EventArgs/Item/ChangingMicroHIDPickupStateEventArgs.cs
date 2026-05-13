@@ -10,7 +10,6 @@ namespace Exiled.Events.EventArgs.Item
     using Exiled.API.Features.Pickups;
 
     using Interfaces;
-
     using InventorySystem.Items.MicroHID.Modules;
     using InventorySystem.Items.Pickups;
 

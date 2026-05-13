@@ -16,12 +16,9 @@ namespace Exiled.API.Features
     using Exiled.API.Features.Doors;
     using Exiled.API.Features.Pools;
     using Exiled.API.Interfaces;
-
     using Interactables.Interobjects;
     using Interactables.Interobjects.DoorUtils;
-
     using UnityEngine;
-
     using Utils;
 
     using static Interactables.Interobjects.ElevatorChamber;
@@ -86,7 +83,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a value of the internal doors list.
         /// </summary>
-        public IReadOnlyCollection<Doors.ElevatorDoor> Doors => internalDoorsList.Select(Door.Get<Doors.ElevatorDoor>).ToList();
+        public IReadOnlyCollection<Doors.ElevatorDoor> Doors => internalDoorsList.Select(x => Door.Get<Doors.ElevatorDoor>(x)).ToList();
 
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> of <see cref="Player"/> in the <see cref="Room"/>.

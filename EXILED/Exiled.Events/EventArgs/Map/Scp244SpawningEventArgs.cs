@@ -7,13 +7,10 @@
 
 namespace Exiled.Events.EventArgs.Map
 {
-    using Exiled.API.Features;
+    using API.Features;
     using Exiled.API.Features.Pickups;
-
     using Interfaces;
-
     using InventorySystem.Items.Usables.Scp244;
-
     using MapGeneration;
 
     /// <summary>

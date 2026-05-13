@@ -9,9 +9,10 @@ namespace Exiled.Events.EventArgs.Scp079
 {
     using Exiled.API.Features;
     using Exiled.Events.EventArgs.Interfaces;
-
     using PlayerRoles;
     using PlayerRoles.PlayableScps.Scp079;
+
+    using Scp079Role = API.Features.Roles.Scp079Role;
 
     /// <summary>
     /// Contains all information before SCP-079 gains experience.

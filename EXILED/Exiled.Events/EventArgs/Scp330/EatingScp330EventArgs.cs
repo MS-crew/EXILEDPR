@@ -7,9 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Scp330
 {
-    using Exiled.API.Features;
+    using API.Features;
     using Exiled.API.Features.Items;
-
     using Interfaces;
 
     using InventorySystem.Items.Usables.Scp330;

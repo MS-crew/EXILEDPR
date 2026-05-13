@@ -7,11 +7,10 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.Items;
+    using API.Features;
+    using API.Features.Items;
 
     using Interfaces;
-
     using InventorySystem.Items.ToggleableLights;
 
     /// <summary>

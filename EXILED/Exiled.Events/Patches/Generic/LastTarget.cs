@@ -13,9 +13,7 @@ namespace Exiled.Events.Patches.Generic
 
     using Exiled.API.Features;
     using Exiled.API.Features.Pools;
-
     using HarmonyLib;
-
     using PlayerRoles.PlayableScps.HumanTracker;
 
     using static HarmonyLib.AccessTools;

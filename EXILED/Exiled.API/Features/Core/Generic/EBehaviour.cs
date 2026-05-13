@@ -7,6 +7,8 @@
 
 namespace Exiled.API.Features.Core.Generic
 {
+    using System;
+
     using Exiled.API.Features;
 
     /// <summary>

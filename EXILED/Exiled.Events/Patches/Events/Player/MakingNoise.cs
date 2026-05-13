@@ -14,9 +14,7 @@ namespace Exiled.Events.Patches.Events.Player
     using Exiled.API.Features.Pools;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Player;
-
     using HarmonyLib;
-
     using PlayerRoles.FirstPersonControl.Thirdperson;
 
     using static HarmonyLib.AccessTools;

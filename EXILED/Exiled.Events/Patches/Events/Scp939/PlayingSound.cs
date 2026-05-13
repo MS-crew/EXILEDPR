@@ -15,7 +15,6 @@ namespace Exiled.Events.Patches.Events.Scp939
     using Exiled.Events.Handlers;
 
     using HarmonyLib;
-
     using Mirror;
 
     using PlayerRoles.PlayableScps.Scp939;
@@ -34,9 +33,6 @@ namespace Exiled.Events.Patches.Events.Scp939
     {
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
-            // TODO: This is bad practice should be reworked.
-            _ = instructions;
-
             List<CodeInstruction> newInstructions = new();
 
             LocalBuilder option = generator.DeclareLocal(typeof(byte));

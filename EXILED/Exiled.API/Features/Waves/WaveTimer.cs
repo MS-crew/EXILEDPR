@@ -15,6 +15,8 @@ namespace Exiled.API.Features.Waves
 
     using PlayerRoles;
 
+    using Respawning;
+
     using Respawning.Waves;
 
     /// <summary>

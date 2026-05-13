@@ -8,10 +8,9 @@
 namespace Exiled.Events.Patches.Generic
 {
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-    using Exiled.API.Features;
+    using API.Features;
 
     using HarmonyLib;
-
     using Interactables.Interobjects;
 
     /// <summary>

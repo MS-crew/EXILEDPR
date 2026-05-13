@@ -11,7 +11,6 @@ namespace Exiled.API.Features.Roles
     using System.Collections.Generic;
 
     using Exiled.API.Features.Pools;
-
     using PlayerRoles;
     using PlayerRoles.FirstPersonControl;
     using PlayerRoles.FirstPersonControl.Thirdperson;
@@ -19,11 +18,8 @@ namespace Exiled.API.Features.Roles
     using PlayerRoles.Spectating;
     using PlayerRoles.Visibility;
     using PlayerRoles.Voice;
-
     using PlayerStatsSystem;
-
     using RelativePositioning;
-
     using UnityEngine;
 
     /// <summary>

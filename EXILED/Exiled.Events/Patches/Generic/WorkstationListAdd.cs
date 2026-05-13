@@ -11,7 +11,6 @@ namespace Exiled.Events.Patches.Generic
 #pragma warning disable SA1402
 
     using HarmonyLib;
-
     using InventorySystem.Items.Firearms.Attachments;
 
     /// <summary>

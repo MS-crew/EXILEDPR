@@ -11,9 +11,7 @@ namespace Exiled.API.Features.Objectives
     using Exiled.API.Features.Items;
     using Exiled.API.Features.Pickups;
     using Exiled.API.Interfaces;
-
     using Respawning.Objectives;
-
     using UnityEngine;
 
     using BaseObjective = Respawning.Objectives.ScpItemPickupObjective;

@@ -7,9 +7,9 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
-    using CustomPlayerEffects;
+    using API.Features;
 
-    using Exiled.API.Features;
+    using CustomPlayerEffects;
 
     using Interfaces;
 

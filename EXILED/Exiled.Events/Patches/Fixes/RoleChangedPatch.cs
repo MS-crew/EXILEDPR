@@ -10,9 +10,9 @@ namespace Exiled.Events.Patches.Fixes
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using EventArgs.Player;
+    using API.Features.Items;
 
-    using Exiled.API.Features.Items;
+    using EventArgs.Player;
 
     using HarmonyLib;
 
@@ -26,7 +26,6 @@ namespace Exiled.Events.Patches.Fixes
     {
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            _ = instructions;
             yield return new CodeInstruction(OpCodes.Ret);
         }
     }

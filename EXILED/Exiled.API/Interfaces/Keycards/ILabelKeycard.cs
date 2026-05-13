@@ -8,7 +8,6 @@
 namespace Exiled.API.Interfaces.Keycards
 {
     using Exiled.API.Features.Items.Keycards;
-
     using UnityEngine;
 
     /// <summary>

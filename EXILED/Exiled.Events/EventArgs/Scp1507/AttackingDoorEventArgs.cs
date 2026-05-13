@@ -13,7 +13,6 @@ namespace Exiled.Events.EventArgs.Scp1507
     using Exiled.API.Features.Doors;
     using Exiled.API.Features.Roles;
     using Exiled.Events.EventArgs.Interfaces;
-
     using Interactables.Interobjects.DoorUtils;
 
     /// <summary>

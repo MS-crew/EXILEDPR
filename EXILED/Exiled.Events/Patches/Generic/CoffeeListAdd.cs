@@ -8,7 +8,6 @@
 namespace Exiled.Events.Patches.Generic
 {
     using Exiled.API.Features;
-
     using HarmonyLib;
 #pragma warning disable SA1313
 #pragma warning disable CS0618

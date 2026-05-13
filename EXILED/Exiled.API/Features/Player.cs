@@ -14,14 +14,10 @@ namespace Exiled.API.Features
     using System.Runtime.CompilerServices;
 
     using Core;
-
     using CustomPlayerEffects;
     using CustomPlayerEffects.Danger;
-
     using DamageHandlers;
-
     using Enums;
-
     using Exiled.API.Features.Core.Interfaces;
     using Exiled.API.Features.CustomStats;
     using Exiled.API.Features.Doors;
@@ -32,17 +28,11 @@ namespace Exiled.API.Features
     using Exiled.API.Features.Roles;
     using Exiled.API.Interfaces;
     using Exiled.API.Structs;
-
     using Extensions;
-
     using Footprinting;
-
     using global::Scp914;
-
     using Hints;
-
     using Interactables.Interobjects;
-
     using InventorySystem;
     using InventorySystem.Disarming;
     using InventorySystem.Items;
@@ -52,35 +42,24 @@ namespace Exiled.API.Features
     using InventorySystem.Items.Firearms.ShotEvents;
     using InventorySystem.Items.Usables;
     using InventorySystem.Items.Usables.Scp330;
-
     using MapGeneration.Distributors;
     using MapGeneration.Rooms;
-
     using MEC;
-
     using Mirror;
     using Mirror.LiteNetLib4Mirror;
-
     using PlayerRoles;
     using PlayerRoles.FirstPersonControl;
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers;
     using PlayerRoles.RoleAssign;
     using PlayerRoles.Spectating;
     using PlayerRoles.Voice;
-
     using PlayerStatsSystem;
-
     using RelativePositioning;
-
     using RemoteAdmin;
-
     using RoundRestarting;
-
     using UnityEngine;
-
     using Utils;
     using Utils.Networking;
-
     using VoiceChat;
     using VoiceChat.Playbacks;
 
@@ -939,7 +918,10 @@ namespace Exiled.API.Features
                 if (value > MaxArtificialHealth)
                     MaxArtificialHealth = value;
 
-                ActiveArtificialHealthProcesses.FirstOrDefault()?.CurrentAmount = value;
+                AhpStat.AhpProcess ahp = ActiveArtificialHealthProcesses.FirstOrDefault();
+
+                if (ahp is not null)
+                    ahp.CurrentAmount = value;
             }
         }
 
@@ -956,7 +938,8 @@ namespace Exiled.API.Features
 
                 AhpStat.AhpProcess ahp = ActiveArtificialHealthProcesses.FirstOrDefault();
 
-                ahp?.Limit = value;
+                if (ahp is not null)
+                    ahp.Limit = value;
             }
         }
 
@@ -1559,7 +1542,7 @@ namespace Exiled.API.Features
         /// <param name="newargs">Contains the updated arguments after processing.</param>
         /// <param name="keepEmptyEntries">Determines whether empty entries should be kept in the result.</param>
         /// <returns>An <see cref="IEnumerable{Player}"/> representing the processed players.</returns>
-        public static IEnumerable<Player> GetProcessedData(ArraySegment<string> args, int startIndex, out string[] newargs, bool keepEmptyEntries = false) => RAUtils.ProcessPlayerIdOrNamesList(args, startIndex, out newargs, keepEmptyEntries).Select(Get);
+        public static IEnumerable<Player> GetProcessedData(ArraySegment<string> args, int startIndex, out string[] newargs, bool keepEmptyEntries = false) => RAUtils.ProcessPlayerIdOrNamesList(args, startIndex, out newargs, keepEmptyEntries).Select(hub => Get(hub));
 
         /// <summary>
         /// Gets an <see cref="IEnumerable{Player}"/> containing all players processed based on the arguments specified.
@@ -2948,7 +2931,7 @@ namespace Exiled.API.Features
         /// <returns>The <see cref="Item"/> that was added.</returns>
         public Item AddItem(FirearmPickup pickup, IEnumerable<AttachmentIdentifier> identifiers)
         {
-            Firearm firearm = Item.Get<Firearm>(Inventory.ServerAddItem(pickup.Type, ItemAddReason.PickedUp, pickup.Serial, pickup.Base));
+            Firearm firearm = Item.Get<Firearm>(Inventory.ServerAddItem(pickup.Type, ItemAddReason.AdminCommand, pickup.Serial, pickup.Base));
 
             if (identifiers is not null)
                 firearm.AddAttachment(identifiers);
@@ -4048,7 +4031,8 @@ namespace Exiled.API.Features
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            return obj is Player player && ReferenceHub == player.ReferenceHub;
+            Player player = obj as Player;
+            return (object)player != null && ReferenceHub == player.ReferenceHub;
         }
 
         /// <inheritdoc />
@@ -4064,7 +4048,7 @@ namespace Exiled.API.Features
         /// <param name="player2">The second player instance.</param>
         /// <returns><see langword="true"/> if the values are equal.</returns>
 #pragma warning disable SA1201
-        public static bool operator ==(Player player1, Player player2) => player1?.Equals(player2) ?? (player2 is null);
+        public static bool operator ==(Player player1, Player player2) => player1?.Equals(player2) ?? player2 is null;
 
         /// <summary>
         /// Returns whether the two players are different.

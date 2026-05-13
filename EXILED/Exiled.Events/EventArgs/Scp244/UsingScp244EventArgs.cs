@@ -7,8 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Scp244
 {
-    using Exiled.API.Features;
-    using Exiled.API.Features.Items;
+    using API.Features;
+    using API.Features.Items;
 
     using Interfaces;
 

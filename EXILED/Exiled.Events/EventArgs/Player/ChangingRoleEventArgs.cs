@@ -10,18 +10,14 @@ namespace Exiled.Events.EventArgs.Player
     using System.Collections.Generic;
     using System.Linq;
 
-    using Exiled.API.Enums;
+    using API.Enums;
+    using API.Features;
     using Exiled.API.Extensions;
-    using Exiled.API.Features;
     using Exiled.API.Features.Pools;
-
     using Interfaces;
-
     using InventorySystem;
-
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Handlers;
-
     using PlayerRoles;
 
     /// <summary>

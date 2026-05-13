@@ -10,14 +10,10 @@ namespace Exiled.Events.Patches.Fixes
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Pools;
-
+    using API.Features.Pools;
     using Footprinting;
-
     using HarmonyLib;
-
     using Interactables.Interobjects.DoorUtils;
-
     using PlayerRoles.PlayableScps.Scp1507;
 
     using static HarmonyLib.AccessTools;
@@ -29,7 +25,7 @@ namespace Exiled.Events.Patches.Fixes
     [HarmonyPatch(typeof(Scp1507AttackAbility), nameof(Scp1507AttackAbility.TryAttackDoor))]
     internal class FixScp1507DestroyingDoor
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 

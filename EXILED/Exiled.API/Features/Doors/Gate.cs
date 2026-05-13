@@ -10,10 +10,8 @@ namespace Exiled.API.Features.Doors
     using System.Collections.Generic;
 
     using Exiled.API.Enums;
-
     using Interactables.Interobjects;
     using Interactables.Interobjects.DoorUtils;
-
     using UnityEngine;
 
     /// <summary>

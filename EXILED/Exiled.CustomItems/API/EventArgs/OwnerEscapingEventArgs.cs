@@ -7,10 +7,17 @@
 
 namespace Exiled.CustomItems.API.EventArgs
 {
+    using System.Collections.Generic;
+
+    using Exiled.API.Enums;
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
     using Exiled.CustomItems.API.Features;
     using Exiled.Events.EventArgs.Player;
+
+    using PlayerRoles;
+
+    using Respawning;
 
     /// <summary>
     /// Contains all information of a <see cref="CustomItem"/> before a <see cref="Player"/> escapes.

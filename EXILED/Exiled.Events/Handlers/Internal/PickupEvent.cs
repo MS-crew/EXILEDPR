@@ -8,7 +8,6 @@
 namespace Exiled.Events.Handlers.Internal
 {
     using Exiled.API.Features.Pickups;
-
     using InventorySystem.Items.Pickups;
 
     /// <summary>

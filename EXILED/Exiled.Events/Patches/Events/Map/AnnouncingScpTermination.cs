@@ -12,15 +12,13 @@ namespace Exiled.Events.Patches.Events.Map
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    using Exiled.API.Features.Pools;
-
+    using API.Features.Pools;
+    using Exiled.API.Features;
     using Exiled.Events.Attributes;
     using Exiled.Events.EventArgs.Map;
-
+    using Exiled.Events.Handlers;
     using Footprinting;
-
     using global::Cassie;
-
     using HarmonyLib;
 
     using static HarmonyLib.AccessTools;

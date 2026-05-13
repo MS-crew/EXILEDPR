@@ -10,7 +10,6 @@ namespace Exiled.API.Features.Objectives
     using Exiled.API.Enums;
     using Exiled.API.Features.DamageHandlers;
     using Exiled.API.Interfaces;
-
     using Respawning.Objectives;
 
     using BaseObjective = Respawning.Objectives.HumanDamageObjective;

@@ -8,9 +8,7 @@
 namespace Exiled.Events.EventArgs.Player
 {
     using Achievements;
-
     using Exiled.API.Features;
-
     using Interfaces;
 
     /// <summary>
