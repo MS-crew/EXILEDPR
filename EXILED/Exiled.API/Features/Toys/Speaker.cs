@@ -358,7 +358,9 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkVolume;
             set
             {
-                StopFade();
+                if (isPlayBackInitialized)
+                    StopFade();
+
                 Base.NetworkVolume = value;
             }
         }
