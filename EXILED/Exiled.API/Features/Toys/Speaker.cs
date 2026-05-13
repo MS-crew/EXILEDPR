@@ -334,7 +334,6 @@ namespace Exiled.API.Features.Toys
                     field = 1f;
                     isPitchDefault = true;
                     Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default value (1).");
-                    return;
                 }
 
                 if (isPitchDefault)
