@@ -898,9 +898,9 @@ namespace Exiled.API.Features
 
                 if (value.HasFlagFast(WearableElementType.ArmorDefault))
                 {
-                    ItemType displayedArmor = value.HasFlag(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
-                        value.HasFlag(WearableElementType.ArmorCombat) ? ItemType.ArmorCombat :
-                        value.HasFlag(WearableElementType.ArmorHeavy) ? ItemType.ArmorHeavy :
+                    ItemType displayedArmor = value.HasFlagFast(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
+                        value.HasFlagFast(WearableElementType.ArmorCombat) ? ItemType.ArmorCombat :
+                        value.HasFlagFast(WearableElementType.ArmorHeavy) ? ItemType.ArmorHeavy :
                         CurrentArmor?.Type ?? ItemType.None;
 
                     if (displayedArmor is not ItemType.None)
