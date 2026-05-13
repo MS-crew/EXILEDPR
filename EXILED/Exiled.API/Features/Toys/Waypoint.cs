@@ -114,7 +114,7 @@ namespace Exiled.API.Features.Toys
             {
                 Priority = priority,
                 VisualizeBounds = visualizeBounds,
-                BoundsSize = scale ?? Vector3.one * WaypointToy.MaxBounds,
+                BoundsSize = scale ?? (Vector3.one * WaypointToy.MaxBounds),
                 LocalPosition = position ?? Vector3.zero,
                 LocalRotation = rotation ?? Quaternion.identity,
             };
