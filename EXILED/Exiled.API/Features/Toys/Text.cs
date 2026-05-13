@@ -82,7 +82,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="displaySize">The display size of the text.</param>
         /// <param name="spawn">Whether the <see cref="Text"/> should be initially spawned.</param>
         /// <returns>The new <see cref="Text"/>.</returns>
-        public static Text Create(Transform parent = null, Vector3? position = null, Quaternion? rotation = null, Vector3? scale = null, string text = null, Vector2? displaySize = null, bool spawn = true)
+        public static Text Create(Transform parent = null, Vector3? position = null, Quaternion? rotation = null, Vector3? scale = null, string text = "Hello World!", Vector2? displaySize = null, bool spawn = true)
         {
             Text toy = new(Object.Instantiate(Prefab, parent))
             {
