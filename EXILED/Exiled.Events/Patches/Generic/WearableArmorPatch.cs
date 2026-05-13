@@ -7,12 +7,10 @@
 
 namespace Exiled.Events.Patches.Generic
 {
-#pragma warning disable SA1313
     using System.Collections.Generic;
 
     using HarmonyLib;
-    using Mirror;
-    using PlayerRoles.FirstPersonControl.Thirdperson;
+
     using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 
     /// <summary>

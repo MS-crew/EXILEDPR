@@ -875,13 +875,7 @@ namespace Exiled.API.Features
                 {
                     ItemType armor = (ItemType)UnsafeUtility.As<byte, sbyte>(ref data.Payload[0]);
 
-                    exiledFlags = armor switch
-                    {
-                        ItemType.ArmorLight => WearableElementType.ArmorLight,
-                        ItemType.ArmorCombat => WearableElementType.ArmorCombat,
-                        ItemType.ArmorHeavy => WearableElementType.ArmorHeavy,
-                        _ => WearableElementType.None,
-                    };
+                    exiledFlags = armor.GetWearableElementType();
                 }
 
                 return (WearableElementType)flags | exiledFlags;
@@ -904,8 +898,17 @@ namespace Exiled.API.Features
 
                 if (value.HasFlagFast(WearableElementType.ArmorDefault))
                 {
-                    ItemType displayedArmor =
-                        value.HasFlagFast(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
+                    /*
+                    ItemType displayedArmor = value switch
+                    {
+                        | WearableElementType.ArmorLight => ItemType.ArmorLight,
+                        | WearableElementType.ArmorCombat => ItemType.ArmorCombat,
+                        | WearableElementType.ArmorHeavy => ItemType.ArmorHeavy,
+
+                        _ => ItemType.None,
+                    };*/
+
+                    ItemType displayedArmor = value.HasFlagFast(WearableElementType.ArmorLight) ? ItemType.ArmorLight :
                         value.HasFlagFast(WearableElementType.ArmorCombat) ? ItemType.ArmorCombat :
                         value.HasFlagFast(WearableElementType.ArmorHeavy) ? ItemType.ArmorHeavy :
                         CurrentArmor?.Type ?? ItemType.None;

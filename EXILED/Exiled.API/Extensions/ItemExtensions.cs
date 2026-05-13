@@ -194,6 +194,22 @@ namespace Exiled.API.Extensions
             _ => FirearmType.None,
         };
 
+
+        /// <summary>
+        /// Converts a valid firearm <see cref="ItemType"/> into a <see cref="WearableElementType"/>.
+        /// </summary>
+        /// <param name="type">The <see cref="ItemType"/> to convert.</param>
+        /// <returns>The firearm type of the given item.</returns>
+        public static WearableElementType GetWearableElementType(this ItemType type) => type switch
+        {
+            ItemType.SCP268 => WearableElementType.Scp268Hat,
+            ItemType.ArmorLight => WearableElementType.ArmorLight,
+            ItemType.ArmorCombat => WearableElementType.ArmorCombat,
+            ItemType.ArmorHeavy => WearableElementType.ArmorHeavy,
+            ItemType.SCP1344 => WearableElementType.Scp1344Goggles,
+            _ => WearableElementType.None,
+        };
+
         /// <summary>
         /// Converts an <see cref="AmmoType"/> into it's corresponding <see cref="ItemType"/>.
         /// </summary>
