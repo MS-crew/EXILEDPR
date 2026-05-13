@@ -194,7 +194,6 @@ namespace Exiled.API.Extensions
             _ => FirearmType.None,
         };
 
-
         /// <summary>
         /// Converts a valid firearm <see cref="ItemType"/> into a <see cref="WearableElementType"/>.
         /// </summary>
