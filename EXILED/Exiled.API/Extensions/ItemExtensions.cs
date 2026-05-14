@@ -20,6 +20,7 @@ namespace Exiled.API.Extensions
     using InventorySystem.Items.Firearms.Attachments;
     using InventorySystem.Items.Firearms.Modules;
     using InventorySystem.Items.Pickups;
+
     using Structs;
 
     /// <summary>
@@ -344,6 +345,416 @@ namespace Exiled.API.Extensions
         /// <param name="type">The <see cref="ItemType"/> to check.</param>
         /// <returns><see cref="ItemCategory"/> of the specified <see cref="ItemType"/>.</returns>
         public static ItemCategory GetCategory(this ItemType type) => GetItemBase(type).Category;
+
+        /// <summary>
+        /// Gets the <see cref="GunSoundType"/> associated with a specific <see cref="ItemType"/> and sound index.
+        /// </summary>
+        /// <param name="type">The <see cref="ItemType"/> of the firearm.</param>
+        /// <param name="index">The mapped index of the sound.</param>
+        /// <returns>The mapped <see cref="GunSoundType"/>, or <see cref="GunSoundType.Unknown"/> if not found.</returns>
+        public static GunSoundType GetSoundType(this ItemType type, int index) => type switch
+        {
+            ItemType.GunCOM15 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                4 => GunSoundType.Equip,
+                5 => GunSoundType.ReloadInsert,
+                6 => GunSoundType.ReloadEject,
+                7 => GunSoundType.Cock,
+                8 => GunSoundType.BoltOpen,
+                9 => GunSoundType.BoltClose,
+                11 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunCOM18 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                3 => GunSoundType.Equip,
+                4 => GunSoundType.ReloadInsert,
+                5 => GunSoundType.ReloadEject,
+                6 => GunSoundType.BoltOpen,
+                7 => GunSoundType.BoltClose,
+                8 => GunSoundType.ChamberEject,
+                9 => GunSoundType.EquipRare,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunRevolver => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.CylinderRotate,
+                4 => GunSoundType.Fire,
+                5 => GunSoundType.FireBuckshot,
+                7 => GunSoundType.Equip,
+                8 => GunSoundType.CylinderSpin,
+                9 => GunSoundType.CockInitial,
+                11 => GunSoundType.ReloadBuckshotEmpty,
+                14 => GunSoundType.Reload,
+                15 => GunSoundType.EquipRare,
+                16 => GunSoundType.EjectBuckshot,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunCom45 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.Equip,
+                3 => GunSoundType.CockInitial,
+                4 => GunSoundType.ReloadInsert,
+                5 => GunSoundType.ReloadEject,
+                6 => GunSoundType.BoltOpen,
+                7 => GunSoundType.BoltClose,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.ParticleDisruptor => index switch
+            {
+                0 => GunSoundType.Reload,
+                2 => GunSoundType.CockInitial,
+                3 => GunSoundType.Inspect,
+                4 => GunSoundType.Inspect,
+                5 => GunSoundType.Inspect,
+                6 => GunSoundType.Equip,
+                7 => GunSoundType.FireDisintegrator,
+                9 => GunSoundType.FireDisintegrator,
+                8 => GunSoundType.FireDisintegratorLast,
+                10 => GunSoundType.FireDisintegratorLast,
+                11 => GunSoundType.FireBurst3x,
+                13 => GunSoundType.FireBurst3x,
+                12 => GunSoundType.FireBurst3xLast,
+                14 => GunSoundType.FireBurst3xLast,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunFSP9 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                3 => GunSoundType.WeaponHandling,
+                4 => GunSoundType.Equip,
+                5 => GunSoundType.WeaponHandling,
+                7 => GunSoundType.ReloadEject,
+                8 => GunSoundType.BoltOpen,
+                9 => GunSoundType.StockExtend,
+                11 => GunSoundType.BoltClose,
+                12 => GunSoundType.ReloadInsert,
+                13 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunShotgun => index switch
+            {
+                0 => GunSoundType.FireDouble,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.DryFire,
+                3 => GunSoundType.WeaponHandling,
+                4 => GunSoundType.ReloadInsert,
+                5 => GunSoundType.ReloadInsert,
+                6 => GunSoundType.BoltOpen,
+                7 => GunSoundType.BoltClose,
+                8 => GunSoundType.UnloadComplete,
+                9 => GunSoundType.ShellEject,
+                10 => GunSoundType.Equip,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunFRMG0 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                5 => GunSoundType.Equip,
+                7 => GunSoundType.ReloadEject,
+                8 => GunSoundType.ReloadEjectDrum,
+                9 => GunSoundType.Cock,
+                10 => GunSoundType.ReloadInsert,
+                11 => GunSoundType.ReloadInsertDrum,
+                13 => GunSoundType.ReloadLock,
+                14 => GunSoundType.ReloadLockDrum,
+                16 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunAK => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                6 => GunSoundType.Equip,
+                7 => GunSoundType.ReloadEject,
+                8 => GunSoundType.ReloadEjectDrum,
+                10 => GunSoundType.Cock,
+                11 => GunSoundType.CockInitial,
+                12 => GunSoundType.ReloadInsertDrum,
+                14 => GunSoundType.ReloadInsert,
+                19 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunA7 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.CockInitial,
+                3 => GunSoundType.Equip,
+                5 => GunSoundType.ReloadEject,
+                6 => GunSoundType.WeaponHandling,
+                7 => GunSoundType.ReloadInsert,
+                8 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunSCP127 => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.CockInitial,
+                4 => GunSoundType.Equip,
+                5 => GunSoundType.Cock,
+                6 => GunSoundType.WeaponHandling,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunLogicer => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.Equip,
+                3 => GunSoundType.Cock,
+                4 => GunSoundType.BoltOpen,
+                5 => GunSoundType.ReloadEject,
+                6 => GunSoundType.ReloadInsert,
+                7 => GunSoundType.BoltClose,
+                8 => GunSoundType.WeaponHandling,
+                _ => GunSoundType.Unknown
+            },
+
+            ItemType.GunCrossvec => index switch
+            {
+                0 => GunSoundType.DryFire,
+                1 => GunSoundType.Fire,
+                2 => GunSoundType.SuppressedFire,
+                4 => GunSoundType.Equip,
+                5 => GunSoundType.StockExtend,
+                6 => GunSoundType.BoltOpen,
+                7 => GunSoundType.BoltClose,
+                8 => GunSoundType.ReloadEject,
+                9 => GunSoundType.ReloadInsert,
+                10 => GunSoundType.WeaponHandling,
+                15 => GunSoundType.ChamberEject,
+                _ => GunSoundType.Unknown
+            },
+
+            _ => GunSoundType.Unknown
+        };
+
+        /// <summary>
+        /// Gets the mapped index associated with a specific <see cref="ItemType"/> and <see cref="GunSoundType"/>.
+        /// </summary>
+        /// <param name="type">The <see cref="ItemType"/> of the firearm.</param>
+        /// <param name="soundType">The <see cref="GunSoundType"/> to find the index for.</param>
+        /// <returns>The mapped index, or 0 if not found.</returns>
+        public static int GetGunSoundTypeIndex(this ItemType type, GunSoundType soundType) => type switch
+        {
+            ItemType.GunCOM15 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.Equip => 4,
+                GunSoundType.ReloadInsert => 5,
+                GunSoundType.ReloadEject => 6,
+                GunSoundType.Cock => 7,
+                GunSoundType.BoltOpen => 8,
+                GunSoundType.BoltClose => 9,
+                GunSoundType.ChamberEject => 11,
+                _ => -1
+            },
+
+            ItemType.GunCOM18 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.Equip => 3,
+                GunSoundType.ReloadInsert => 4,
+                GunSoundType.ReloadEject => 5,
+                GunSoundType.BoltOpen => 6,
+                GunSoundType.BoltClose => 7,
+                GunSoundType.ChamberEject => 8,
+                GunSoundType.EquipRare => 9,
+                _ => -1
+            },
+
+            ItemType.GunRevolver => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.CylinderRotate => 1,
+                GunSoundType.Fire => 4,
+                GunSoundType.FireBuckshot => 5,
+                GunSoundType.Equip => 7,
+                GunSoundType.CylinderSpin => 8,
+                GunSoundType.CockInitial => 9,
+                GunSoundType.ReloadBuckshotEmpty => 11,
+                GunSoundType.Reload => 14,
+                GunSoundType.EquipRare => 15,
+                GunSoundType.EjectBuckshot => 16,
+                _ => -1
+            },
+
+            ItemType.GunCom45 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.Equip => 2,
+                GunSoundType.CockInitial => 3,
+                GunSoundType.ReloadInsert => 4,
+                GunSoundType.ReloadEject => 5,
+                GunSoundType.BoltOpen => 6,
+                GunSoundType.BoltClose => 7,
+                _ => -1
+            },
+
+            ItemType.ParticleDisruptor => soundType switch
+            {
+                GunSoundType.Reload => 0,
+                GunSoundType.CockInitial => 2,
+                GunSoundType.Inspect => 3,
+                GunSoundType.Equip => 6,
+                GunSoundType.FireDisintegrator => 7,
+                GunSoundType.FireDisintegratorLast => 8,
+                GunSoundType.FireBurst3x => 11,
+                GunSoundType.FireBurst3xLast => 12,
+                _ => -1
+            },
+
+            ItemType.GunFSP9 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.WeaponHandling => 3,
+                GunSoundType.Equip => 4,
+                GunSoundType.ReloadEject => 7,
+                GunSoundType.BoltOpen => 8,
+                GunSoundType.StockExtend => 9,
+                GunSoundType.BoltClose => 11,
+                GunSoundType.ReloadInsert => 12,
+                GunSoundType.ChamberEject => 13,
+                _ => -1
+            },
+
+            ItemType.GunShotgun => soundType switch
+            {
+                GunSoundType.FireDouble => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.DryFire => 2,
+                GunSoundType.WeaponHandling => 3,
+                GunSoundType.ReloadInsert => 4,
+                GunSoundType.BoltOpen => 6,
+                GunSoundType.BoltClose => 7,
+                GunSoundType.UnloadComplete => 8,
+                GunSoundType.ShellEject => 9,
+                GunSoundType.Equip => 10,
+                _ => -1
+            },
+
+            ItemType.GunFRMG0 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.Equip => 5,
+                GunSoundType.ReloadEject => 7,
+                GunSoundType.ReloadEjectDrum => 8,
+                GunSoundType.Cock => 9,
+                GunSoundType.ReloadInsert => 10,
+                GunSoundType.ReloadInsertDrum => 11,
+                GunSoundType.ReloadLock => 13,
+                GunSoundType.ReloadLockDrum => 14,
+                GunSoundType.ChamberEject => 16,
+                _ => -1
+            },
+
+            ItemType.GunAK => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.Equip => 6,
+                GunSoundType.ReloadEject => 7,
+                GunSoundType.ReloadEjectDrum => 8,
+                GunSoundType.Cock => 10,
+                GunSoundType.CockInitial => 11,
+                GunSoundType.ReloadInsertDrum => 12,
+                GunSoundType.ReloadInsert => 14,
+                GunSoundType.ChamberEject => 19,
+                _ => -1
+            },
+
+            ItemType.GunA7 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.CockInitial => 2,
+                GunSoundType.Equip => 3,
+                GunSoundType.ReloadEject => 5,
+                GunSoundType.WeaponHandling => 6,
+                GunSoundType.ReloadInsert => 7,
+                GunSoundType.ChamberEject => 8,
+                _ => -1
+            },
+
+            ItemType.GunSCP127 => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.CockInitial => 2,
+                GunSoundType.Equip => 4,
+                GunSoundType.Cock => 5,
+                GunSoundType.WeaponHandling => 6,
+                _ => -1
+            },
+
+            ItemType.GunLogicer => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.Equip => 2,
+                GunSoundType.Cock => 3,
+                GunSoundType.BoltOpen => 4,
+                GunSoundType.ReloadEject => 5,
+                GunSoundType.ReloadInsert => 6,
+                GunSoundType.BoltClose => 7,
+                GunSoundType.WeaponHandling => 8,
+                _ => -1
+            },
+
+            ItemType.GunCrossvec => soundType switch
+            {
+                GunSoundType.DryFire => 0,
+                GunSoundType.Fire => 1,
+                GunSoundType.SuppressedFire => 2,
+                GunSoundType.Equip => 4,
+                GunSoundType.StockExtend => 5,
+                GunSoundType.BoltOpen => 6,
+                GunSoundType.BoltClose => 7,
+                GunSoundType.ReloadEject => 8,
+                GunSoundType.ReloadInsert => 9,
+                GunSoundType.WeaponHandling => 10,
+                GunSoundType.ChamberEject => 15,
+                _ => -1
+            },
+
+            _ => -1
+        };
 
         /// <summary>
         /// Checks if the specified <see cref="Firearm"/> has the specified <see cref="AttachmentName"/>.

@@ -12,6 +12,8 @@ namespace Exiled.Events.EventArgs.Player
 
     using AudioPooling;
 
+    using Exiled.API.Enums;
+    using Exiled.API.Extensions;
     using Exiled.Events.EventArgs.Interfaces;
 
     using UnityEngine;
@@ -67,6 +69,25 @@ namespace Exiled.Events.EventArgs.Player
         /// Gets or sets the index of the audio clip to be played from the firearm's audio list.
         /// </summary>
         public int AudioIndex { get; set; }
+
+        /// <summary>
+        /// Gets or sets or set the type of the gun sound.
+        /// </summary>
+        public GunSoundType SoundType
+        {
+            get => Firearm.Type.GetSoundType(AudioIndex);
+            set
+            {
+                int index = Firearm.Type.GetGunSoundTypeIndex(value);
+                if (index == -1)
+                {
+                    Log.Warn($"The firearm {Firearm} doesn't have a sound of type {value}.");
+                    return;
+                }
+
+                AudioIndex = index;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the mixer channel through which the sound will be played.
