@@ -18,10 +18,10 @@ namespace Exiled.Events.EventArgs.Player
     using Interfaces;
 
     using InventorySystem;
-    
+
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Handlers;
-    
+
     using PlayerRoles;
 
     /// <summary>
