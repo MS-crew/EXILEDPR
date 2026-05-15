@@ -55,12 +55,12 @@ namespace Exiled.API.Enums
         /// <summary>
         /// Sound of a magazine being inserted.
         /// </summary>
-        ReloadInsert,
+        MagInsert,
 
         /// <summary>
         /// Sound of a magazine being ejected.
         /// </summary>
-        ReloadEject,
+        MagRemove,
 
         /// <summary>
         /// Sound of a general reload action (often used for revolvers or shotguns).
@@ -70,12 +70,12 @@ namespace Exiled.API.Enums
         /// <summary>
         /// Sound of a bolt or slide being pulled back.
         /// </summary>
-        BoltOpen,
+        BoltPull,
 
         /// <summary>
         /// Sound of a bolt or slide releasing forward.
         /// </summary>
-        BoltClose,
+        BoltReturn,
 
         /// <summary>
         /// Sound of a round being ejected from the chamber.
