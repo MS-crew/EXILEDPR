@@ -24,8 +24,6 @@ namespace Exiled.API.Features.Doors
 
     using Mirror;
 
-    using PlayerRoles.PlayableScps.Scp079.Cameras;
-
     using UnityEngine;
 
     using BaseBreakableDoor = Interactables.Interobjects.BreakableDoor;
@@ -434,7 +432,7 @@ namespace Exiled.API.Features.Doors
             {
                 door.IsOpen = false;
                 door.ChangeLock(lockType);
-                Timing.CallDelayed(duration, () => door.Unlock());
+                Timing.CallDelayed(duration, door.Unlock);
             }
         }
 
@@ -461,7 +459,7 @@ namespace Exiled.API.Features.Doors
             {
                 door.IsOpen = false;
                 door.ChangeLock(lockType);
-                Timing.CallDelayed(duration, () => door.Unlock());
+                Timing.CallDelayed(duration, door.Unlock);
             }
         }
 
@@ -606,7 +604,7 @@ namespace Exiled.API.Features.Doors
                 PryableDoor prbl => new Gate(prbl, rooms),
                 Interactables.Interobjects.BasicNonInteractableDoor nonInteractableDoor => new BasicNonInteractableDoor(nonInteractableDoor, rooms),
                 Interactables.Interobjects.BasicDoor basicDoor => new BasicDoor(basicDoor, rooms),
-                _ => new Door(doorVariant, rooms)
+                _ => new Door(doorVariant, rooms),
             };
         }
 

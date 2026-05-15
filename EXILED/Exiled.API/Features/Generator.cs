@@ -15,7 +15,6 @@ namespace Exiled.API.Features
 
     using Exiled.API.Interfaces;
 
-    using Interactables.Interobjects;
     using Interactables.Interobjects.DoorUtils;
 
     using MapGeneration.Distributors;

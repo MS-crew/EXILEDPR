@@ -17,8 +17,6 @@ namespace Exiled.API.Features.Toys
 
     using Footprinting;
 
-    using InventorySystem.Items.Pickups;
-
     using Mirror;
 
     using UnityEngine;

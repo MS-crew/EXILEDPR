@@ -19,8 +19,6 @@ namespace Exiled.API.Features
     using Exiled.API.Features.Doors;
     using Exiled.API.Interfaces;
 
-    using MapGeneration;
-
     using UnityEngine;
 
     /// <summary>

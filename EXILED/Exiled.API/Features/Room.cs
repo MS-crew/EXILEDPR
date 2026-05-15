@@ -27,7 +27,6 @@ namespace Exiled.API.Features
     using Mirror;
 
     using PlayerRoles.PlayableScps.Scp079;
-    using PlayerRoles.Ragdolls;
 
     using RelativePositioning;
 
@@ -516,7 +515,7 @@ namespace Exiled.API.Features
                 "HCZ_Corner_Deep" => RoomType.HczCornerDeep,
                 "HCZ_Straight" => RoomType.HczStraight,
                 "HCZ_Straight_C" => RoomType.HczStraightC,
-                "HCZ_Straight_PipeRoom"=> RoomType.HczStraightPipeRoom,
+                "HCZ_Straight_PipeRoom" => RoomType.HczStraightPipeRoom,
                 "HCZ_Straight Variant" => RoomType.HczStraightVariant,
                 "HCZ_ChkpA" => RoomType.HczElevatorA,
                 "HCZ_ChkpB" => RoomType.HczElevatorB,
@@ -549,7 +548,7 @@ namespace Exiled.API.Features
                 "HCZ_EZ_Checkpoint Part" => gameObject.transform.position.z switch
                 {
                     > 95 => RoomType.HczEzCheckpointA,
-                    _ => RoomType.HczEzCheckpointB
+                    _ => RoomType.HczEzCheckpointB,
                 },
                 _ => RoomType.Unknown,
             };

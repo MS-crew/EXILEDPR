@@ -7,7 +7,6 @@
 
 namespace Exiled.API.Features.Items
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -24,7 +23,6 @@ namespace Exiled.API.Features.Items
 
     using Extensions;
 
-    using InventorySystem.Items;
     using InventorySystem.Items.Autosync;
     using InventorySystem.Items.Firearms.Attachments;
     using InventorySystem.Items.Firearms.Attachments.Components;
@@ -113,8 +111,7 @@ namespace Exiled.API.Features.Items
             {
                 IEnumerable<KeyValuePair<Player, Dictionary<FirearmType, AttachmentIdentifier[]>>> playerPreferences =
                     AttachmentsServerHandler.PlayerPreferences.Where(
-                        kvp => kvp.Key is not null).Select(
-                        (KeyValuePair<ReferenceHub, Dictionary<ItemType, uint>> keyValuePair) =>
+                        kvp => kvp.Key is not null).Select(keyValuePair =>
                         {
                             return new KeyValuePair<Player, Dictionary<FirearmType, AttachmentIdentifier[]>>(
                                 Player.Get(keyValuePair.Key),
@@ -173,12 +170,7 @@ namespace Exiled.API.Features.Items
         public int BarrelAmmo
         {
             get => BarrelMagazine?.Ammo ?? 0;
-
-            set
-            {
-                if (BarrelMagazine != null)
-                    BarrelMagazine.Ammo = value;
-            }
+            set => BarrelMagazine?.Ammo = value;
         }
 
         /// <summary>
@@ -255,12 +247,7 @@ namespace Exiled.API.Features.Items
         public int MaxBarrelAmmo
         {
             get => BarrelMagazine?.MaxAmmo ?? 0;
-
-            set
-            {
-                if (BarrelMagazine != null)
-                    BarrelMagazine.MaxAmmo = value;
-            }
+            set => BarrelMagazine?.MaxAmmo = value;
         }
 
         /// <summary>

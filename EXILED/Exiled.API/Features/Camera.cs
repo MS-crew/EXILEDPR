@@ -17,7 +17,6 @@ namespace Exiled.API.Features
     using Exiled.API.Interfaces;
 
     using MapGeneration;
-    using MapGeneration.Distributors;
 
     using PlayerRoles.PlayableScps.Scp079.Cameras;
 
