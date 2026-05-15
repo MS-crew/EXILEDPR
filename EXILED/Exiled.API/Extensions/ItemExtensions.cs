@@ -366,7 +366,7 @@ namespace Exiled.API.Extensions
                 8 => GunSoundType.BoltOpen,
                 9 => GunSoundType.BoltClose,
                 11 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunCOM18 => index switch
@@ -381,7 +381,7 @@ namespace Exiled.API.Extensions
                 7 => GunSoundType.BoltClose,
                 8 => GunSoundType.ChamberEject,
                 9 => GunSoundType.EquipRare,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunRevolver => index switch
@@ -397,7 +397,7 @@ namespace Exiled.API.Extensions
                 14 => GunSoundType.Reload,
                 15 => GunSoundType.EquipRare,
                 16 => GunSoundType.EjectBuckshot,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunCom45 => index switch
@@ -410,7 +410,7 @@ namespace Exiled.API.Extensions
                 5 => GunSoundType.ReloadEject,
                 6 => GunSoundType.BoltOpen,
                 7 => GunSoundType.BoltClose,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.ParticleDisruptor => index switch
@@ -429,7 +429,7 @@ namespace Exiled.API.Extensions
                 13 => GunSoundType.FireBurst3x,
                 12 => GunSoundType.FireBurst3xLast,
                 14 => GunSoundType.FireBurst3xLast,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunFSP9 => index switch
@@ -446,7 +446,7 @@ namespace Exiled.API.Extensions
                 11 => GunSoundType.BoltClose,
                 12 => GunSoundType.ReloadInsert,
                 13 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunShotgun => index switch
@@ -462,7 +462,7 @@ namespace Exiled.API.Extensions
                 8 => GunSoundType.UnloadComplete,
                 9 => GunSoundType.ShellEject,
                 10 => GunSoundType.Equip,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunFRMG0 => index switch
@@ -479,7 +479,7 @@ namespace Exiled.API.Extensions
                 13 => GunSoundType.ReloadLock,
                 14 => GunSoundType.ReloadLockDrum,
                 16 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunAK => index switch
@@ -495,7 +495,7 @@ namespace Exiled.API.Extensions
                 12 => GunSoundType.ReloadInsertDrum,
                 14 => GunSoundType.ReloadInsert,
                 19 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunA7 => index switch
@@ -508,7 +508,7 @@ namespace Exiled.API.Extensions
                 6 => GunSoundType.WeaponHandling,
                 7 => GunSoundType.ReloadInsert,
                 8 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunSCP127 => index switch
@@ -519,7 +519,7 @@ namespace Exiled.API.Extensions
                 4 => GunSoundType.Equip,
                 5 => GunSoundType.Cock,
                 6 => GunSoundType.WeaponHandling,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunLogicer => index switch
@@ -533,7 +533,7 @@ namespace Exiled.API.Extensions
                 6 => GunSoundType.ReloadInsert,
                 7 => GunSoundType.BoltClose,
                 8 => GunSoundType.WeaponHandling,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
             ItemType.GunCrossvec => index switch
@@ -549,10 +549,10 @@ namespace Exiled.API.Extensions
                 9 => GunSoundType.ReloadInsert,
                 10 => GunSoundType.WeaponHandling,
                 15 => GunSoundType.ChamberEject,
-                _ => GunSoundType.Unknown
+                _ => GunSoundType.Unknown,
             },
 
-            _ => GunSoundType.Unknown
+            _ => GunSoundType.Unknown,
         };
 
         /// <summary>
@@ -575,7 +575,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.BoltOpen => 8,
                 GunSoundType.BoltClose => 9,
                 GunSoundType.ChamberEject => 11,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunCOM18 => soundType switch
@@ -590,7 +590,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.BoltClose => 7,
                 GunSoundType.ChamberEject => 8,
                 GunSoundType.EquipRare => 9,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunRevolver => soundType switch
@@ -606,7 +606,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.Reload => 14,
                 GunSoundType.EquipRare => 15,
                 GunSoundType.EjectBuckshot => 16,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunCom45 => soundType switch
@@ -619,7 +619,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.ReloadEject => 5,
                 GunSoundType.BoltOpen => 6,
                 GunSoundType.BoltClose => 7,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.ParticleDisruptor => soundType switch
@@ -632,7 +632,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.FireDisintegratorLast => 8,
                 GunSoundType.FireBurst3x => 11,
                 GunSoundType.FireBurst3xLast => 12,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunFSP9 => soundType switch
@@ -648,7 +648,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.BoltClose => 11,
                 GunSoundType.ReloadInsert => 12,
                 GunSoundType.ChamberEject => 13,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunShotgun => soundType switch
@@ -663,7 +663,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.UnloadComplete => 8,
                 GunSoundType.ShellEject => 9,
                 GunSoundType.Equip => 10,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunFRMG0 => soundType switch
@@ -680,7 +680,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.ReloadLock => 13,
                 GunSoundType.ReloadLockDrum => 14,
                 GunSoundType.ChamberEject => 16,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunAK => soundType switch
@@ -696,7 +696,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.ReloadInsertDrum => 12,
                 GunSoundType.ReloadInsert => 14,
                 GunSoundType.ChamberEject => 19,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunA7 => soundType switch
@@ -709,7 +709,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.WeaponHandling => 6,
                 GunSoundType.ReloadInsert => 7,
                 GunSoundType.ChamberEject => 8,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunSCP127 => soundType switch
@@ -720,7 +720,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.Equip => 4,
                 GunSoundType.Cock => 5,
                 GunSoundType.WeaponHandling => 6,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunLogicer => soundType switch
@@ -734,7 +734,7 @@ namespace Exiled.API.Extensions
                 GunSoundType.ReloadInsert => 6,
                 GunSoundType.BoltClose => 7,
                 GunSoundType.WeaponHandling => 8,
-                _ => -1
+                _ => -1,
             },
 
             ItemType.GunCrossvec => soundType switch
@@ -750,10 +750,10 @@ namespace Exiled.API.Extensions
                 GunSoundType.ReloadInsert => 9,
                 GunSoundType.WeaponHandling => 10,
                 GunSoundType.ChamberEject => 15,
-                _ => -1
+                _ => -1,
             },
 
-            _ => -1
+            _ => -1,
         };
 
         /// <summary>
