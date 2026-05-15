@@ -9,7 +9,7 @@ namespace Exiled.API.Enums
     /// <summary>
     /// Represents the type of sound a firearm can produce.
     /// </summary>
-    /// <seealso cref="Extensions.ItemExtensions.GetSoundType(ItemType, int)"/>
+    /// <seealso cref="Extensions.ItemExtensions.GetGunSoundType(ItemType, int)"/>
     public enum GunSoundType
     {
         /// <summary>

@@ -228,7 +228,7 @@ namespace Exiled.API.Extensions
         /// <param name="soundType">Which sound from the firearm's sound set to play (for example Fire, Cock, etc.).</param>
         public static void PlayGunSound(this Player player, Vector3 position, FirearmType firearmType, float pitch = 1, GunSoundType soundType = GunSoundType.Fire)
         {
-            int index = firearmType.GetItemType().GetGunSoundTypeIndex(soundType);
+            int index = firearmType.GetItemType().GetGunSoundIndex(soundType);
             if (index == -1)
             {
                 Log.Warn($"Failed to find gun sound for {firearmType} with sound type {soundType}.");

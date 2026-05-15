@@ -352,7 +352,7 @@ namespace Exiled.API.Extensions
         /// <param name="type">The <see cref="ItemType"/> of the firearm.</param>
         /// <param name="index">The mapped index of the sound.</param>
         /// <returns>The mapped <see cref="GunSoundType"/>, or <see cref="GunSoundType.Unknown"/> if not found.</returns>
-        public static GunSoundType GetSoundType(this ItemType type, int index) => type switch
+        public static GunSoundType GetGunSoundType(this ItemType type, int index) => type switch
         {
             ItemType.GunCOM15 => index switch
             {
@@ -561,7 +561,7 @@ namespace Exiled.API.Extensions
         /// <param name="type">The <see cref="ItemType"/> of the firearm.</param>
         /// <param name="soundType">The <see cref="GunSoundType"/> to find the index for.</param>
         /// <returns>The mapped index, or 0 if not found.</returns>
-        public static int GetGunSoundTypeIndex(this ItemType type, GunSoundType soundType) => type switch
+        public static int GetGunSoundIndex(this ItemType type, GunSoundType soundType) => type switch
         {
             ItemType.GunCOM15 => soundType switch
             {

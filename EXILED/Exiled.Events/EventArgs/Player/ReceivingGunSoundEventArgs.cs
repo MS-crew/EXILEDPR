@@ -74,10 +74,10 @@ namespace Exiled.Events.EventArgs.Player
         /// </summary>
         public GunSoundType SoundType
         {
-            get => Firearm.Type.GetSoundType(AudioIndex);
+            get => Firearm.Type.GetGunSoundType(AudioIndex);
             set
             {
-                int index = Firearm.Type.GetGunSoundTypeIndex(value);
+                int index = Firearm.Type.GetGunSoundIndex(value);
                 if (index == -1)
                 {
                     Log.Warn($"The firearm {Firearm} doesn't have a sound of type {value}.");
