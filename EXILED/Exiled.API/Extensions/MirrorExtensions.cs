@@ -248,7 +248,7 @@ namespace Exiled.API.Extensions
         /// <param name="clipIndex">Index of clip.</param>
         public static void PlayGunSound(this Player player, Vector3 position, FirearmType firearmType, float pitch = 1, int clipIndex = 0)
         {
-            if (firearmType is FirearmType.ParticleDisruptor or FirearmType.None)
+            if (firearmType is FirearmType.None)
                 return;
 
             Features.Items.Firearm firearm = Features.Items.Firearm.ItemTypeToFirearmInstance[firearmType];

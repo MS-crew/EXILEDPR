@@ -13,7 +13,6 @@ namespace Exiled.Example.Commands
 
     using Exiled.API.Enums;
     using Exiled.API.Features;
-    using Exiled.API.Features.Pickups;
 
     /// <summary>
     /// This is an example of how commands should be made.
@@ -35,9 +34,15 @@ namespace Exiled.Example.Commands
         {
             Player player = Player.Get(sender);
 
-            if (!Enum.TryParse(arguments.At(1), out FirearmType itemType))
+            if (!Enum.TryParse(arguments.At(0), out FirearmType itemType))
             {
                 response = "notitem type.";
+                return false;
+            }
+
+            if (!float.TryParse(arguments.At(1), out float pitch))
+            {
+                response = "not index.";
                 return false;
             }
 
@@ -47,7 +52,7 @@ namespace Exiled.Example.Commands
                 return false;
             }
 
-            player.PlayGunSound(itemType, 1, clipIndex);
+            player.PlayGunSound(itemType, pitch, clipIndex);
 
             response = $"{player.Nickname} sent the command!";
 
