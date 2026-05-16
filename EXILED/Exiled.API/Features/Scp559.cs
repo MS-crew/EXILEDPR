@@ -15,8 +15,6 @@ namespace Exiled.API.Features
 
     using MapGeneration;
 
-    using PlayerRoles.Ragdolls;
-
     using UnityEngine;
 
     /// <summary>
