@@ -117,11 +117,18 @@ namespace Exiled.API.Features.Hazards
         }
 
         /// <summary>
-        /// Converts EnvironmentalHazard to Hazard.
+        /// Converts <see cref="EnvironmentalHazard"/> to <see cref="Hazard"/>.
         /// </summary>
         /// <param name="environmentalHazard">The EnvironmentalHazard.</param>
         /// <returns>EXILED Hazard.</returns>
         public static implicit operator Hazard(EnvironmentalHazard environmentalHazard) => Get(environmentalHazard);
+
+        /// <summary>
+        /// Converts <see cref="LabApi.Features.Wrappers.Hazard"/> to <see cref="Hazard"/>.
+        /// </summary>
+        /// <param name="environmentalHazard">The EnvironmentalHazard.</param>
+        /// <returns>EXILED Hazard.</returns>
+        public static implicit operator Hazard(LabApi.Features.Wrappers.Hazard environmentalHazard) => Get(environmentalHazard);
 
         /// <summary>
         /// Gets the <see cref="Hazard"/> by <see cref="EnvironmentalHazard"/>.
@@ -138,6 +145,13 @@ namespace Exiled.API.Features.Hazards
                 global::Hazards.TemporaryHazard temporaryHazard => new TemporaryHazard(temporaryHazard),
                 _ => new Hazard(environmentalHazard),
             };
+
+        /// <summary>
+        /// Gets the <see cref="Hazard"/> by <see cref="LabApi.Features.Wrappers.Hazard"/>.
+        /// </summary>
+        /// <param name="environmentalHazard">The <see cref="EnvironmentalHazard"/> instance.</param>
+        /// <returns><see cref="Hazard"/> for <see cref="EnvironmentalHazard"/>.</returns>
+        public static Hazard Get(LabApi.Features.Wrappers.Hazard environmentalHazard) => Get(environmentalHazard?.Base);
 
         /// <summary>
         /// Gets the <see cref="Hazard"/> by <see cref="EnvironmentalHazard"/>.

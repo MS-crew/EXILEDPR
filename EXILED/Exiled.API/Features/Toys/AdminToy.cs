@@ -175,11 +175,18 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
-        /// Converts AdminToyBase to AdminToy.
+        /// Converts <see cref="AdminToys.AdminToyBase"/> to <see cref="AdminToy"/>.
         /// </summary>
         /// <param name="adminToyBase">The AdminToyBase.</param>
         /// <returns>EXILED AdminToy.</returns>
         public static implicit operator AdminToy(AdminToyBase adminToyBase) => Get(adminToyBase);
+
+        /// <summary>
+        /// Converts <see cref="LabApi.Features.Wrappers.AdminToy"/> to <see cref="AdminToy"/>.
+        /// </summary>
+        /// <param name="adminToyBase">The AdminToyBase.</param>
+        /// <returns>EXILED AdminToy.</returns>
+        public static implicit operator AdminToy(LabApi.Features.Wrappers.AdminToy adminToyBase) => Get(adminToyBase);
 
         /// <summary>
         /// Gets the <see cref="AdminToy"/> belonging to the <see cref="AdminToys.AdminToyBase"/>.
@@ -208,6 +215,13 @@ namespace Exiled.API.Features.Toys
                 _ => throw new System.NotImplementedException(),
             };
         }
+
+        /// <summary>
+        /// Gets the <see cref="AdminToy"/> belonging to the <see cref="LabApi.Features.Wrappers.AdminToy"/>.
+        /// </summary>
+        /// <param name="adminToyBase">The <see cref="AdminToys.AdminToyBase"/> instance.</param>
+        /// <returns>The corresponding <see cref="AdminToy"/> instance.</returns>
+        public static AdminToy Get(LabApi.Features.Wrappers.AdminToy adminToyBase) => Get(adminToyBase?.Base);
 
         /// <summary>
         /// Gets the <see cref="AdminToy"/> by <see cref="AdminToys.AdminToyBase"/>.
