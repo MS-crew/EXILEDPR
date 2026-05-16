@@ -15,6 +15,8 @@ namespace Exiled.API.Features
 
     using MapGeneration;
 
+    using PlayerRoles.Ragdolls;
+
     using UnityEngine;
 
     /// <summary>
@@ -90,7 +92,7 @@ namespace Exiled.API.Features
         /// </summary>
         public byte RemainingSlices
         {
-            get => Base._remainingSlices;
+            get => Base.Network_remainingSlices;
             set => Base.Network_remainingSlices = value;
         }
 
@@ -99,7 +101,7 @@ namespace Exiled.API.Features
         /// </summary>
         public bool IsSpawned
         {
-            get => Base._isSpawned;
+            get => Base.Network_isSpawned;
             set => Base.Network_isSpawned = value;
         }
 
@@ -124,9 +126,16 @@ namespace Exiled.API.Features
         /// <inheritdoc/>
         public Vector3 Position
         {
-            get => Base._position;
+            get => Base.Network_position;
             set => Base.Network_position = value;
         }
+
+        /// <summary>
+        /// Converts Scp559Cake to Scp559.
+        /// </summary>
+        /// <param name="scp559Cake">The Scp559Cake.</param>
+        /// <returns>EXILED Scp559.</returns>
+        public static implicit operator Scp559(Scp559Cake scp559Cake) => Get(scp559Cake);
 
         /// <summary>
         /// Gets the <see cref="Scp559"/> by it's game instance.

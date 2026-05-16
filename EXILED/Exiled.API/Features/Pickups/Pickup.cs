@@ -297,9 +297,9 @@ namespace Exiled.API.Features.Pickups
         /// <summary>
         /// Converts ItemPickupBase to Pickup.
         /// </summary>
-        /// <param name="pickupBase">The ItemPickupBase.</param>
+        /// <param name="itemPickupBase">The ItemPickupBase.</param>
         /// <returns>EXILED Pickup.</returns>
-        public static implicit operator Pickup(ItemPickupBase pickupBase) => Get(pickupBase);
+        public static implicit operator Pickup(ItemPickupBase itemPickupBase) => Get(itemPickupBase);
 
         /// <summary>
         /// Gets an existing <see cref="Pickup"/> or creates a new instance of one.

@@ -195,9 +195,9 @@ namespace Exiled.API.Features.Lockers
         /// <summary>
         /// Converts LockerChamber to Chamber.
         /// </summary>
-        /// <param name="chamber">The LockerChamber.</param>
+        /// <param name="lockerChamber">The LockerChamber.</param>
         /// <returns>EXILED Chamber.</returns>
-        public static implicit operator Chamber(LockerChamber chamber) => Get(chamber);
+        public static implicit operator Chamber(LockerChamber lockerChamber) => Get(lockerChamber);
 
         /// <summary>
         /// Adds an item to the current chamber.

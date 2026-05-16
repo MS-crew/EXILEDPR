@@ -265,9 +265,9 @@ namespace Exiled.API.Features
         /// <summary>
         /// Converts Scp079Camera to Camera.
         /// </summary>
-        /// <param name="camera079">The Scp079Camera.</param>
+        /// <param name="scp079Camera">The Scp079Camera.</param>
         /// <returns>EXILED Camera.</returns>
-        public static implicit operator Camera(Scp079Camera camera079) => Get(camera079);
+        public static implicit operator Camera(Scp079Camera scp079Camera) => Get(scp079Camera);
 
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> of <see cref="Camera"/> which contains all the <see cref="Camera"/> instances given a <see cref="IEnumerable{T}"/> of <see cref="Scp079Camera"/>.

@@ -162,9 +162,13 @@ namespace Exiled.API.Features
         };
 
         /// <summary>
-        /// Gets the <see cref="ElevatorGroup"/>.
+        /// Gets or sets the <see cref="ElevatorGroup"/>.
         /// </summary>
-        public ElevatorGroup Group => Base.AssignedGroup;
+        public ElevatorGroup Group
+        {
+            get => Base.NetworkAssignedGroup;
+            set => Base.NetworkAssignedGroup = value;
+        }
 
         /// <summary>
         /// Gets a value indicating whether the lift is operative.
@@ -223,9 +227,9 @@ namespace Exiled.API.Features
         /// <summary>
         /// Converts ElevatorChamber to Lift.
         /// </summary>
-        /// <param name="elevator">The ElevatorChamber.</param>
+        /// <param name="elevatorChamber">The ElevatorChamber.</param>
         /// <returns>EXILED Lift.</returns>
-        public static implicit operator Lift(ElevatorChamber elevator) => Get(elevator);
+        public static implicit operator Lift(ElevatorChamber elevatorChamber) => Get(elevatorChamber);
 
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> of <see cref="Lift"/> which contains all the <see cref="Lift"/> instances from the specified <see cref="Status"/>.
