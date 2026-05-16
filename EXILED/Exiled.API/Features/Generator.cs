@@ -245,18 +245,11 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Converts <see cref="Scp079Generator"/> to <see cref="Generator"/>.
+        /// Converts Scp079Generator to Generator.
         /// </summary>
         /// <param name="scp079Generator">The Scp079Generator.</param>
         /// <returns>EXILED Generator.</returns>
         public static implicit operator Generator(Scp079Generator scp079Generator) => Get(scp079Generator);
-
-        /// <summary>
-        /// Converts <see cref="LabApi.Features.Wrappers.Generator"/> to <see cref="Generator"/>.
-        /// </summary>
-        /// <param name="scp079Generator">The Scp079Generator.</param>
-        /// <returns>EXILED Generator.</returns>
-        public static implicit operator Generator(LabApi.Features.Wrappers.Generator scp079Generator) => Get(scp079Generator);
 
         /// <summary>
         /// Gets the <see cref="Generator"/> belonging to the <see cref="Scp079Generator"/>, if any.
@@ -265,13 +258,6 @@ namespace Exiled.API.Features
         /// <returns>A <see cref="Generator"/> or <see langword="null"/> if not found.</returns>
         public static Generator Get(Scp079Generator scp079Generator) => scp079Generator == null ? null :
             Scp079GeneratorToGenerator.TryGetValue(scp079Generator, out Generator generator) ? generator : new(scp079Generator);
-
-        /// <summary>
-        /// Gets the <see cref="Generator"/> belonging to the <see cref="LabApi.Features.Wrappers.Generator"/>, if any.
-        /// </summary>
-        /// <param name="scp079Generator">The <see cref="LabApi.Features.Wrappers.Generator"/> instance.</param>
-        /// <returns>A <see cref="Generator"/> or <see langword="null"/> if not found.</returns>
-        public static Generator Get(LabApi.Features.Wrappers.Generator scp079Generator) => Get(scp079Generator?.Base);
 
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> of <see cref="Generator"/> given the specified <see cref="GeneratorState"/>.

@@ -152,34 +152,20 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Converts the <see cref="Window"/> to <see cref="BreakableWindow"/>.
+        /// Converts BreakableWindow to Window.
         /// </summary>
         /// <param name="breakableWindow">The BreakableWindow.</param>
         /// <returns>EXILED Window.</returns>
         public static implicit operator Window(BreakableWindow breakableWindow) => Get(breakableWindow);
 
         /// <summary>
-        /// Converts the <see cref="Window"/> to <see cref="LabApi.Features.Wrappers.Window"/>.
+        /// Gets the window object associated with a specific <see cref="Window"/>, or creates a new one if there isn't one.
         /// </summary>
-        /// <param name="breakableWindow">The BreakableWindow.</param>
-        /// <returns>EXILED Window.</returns>
-        public static implicit operator Window(LabApi.Features.Wrappers.Window breakableWindow) => Get(breakableWindow);
-
-        /// <summary>
-        /// Gets the <see cref="Window"/> object associated with a specific <see cref="BreakableWindow"/>, or creates a new one if there isn't one.
-        /// </summary>
-        /// <param name="breakableWindow">The base-game <see cref="BreakableWindow"/>.</param>
+        /// <param name="breakableWindow">The base-game <see cref="Window"/>.</param>
         /// <returns>A <see cref="Door"/> wrapper object.</returns>
-        public static Window Get(BreakableWindow breakableWindow) => breakableWindow == null ? null :
-            BreakableWindowToWindow.TryGetValue(breakableWindow, out Window window) ? window :
-            new(breakableWindow, breakableWindow.GetComponentInParent<Room>());
-
-        /// <summary>
-        /// Gets the <see cref="Window"/> object associated with a specific <see cref="Window"/>, or creates a new one if there isn't one.
-        /// </summary>
-        /// <param name="breakableWindow">The base-game <see cref="LabApi.Features.Wrappers.Window"/>.</param>
-        /// <returns>A <see cref="Door"/> wrapper object.</returns>
-        public static Window Get(LabApi.Features.Wrappers.Window breakableWindow) => Get(breakableWindow?.Base);
+        public static Window Get(BreakableWindow breakableWindow) => breakableWindow == null ? null : BreakableWindowToWindow.TryGetValue(breakableWindow, out Window window)
+            ? window
+            : new(breakableWindow, breakableWindow.GetComponentInParent<Room>());
 
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> of <see cref="Window"/> filtered based on a predicate.
