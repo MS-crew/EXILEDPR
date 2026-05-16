@@ -12,6 +12,8 @@ namespace Exiled.API.Features.Toys
     using Exiled.API.Enums;
     using Exiled.API.Interfaces;
 
+    using PlayerRoles.PlayableScps.Scp079.Cameras;
+
     using UnityEngine;
 
     /// <summary>
@@ -76,6 +78,13 @@ namespace Exiled.API.Features.Toys
         /// Gets the id of the Waypoint used for <see cref="RelativePositioning.RelativePosition.WaypointId"/>.
         /// </summary>
         public byte WaypointId => Base._waypointId;
+
+        /// <summary>
+        /// Converts WaypointToy to Waypoint.
+        /// </summary>
+        /// <param name="waypointToy">The WaypointToy.</param>
+        /// <returns>EXILED Waypoint.</returns>
+        public static implicit operator Waypoint(WaypointToy waypointToy) => (Waypoint)Get(waypointToy);
 
         /// <summary>
         /// Creates a new <see cref="Waypoint"/> with a specific position and size (bounds).
