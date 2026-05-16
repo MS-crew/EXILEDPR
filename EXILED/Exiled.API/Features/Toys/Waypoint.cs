@@ -12,8 +12,6 @@ namespace Exiled.API.Features.Toys
     using Exiled.API.Enums;
     using Exiled.API.Interfaces;
 
-    using PlayerRoles.PlayableScps.Scp079.Cameras;
-
     using UnityEngine;
 
     /// <summary>
