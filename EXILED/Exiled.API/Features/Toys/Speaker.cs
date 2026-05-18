@@ -73,8 +73,6 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         public const bool DefaultSpatial = true;
 
-        private const int ResampleBufferPadding = 10;
-        private const float PitchTolerance = 0.0001f;
         private const int FrameSize = VoiceChatSettings.PacketSizePerChannel;
         private const float FrameTime = (float)FrameSize / VoiceChatSettings.SampleRate;
 
@@ -326,16 +324,18 @@ namespace Exiled.API.Features.Toys
                 if (field == value)
                     return;
 
-                field = Mathf.Max(0.1f, Mathf.Abs(value));
-                isPitchDefault = Mathf.Abs(field - 1f) < PitchTolerance;
-
-                if (!isPitchDefault && CurrentSource is ILiveSource)
+                if (Mathf.Abs(value - 1f) > 0.0001f && CurrentSource is ILiveSource)
                 {
                     field = 1f;
                     isPitchDefault = true;
-                    Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default value (1).");
+                    resampleTime = 0.0;
+                    resampleBufferFilled = 0;
+                    Log.Warn("[Speaker] Pitch adjustment is not supported for live sources. Pitch has been reset to default (1.0).");
+                    return;
                 }
 
+                field = Mathf.Max(0.1f, Mathf.Abs(value));
+                isPitchDefault = Mathf.Abs(field - 1.0f) < 0.0001f;
                 if (isPitchDefault)
                 {
                     resampleTime = 0.0;
@@ -358,9 +358,7 @@ namespace Exiled.API.Features.Toys
             get => Base.NetworkVolume;
             set
             {
-                if (isPlayBackInitialized)
-                    StopFade();
-
+                StopFade();
                 Base.NetworkVolume = value;
             }
         }
@@ -1043,7 +1041,12 @@ namespace Exiled.API.Features.Toys
 
             Stop();
 
-            Transform.SetParent(null);
+            if (Transform.parent != null || AdminToyBase._clientParentId != 0)
+            {
+                Transform.parent = null;
+                Base.RpcChangeParent(0);
+            }
+
             LocalPosition = SpeakerParkPosition;
 
             Volume = DefaultVolume;
@@ -1375,15 +1378,18 @@ namespace Exiled.API.Features.Toys
             {
                 if (resampleBufferFilled == 0)
                 {
-                    int actualRead = CurrentSource.Read(resampleBuffer, 0, resampleBuffer.Length - ResampleBufferPadding);
+                    int toRead = resampleBuffer.Length - 4;
+                    int actualRead = CurrentSource.Read(resampleBuffer, 0, toRead);
 
                     if (actualRead == 0)
                     {
-                        Array.Clear(frame, outputIdx, FrameSize - outputIdx);
+                        while (outputIdx < FrameSize)
+                            frame[outputIdx++] = 0f;
                         return;
                     }
 
                     resampleBufferFilled = actualRead;
+                    resampleTime = 0.0;
                 }
 
                 int currentSample = (int)resampleTime;
@@ -1394,11 +1400,13 @@ namespace Exiled.API.Features.Toys
                     {
                         resampleBuffer[0] = resampleBuffer[resampleBufferFilled - 1];
 
-                        int actualRead = CurrentSource.Read(resampleBuffer, 1, resampleBuffer.Length - ResampleBufferPadding - 1);
+                        int toRead = resampleBuffer.Length - 5;
+                        int actualRead = CurrentSource.Read(resampleBuffer, 1, toRead);
 
                         if (actualRead == 0)
                         {
-                            Array.Clear(frame, outputIdx, FrameSize - outputIdx);
+                            while (outputIdx < FrameSize)
+                                frame[outputIdx++] = 0f;
                             return;
                         }
 
