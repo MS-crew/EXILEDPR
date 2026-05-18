@@ -8,6 +8,7 @@
 namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Exiled.API.Features.Audio;
@@ -21,11 +22,13 @@ namespace Exiled.API.Features.Audio.PcmSources
     /// </summary>
     public sealed class PreloadedPcmSource : IPcmSource, IAsyncPcmSource
     {
-        private float[] data;
         private int pos;
+        private float[] data;
+        private CancellationTokenSource cts;
 
         private volatile bool isReady = false;
         private volatile bool isFailed = false;
+        private volatile bool isDisposed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PreloadedPcmSource"/> class.
@@ -34,22 +37,31 @@ namespace Exiled.API.Features.Audio.PcmSources
         public PreloadedPcmSource(string path)
         {
             TrackInfo = new TrackData { Path = path, Duration = 0.0 };
-
-            Task.Run(() =>
+            cts = new CancellationTokenSource();
+            Task.Run(
+                () =>
             {
                 try
                 {
                     AudioData result = WavUtility.WavToPcm(path);
-                    data = result.Pcm;
-                    TrackInfo = result.TrackInfo;
-                    isReady = true;
+
+                    if (!cts.Token.IsCancellationRequested)
+                    {
+                        data = result.Pcm;
+                        TrackInfo = result.TrackInfo;
+                        isReady = true;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[PreloadedPcmSource] Failed to load audio from path: {path} | Error: {ex.Message}");
-                    isFailed = true;
+                    if (!cts.Token.IsCancellationRequested)
+                    {
+                        Log.Error($"[PreloadedPcmSource] Failed to load audio from path: {path} | Error: {ex.Message}");
+                        isFailed = true;
+                    }
                 }
-            });
+            },
+                cts.Token);
         }
 
         /// <summary>
@@ -71,7 +83,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <summary>
         /// Gets a value indicating whether the end of the PCM data buffer has been reached.
         /// </summary>
-        public bool Ended => isFailed || (isReady && pos >= data.Length);
+        public bool Ended => isFailed || isDisposed || (isReady && pos >= data.Length);
 
         /// <summary>
         /// Gets the total duration of the audio in seconds.
@@ -142,6 +154,16 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <inheritdoc/>
         public void Dispose()
         {
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts.Dispose();
+                cts = null;
+            }
+
+            data = null;
+            isReady = false;
+            isDisposed = true;
         }
     }
 }

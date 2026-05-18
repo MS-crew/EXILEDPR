@@ -8,7 +8,7 @@
 namespace Exiled.API.Features.Audio.PcmSources
 {
     using System.Buffers;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
 
     using Exiled.API.Features;
     using Exiled.API.Interfaces.Audio;
@@ -26,7 +26,7 @@ namespace Exiled.API.Features.Audio.PcmSources
     {
         private readonly Player sourcePlayer;
         private readonly OpusDecoder decoder;
-        private readonly Queue<float> pcmQueue;
+        private readonly ConcurrentQueue<float> pcmQueue;
 
         private float[] decodeBuffer;
 
@@ -41,7 +41,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             BlockOriginalVoice = blockOriginalVoice;
 
             decoder = new OpusDecoder();
-            pcmQueue = new Queue<float>();
+            pcmQueue = new ConcurrentQueue<float>();
             decodeBuffer = ArrayPool<float>.Shared.Rent(VoiceChatSettings.PacketSizePerChannel);
 
             TrackInfo = new TrackData

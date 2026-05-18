@@ -10,6 +10,7 @@ namespace Exiled.API.Features.Audio.PcmSources
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Exiled.API.Features;
@@ -31,11 +32,12 @@ namespace Exiled.API.Features.Audio.PcmSources
         private static readonly Dictionary<string, DateTime> BlacklistKeys = new();
 
         private IPcmSource internalSource;
-        private UnityWebRequest webRequest;
+        private CancellationTokenSource cts;
         private CoroutineHandle downloadRoutine;
 
         private volatile bool isReady = false;
         private volatile bool isFailed = false;
+        private volatile bool isDisposed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VoiceRssTtsSource"/> class.
@@ -74,6 +76,7 @@ namespace Exiled.API.Features.Audio.PcmSources
                 throw new ArgumentException("API key collection cannot be null or empty.", nameof(apiKeys));
             }
 
+            cts = new CancellationTokenSource();
             TrackInfo = new TrackData { Path = $"VoiceRssTts: {text}", Duration = 0.0 };
             downloadRoutine = Timing.RunCoroutine(DownloadRoutine(text, apiKeys, language, voice, rate));
         }
@@ -100,7 +103,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <summary>
         /// Gets a value indicating whether playback has ended or the download has failed.
         /// </summary>
-        public bool Ended => isFailed || (isReady && internalSource != null && internalSource.Ended);
+        public bool Ended => isFailed || isDisposed || (isReady && internalSource != null && internalSource.Ended);
 
         /// <inheritdoc/>
         public bool IsFailed => isFailed;
@@ -156,9 +159,16 @@ namespace Exiled.API.Features.Audio.PcmSources
             if (downloadRoutine.IsRunning)
                 downloadRoutine.IsRunning = false;
 
-            webRequest?.Abort();
-            webRequest?.Dispose();
+            if (cts != null)
+            {
+                cts?.Cancel();
+                cts?.Dispose();
+                cts = null;
+            }
+
             internalSource?.Dispose();
+            isReady = false;
+            isDisposed = true;
         }
 
         private IEnumerator<float> DownloadRoutine(string text, IEnumerable<string> apiKeys, string language, string voice, int rate)
@@ -169,6 +179,7 @@ namespace Exiled.API.Features.Audio.PcmSources
             string voiceEscaped = string.IsNullOrEmpty(voice) ? string.Empty : $"&v={Uri.EscapeDataString(voice)}";
 
             bool successfulDownload = false;
+            byte[] rawBytes = null;
 
             foreach (string apiKey in apiKeys)
             {
@@ -185,10 +196,11 @@ namespace Exiled.API.Features.Audio.PcmSources
 
                 string url = $"{ApiEndpoint}?key={Uri.EscapeDataString(apiKey)}&hl={langEscaped}&c=WAV&f={AudioFormat}&r={clampedRate}&src={textEscaped}{voiceEscaped}";
 
-                webRequest?.Dispose();
+                UnityWebRequest request = null;
+
                 try
                 {
-                    webRequest = UnityWebRequest.Get(url);
+                    request = UnityWebRequest.Get(url);
                 }
                 catch (Exception ex)
                 {
@@ -196,51 +208,64 @@ namespace Exiled.API.Features.Audio.PcmSources
                     break;
                 }
 
-                yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
-
-                if (webRequest.result != UnityWebRequest.Result.Success)
+                using (request)
                 {
-                    Log.Error($"[VoiceRssTtsSource] Network Error: {webRequest.error}.");
-                    break;
-                }
+                    yield return Timing.WaitUntilDone(request.SendWebRequest());
 
-                string responseText = webRequest.downloadHandler.text;
-                if (!string.IsNullOrEmpty(responseText) && responseText.StartsWith("ERROR: "))
-                {
-                    string errorMessage = responseText[7..].Trim();
-
-                    if (errorMessage.Contains("limit") || errorMessage.Contains("expired") || errorMessage.Contains("inactive") || errorMessage.Contains("API key"))
+                    if (request.result != UnityWebRequest.Result.Success)
                     {
-                        Log.Warn($"[VoiceRssTtsSource] Key issue, key: '{apiKey}', Error : {errorMessage}. Switching to another key...");
-                        BlacklistKeys[apiKey] = DateTime.UtcNow;
-                        continue;
-                    }
-                    else
-                    {
-                        Log.Error($"[VoiceRssTtsSource] API Error: {errorMessage}");
+                        Log.Error($"[VoiceRssTtsSource] Network Error: {request.error}.");
                         break;
                     }
-                }
 
-                successfulDownload = true;
-                break;
+                    string responseText = request.downloadHandler.text;
+                    if (!string.IsNullOrEmpty(responseText) && responseText.StartsWith("ERROR: "))
+                    {
+                        string errorMessage = responseText[7..].Trim();
+
+                        if (errorMessage.Contains("limit") || errorMessage.Contains("expired") || errorMessage.Contains("inactive") || errorMessage.Contains("API key"))
+                        {
+                            Log.Warn($"[VoiceRssTtsSource] Key issue, key: '{apiKey}', Error : {errorMessage}. Switching to another key...");
+                            BlacklistKeys[apiKey] = DateTime.UtcNow;
+                            continue;
+                        }
+                        else
+                        {
+                            Log.Error($"[VoiceRssTtsSource] API Error: {errorMessage}");
+                            break;
+                        }
+                    }
+
+                    rawBytes = request.downloadHandler.data;
+                    successfulDownload = true;
+                    break;
+                }
             }
 
             if (!successfulDownload)
             {
                 isFailed = true;
-                webRequest?.Dispose();
-                webRequest = null;
                 yield break;
             }
 
-            byte[] rawBytes = webRequest.downloadHandler.data;
-            webRequest.Dispose();
-            webRequest = null;
+            if (cts == null || cts.Token.IsCancellationRequested)
+                yield break;
 
-            Task<AudioData> toPcmTask = Task.Run(() => WavUtility.WavToPcm(rawBytes));
+            CancellationToken token = cts.Token;
+            Task<AudioData> toPcmTask = Task.Run(
+                () =>
+            {
+                if (token.IsCancellationRequested)
+                    return default;
 
-            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted);
+                return WavUtility.WavToPcm(rawBytes);
+            },
+                token);
+
+            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted || (cts != null && cts.Token.IsCancellationRequested));
+
+            if (cts == null || cts.Token.IsCancellationRequested)
+                yield break;
 
             if (toPcmTask.IsFaulted)
             {

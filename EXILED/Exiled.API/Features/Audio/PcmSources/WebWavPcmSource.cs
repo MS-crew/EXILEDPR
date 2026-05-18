@@ -9,6 +9,7 @@ namespace Exiled.API.Features.Audio.PcmSources
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Exiled.API.Features;
@@ -26,10 +27,12 @@ namespace Exiled.API.Features.Audio.PcmSources
     {
         private IPcmSource internalSource;
         private UnityWebRequest webRequest;
+        private CancellationTokenSource cts;
         private CoroutineHandle downloadRoutine;
 
         private volatile bool isReady = false;
         private volatile bool isFailed = false;
+        private volatile bool isDisposed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebWavPcmSource"/> class.
@@ -38,6 +41,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         public WebWavPcmSource(string url)
         {
             TrackInfo = default;
+            cts = new CancellationTokenSource();
             downloadRoutine = Timing.RunCoroutine(Download(url));
         }
 
@@ -63,7 +67,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         /// <summary>
         /// Gets a value indicating whether the end of the playback has been reached.
         /// </summary>
-        public bool Ended => isFailed || (isReady && internalSource != null && internalSource.Ended);
+        public bool Ended => isFailed || isDisposed || (isReady && internalSource != null && internalSource.Ended);
 
         /// <inheritdoc/>
         public bool IsFailed => isFailed;
@@ -99,7 +103,7 @@ namespace Exiled.API.Features.Audio.PcmSources
         public void Seek(double seconds)
         {
             if (isReady && internalSource != null)
-                internalSource.CurrentTime = seconds;
+                internalSource.Seek(seconds);
         }
 
         /// <summary>
@@ -119,44 +123,77 @@ namespace Exiled.API.Features.Audio.PcmSources
             if (downloadRoutine.IsRunning)
                 downloadRoutine.IsRunning = false;
 
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts.Dispose();
+                cts = null;
+            }
+
             webRequest?.Abort();
             webRequest?.Dispose();
+            webRequest = null;
+
             internalSource?.Dispose();
+            isReady = false;
+            isDisposed = true;
         }
 
         private IEnumerator<float> Download(string url)
         {
+            UnityWebRequest request = null;
+
             try
             {
-                webRequest = UnityWebRequest.Get(url);
+                request = UnityWebRequest.Get(url);
+                webRequest = request;
             }
             catch (Exception ex)
             {
                 Log.Error($"[WebWavPcmSource] Failed to download audio! URL: {url} | Error: {ex.Message}");
                 isFailed = true;
-                webRequest?.Dispose();
-                webRequest = null;
                 yield break;
             }
 
-            yield return Timing.WaitUntilDone(webRequest.SendWebRequest());
+            byte[] rawBytes = null;
 
-            if (webRequest.result != UnityWebRequest.Result.Success)
+            using (request)
             {
-                Log.Error($"[WebWavPcmSource] Failed to download audio! URL: {url} | Error: {webRequest.error}");
-                isFailed = true;
-                webRequest?.Dispose();
-                webRequest = null;
-                yield break;
+                yield return Timing.WaitUntilDone(request.SendWebRequest());
+
+                if (isDisposed)
+                    yield break;
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    Log.Error($"[WebWavPcmSource] Failed to download audio! URL: {url} | Error: {request.error}");
+                    isFailed = true;
+                    yield break;
+                }
+
+                rawBytes = request.downloadHandler.data;
             }
 
-            byte[] rawBytes = webRequest.downloadHandler.data;
-            webRequest.Dispose();
             webRequest = null;
 
-            Task<AudioData> toPcmTask = Task.Run(() => WavUtility.WavToPcm(rawBytes));
+            if (isDisposed || cts == null || cts.Token.IsCancellationRequested)
+                yield break;
 
-            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted);
+            CancellationToken token = cts.Token;
+            Task<AudioData> toPcmTask = Task.Run(
+                () =>
+            {
+                if (token.IsCancellationRequested)
+                    return default;
+
+                return WavUtility.WavToPcm(rawBytes);
+            },
+                token);
+
+            yield return Timing.WaitUntilTrue(() => toPcmTask.IsCompleted || (cts != null && cts.Token.IsCancellationRequested));
+
+            if (isDisposed || cts == null || cts.Token.IsCancellationRequested)
+                yield break;
 
             if (toPcmTask.IsFaulted)
             {
