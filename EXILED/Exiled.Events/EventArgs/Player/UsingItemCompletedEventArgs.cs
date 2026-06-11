@@ -12,8 +12,6 @@ namespace Exiled.Events.EventArgs.Player
 
     using Interfaces;
 
-    using InventorySystem.Items.Usables;
-
     /// <summary>
     /// Contains all information before a player uses an item.
     /// </summary>

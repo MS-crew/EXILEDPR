@@ -20,8 +20,6 @@ namespace Exiled.Events.Handlers
 
     using Exiled.Events.Features;
 
-    using InventorySystem.Items.ToggleableLights.Lantern;
-
     using LabApi.Events.Arguments.PlayerEvents;
 
     /// <summary>
@@ -1403,8 +1401,17 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> dies.
         /// </summary>
-        /// <param name="ev">The <see cref="DyingEventArgs"/> instance. </param>
-        public static void OnDying(DyingEventArgs ev) => Dying.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerDyingEventArgs"/> instance. </param>
+        public static void OnDying(PlayerDyingEventArgs labEv)
+        {
+            if (!Dying.Patched)
+                return;
+
+            DyingEventArgs exiledEv = new(labEv.Player, labEv.DamageHandler);
+            Dying.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> has joined the server.

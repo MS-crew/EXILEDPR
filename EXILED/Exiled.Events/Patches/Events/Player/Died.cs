@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------
-// <copyright file="DyingAndDied.cs" company="ExMod Team">
+// <copyright file="Died.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
@@ -27,12 +27,11 @@ namespace Exiled.Events.Patches.Events.Player
 
     /// <summary>
     /// Patches <see cref="PlayerStats.KillPlayer(DamageHandlerBase)" />.
-    /// Adds the <see cref="Handlers.Player.Dying" /> and <see cref="Handlers.Player.Died" /> event.
+    /// Adds the <see cref="Handlers.Player.Died" /> event.
     /// </summary>
-    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.Dying))]
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.Died))]
     [HarmonyPatch(typeof(PlayerStats), nameof(PlayerStats.KillPlayer))]
-    internal static class DyingAndDied
+    internal static class Died
     {
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
@@ -44,40 +43,16 @@ namespace Exiled.Events.Patches.Events.Player
             LocalBuilder oldRole = generator.DeclareLocal(typeof(RoleTypeId));
             LocalBuilder ragdoll = generator.DeclareLocal(typeof(BasicRagdoll));
 
-            newInstructions.InsertRange(
-                0,
-                new CodeInstruction[]
-                {
-                    // Player player = Player.Get(this._hub)
-                    new(OpCodes.Ldarg_0),
-                    new(OpCodes.Ldfld, Field(typeof(PlayerStats), nameof(PlayerStats._hub))),
-                    new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
-                    new(OpCodes.Dup),
-                    new(OpCodes.Stloc_S, player.LocalIndex),
-                    new(OpCodes.Brfalse_S, ret),
-                    new(OpCodes.Ldloc_S, player),
-
-                    // handler
-                    new(OpCodes.Ldarg_1),
-
-                    // DyingEventArgs ev = new(Player, DamageHandlerBase)
-                    new(OpCodes.Newobj, GetDeclaredConstructors(typeof(DyingEventArgs))[0]),
-                    new(OpCodes.Dup),
-
-                    // Handlers.Player.OnDying(ev)
-                    new(OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnDying))),
-
-                    // if (!ev.IsAllowed)
-                    //    return;
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(DyingEventArgs), nameof(DyingEventArgs.IsAllowed))),
-                    new(OpCodes.Brfalse, ret),
-
-                    // oldRole = player.Role.Type
-                    new(OpCodes.Ldloc_S, player.LocalIndex),
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(Player), nameof(Player.Role))),
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(Role), nameof(Role.Type))),
-                    new(OpCodes.Stloc, oldRole.LocalIndex),
-                });
+            newInstructions.InsertRange(0, new CodeInstruction[]
+            {
+                // oldRole = Player.Get(this._hub).Role.Type;
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Ldfld, Field(typeof(PlayerStats), nameof(PlayerStats._hub))),
+                new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
+                new(OpCodes.Callvirt, PropertyGetter(typeof(Player), nameof(Player.Role))),
+                new(OpCodes.Callvirt, PropertyGetter(typeof(Role), nameof(Role.Type))),
+                new(OpCodes.Stloc, oldRole.LocalIndex),
+            });
 
             int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Pop);
 
