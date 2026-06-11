@@ -21,20 +21,12 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="EarningAchievementEventArgs"/> class.
         /// </summary>
-        /// <param name="player">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="achievementName">
-        /// <inheritdoc cref="AchievementName" />
-        /// </param>
-        /// <param name="isAllowed">
-        /// <inheritdoc cref="IsAllowed" />
-        /// </param>
-        public EarningAchievementEventArgs(Player player, AchievementName achievementName, bool isAllowed = true)
+        /// <param name="player">The player who will achieve achievement.</param>
+        /// <param name="achievementName">The name of the achievement to be gained.</param>
+        public EarningAchievementEventArgs(Player player, AchievementName achievementName)
         {
             Player = player;
             AchievementName = achievementName;
-            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -45,7 +37,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the achievement will be awarded to the player.
         /// </summary>
-        public bool IsAllowed { get; set; }
+        public bool IsAllowed { get; set; } = true;
 
         /// <summary>
         /// Gets the player who earned the achievement.

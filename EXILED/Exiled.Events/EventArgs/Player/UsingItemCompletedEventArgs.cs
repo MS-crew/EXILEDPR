@@ -23,13 +23,13 @@ namespace Exiled.Events.EventArgs.Player
         /// Initializes a new instance of the <see cref="UsingItemCompletedEventArgs" /> class.
         /// </summary>
         /// <param name="player">The player who's going to use the item.</param>
-        /// <param name="item">
-        /// <inheritdoc cref="UsedItemEventArgs.Item" />
-        /// </param>
-        public UsingItemCompletedEventArgs(Player player, UsableItem item)
+        /// <param name="item">The items to be using.</param>
+        /// <param name="continueProcess">Continue the using item process when the event is canceled.</param>
+        public UsingItemCompletedEventArgs(Player player, Usable item, bool continueProcess)
         {
             Player = player;
-            Usable = Item.Get(item) is Usable usable ? usable : null;
+            Usable = item;
+            ContinueProcess = continueProcess;
         }
 
         /// <summary>
@@ -44,6 +44,11 @@ namespace Exiled.Events.EventArgs.Player
         /// Gets the player who using the item.
         /// </summary>
         public Player Player { get; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to continue the using item process when the event is canceled.
+        /// </summary>
+        public bool ContinueProcess { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the player can use the item.

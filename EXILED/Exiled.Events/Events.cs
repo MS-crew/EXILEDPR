@@ -92,6 +92,12 @@ namespace Exiled.Events
 
             ServerSpecificSettingsSync.ServerOnSettingValueReceived += SettingBase.OnSettingUpdated;
 
+            LabApi.Events.Handlers.PlayerEvents.Kicked += Handlers.Player.OnKicked;
+            LabApi.Events.Handlers.PlayerEvents.ItemUsageEffectsApplying += Handlers.Player.OnUsingItemCompleted;
+            LabApi.Events.Handlers.PlayerEvents.CancellingUsingItem += Handlers.Player.OnCancellingItemUse;
+            LabApi.Events.Handlers.PlayerEvents.CancelledUsingItem += Handlers.Player.OnCancelledItemUse;
+            LabApi.Events.Handlers.PlayerEvents.UnlockingWarheadButton += Handlers.Player.OnActivatingWarheadPanel;
+
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon += Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon += Handlers.Player.OnUnloadingWeapon;
 
@@ -136,6 +142,12 @@ namespace Exiled.Events
             ItemPickupBase.OnPickupDestroyed -= Handlers.Internal.PickupEvent.OnRemovedPickup;
 
             ServerSpecificSettingsSync.ServerOnSettingValueReceived -= SettingBase.OnSettingUpdated;
+
+            LabApi.Events.Handlers.PlayerEvents.Kicked -= Handlers.Player.OnKicked;
+            LabApi.Events.Handlers.PlayerEvents.ItemUsageEffectsApplying -= Handlers.Player.OnUsingItemCompleted;
+            LabApi.Events.Handlers.PlayerEvents.CancellingUsingItem -= Handlers.Player.OnCancellingItemUse;
+            LabApi.Events.Handlers.PlayerEvents.CancelledUsingItem -= Handlers.Player.OnCancelledItemUse;
+            LabApi.Events.Handlers.PlayerEvents.UnlockingWarheadButton -= Handlers.Player.OnActivatingWarheadPanel;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon -= Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon -= Handlers.Player.OnUnloadingWeapon;

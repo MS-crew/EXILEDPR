@@ -21,15 +21,15 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="CancellingItemUseEventArgs" /> class.
         /// </summary>
-        /// <param name="hub">
+        /// <param name="player">
         /// <inheritdoc cref="Player" />
         /// </param>
         /// <param name="item">
         /// <inheritdoc cref="UsedItemEventArgs.Item" />
         /// </param>
-        public CancellingItemUseEventArgs(ReferenceHub hub, UsableItem item)
+        public CancellingItemUseEventArgs(Player player, UsableItem item)
         {
-            Player = Player.Get(hub);
+            Player = player;
             Usable = Item.Get<Usable>(item);
         }
 

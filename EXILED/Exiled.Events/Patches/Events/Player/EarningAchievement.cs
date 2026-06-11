@@ -52,9 +52,6 @@ namespace Exiled.Events.Patches.Events.Player
                     // achievementName
                     new(OpCodes.Ldarg_1),
 
-                    // true
-                    new(OpCodes.Ldc_I4_1),
-
                     // EarningAchievementEventArgs ev = new(Player, AchievementName)
                     new(OpCodes.Newobj, GetDeclaredConstructors(typeof(EarningAchievementEventArgs))[0]),
                     new(OpCodes.Dup),

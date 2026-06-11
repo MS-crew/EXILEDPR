@@ -10,6 +10,7 @@ namespace Exiled.Events.Handlers
     using System;
 
     using Exiled.API.Enums;
+    using Exiled.API.Features.Items;
 
 #pragma warning disable IDE0079
 #pragma warning disable IDE0060
@@ -18,6 +19,8 @@ namespace Exiled.Events.Handlers
     using Exiled.Events.EventArgs.Player;
 
     using Exiled.Events.Features;
+
+    using InventorySystem.Items.ToggleableLights.Lantern;
 
     using LabApi.Events.Arguments.PlayerEvents;
 
@@ -687,8 +690,14 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> has been kicked from the server.
         /// </summary>
-        /// <param name="ev">The <see cref="KickedEventArgs"/> instance.</param>
-        public static void OnKicked(KickedEventArgs ev) => Kicked.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="KickedEventArgs"/> instance.</param>
+        public static void OnKicked(PlayerKickedEventArgs labEv)
+        {
+            if (!Kicked.Patched)
+                return;
+
+            Kicked.InvokeSafely(new KickedEventArgs(labEv.Player, labEv.Issuer, labEv.Reason));
+        }
 
         /// <summary>
         /// Called before banning a <see cref="API.Features.Player"/> from the server.
@@ -709,7 +718,7 @@ namespace Exiled.Events.Handlers
         public static void OnBanned(BannedEventArgs ev) => Banned.InvokeSafely(ev);
 
         /// <summary>
-        /// Called before a <see cref="API.Features.Player"/>  earns an achievement.
+        /// Called before a <see cref="API.Features.Player"/> earns an achievement.
         /// </summary>
         /// <param name="ev">The <see cref="EarningAchievementEventArgs"/> instance.</param>
         public static void OnEarningAchievement(EarningAchievementEventArgs ev) => EarningAchievement.InvokeSafely(ev);
@@ -723,8 +732,20 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before completed using of a usable item.
         /// </summary>
-        /// <param name="ev">The <see cref="UsingItemEventArgs"/> instance.</param>
-        public static void OnUsingItemCompleted(UsingItemCompletedEventArgs ev) => UsingItemCompleted.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerItemUsageEffectsApplyingEventArgs"/> instance.</param>
+        public static void OnUsingItemCompleted(PlayerItemUsageEffectsApplyingEventArgs labEv)
+        {
+            if (!UsingItemCompleted.Patched)
+                return;
+
+            Usable usable = API.Features.Items.Item.Get<Usable>(labEv.UsableItem.Serial);
+
+            UsingItemCompletedEventArgs exiledEv = new(labEv.Player, usable, labEv.ContinueProcess);
+            UsingItemCompleted.InvokeSafely(exiledEv);
+
+            labEv.ContinueProcess = exiledEv.ContinueProcess;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> used a <see cref="API.Features.Items.Usable"/> item.
@@ -741,14 +762,30 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> has stopped the use of a <see cref="API.Features.Items.Usable"/> item.
         /// </summary>
-        /// <param name="ev">The <see cref="CancellingItemUseEventArgs"/> instance.</param>
-        public static void OnCancellingItemUse(CancellingItemUseEventArgs ev) => CancellingItemUse.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerCancellingUsingItemEventArgs"/> instance.</param>
+        public static void OnCancellingItemUse(PlayerCancellingUsingItemEventArgs labEv)
+        {
+            if (!CancellingItemUse.Patched)
+                return;
+
+            CancellingItemUseEventArgs exiledEv = new(labEv.Player, labEv.UsableItem.Base);
+
+            CancellingItemUse.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> has stopped the use of a <see cref="API.Features.Items.Usable"/> item.
         /// </summary>
-        /// <param name="ev">The <see cref="CancelledItemUseEventArgs"/> instance.</param>
-        public static void OnCancelledItemUse(CancelledItemUseEventArgs ev) => CancelledItemUse.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerCancelledUsingItemEventArgs"/> instance.</param>
+        public static void OnCancelledItemUse(PlayerCancelledUsingItemEventArgs labEv)
+        {
+            if (!CancelledItemUse.Patched)
+                return;
+
+            CancelledItemUse.InvokeSafely(new(labEv.Player, labEv.UsableItem.Base));
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/>'s aspect ratio changes.
@@ -777,8 +814,17 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before activating the warhead panel.
         /// </summary>
-        /// <param name="ev">The <see cref="ActivatingWarheadPanelEventArgs"/> instance.</param>
-        public static void OnActivatingWarheadPanel(ActivatingWarheadPanelEventArgs ev) => ActivatingWarheadPanel.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerUnlockingWarheadButtonEventArgs"/> instance.</param>
+        public static void OnActivatingWarheadPanel(PlayerUnlockingWarheadButtonEventArgs labEv)
+        {
+            if (!ActivatingWarheadPanel.Patched)
+                return;
+
+            ActivatingWarheadPanelEventArgs exiledEv = new(labEv.Player, labEv.IsAllowed);
+            ActivatingWarheadPanel.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before activating a workstation.
@@ -877,7 +923,8 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="RoomChangedEventArgs"/> instance.</param>
         public static void OnRoomChanged(RoomChangedEventArgs ev)
         {
-            RoomChanged.InvokeSafely(ev);
+            if (RoomChanged.Patched)
+                RoomChanged.InvokeSafely(ev);
 
             if (!ZoneChanged.Patched)
                 return;
