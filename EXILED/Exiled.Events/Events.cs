@@ -133,6 +133,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.DryFiringWeapon += Handlers.Player.OnDryfiringWeapon;
             LabApi.Events.Handlers.PlayerEvents.SendingVoiceMessage += Handlers.Player.OnVoiceChatting;
             LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage += Handlers.Player.OnReceivingVoiceMessage;
+            LabApi.Events.Handlers.PlayerEvents.TogglingNoclip += Handlers.Player.OnTogglingNoClip;
+            LabApi.Events.Handlers.PlayerEvents.ToggledNoclip += Handlers.Player.OnToggledNoClip;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -217,6 +219,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.DryFiringWeapon -= Handlers.Player.OnDryfiringWeapon;
             LabApi.Events.Handlers.PlayerEvents.SendingVoiceMessage -= Handlers.Player.OnVoiceChatting;
             LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage -= Handlers.Player.OnReceivingVoiceMessage;
+            LabApi.Events.Handlers.PlayerEvents.TogglingNoclip -= Handlers.Player.OnTogglingNoClip;
+            LabApi.Events.Handlers.PlayerEvents.ToggledNoclip -= Handlers.Player.OnToggledNoClip;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;

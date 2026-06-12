@@ -19,7 +19,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="TogglingNoClipEventArgs" /> class.
         /// </summary>
-        /// <param name="referenceHub">
+        /// <param name="player">
         /// <inheritdoc cref="Player" />
         /// </param>
         /// <param name="newValue">
@@ -28,9 +28,9 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="isAllowed">
         /// <inheritdoc cref="IsAllowed" />
         /// </param>
-        public TogglingNoClipEventArgs(ReferenceHub referenceHub, bool newValue, bool isAllowed = true)
+        public TogglingNoClipEventArgs(Player player, bool newValue, bool isAllowed)
         {
-            Player = Player.Get(referenceHub);
+            Player = player;
             IsEnabled = newValue;
             IsAllowed = isAllowed;
         }

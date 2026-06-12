@@ -596,6 +596,11 @@ namespace Exiled.Events.Handlers
         public static Event<TogglingNoClipEventArgs> TogglingNoClip { get; set; } = new();
 
         /// <summary>
+        /// Invoked after a <see cref="API.Features.Player"/> toggled the NoClip mode.
+        /// </summary>
+        public static Event<ToggledNoClipEventArgs> ToggledNoClip { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> toggles overwatch.
         /// </summary>
         public static Event<TogglingOverwatchEventArgs> TogglingOverwatch { get; set; } = new();
@@ -1721,8 +1726,29 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> toggles the NoClip mode.
         /// </summary>
-        /// <param name="ev">The <see cref="TogglingNoClipEventArgs"/> instance.</param>
-        public static void OnTogglingNoClip(TogglingNoClipEventArgs ev) => TogglingNoClip.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerTogglingNoclipEventArgs"/> instance.</param>
+        public static void OnTogglingNoClip(PlayerTogglingNoclipEventArgs labEv)
+        {
+            if (!TogglingNoClip.HasSubscribers)
+                return;
+
+            TogglingNoClipEventArgs exiledEv = new(labEv.Player, labEv.NewNoclipState, labEv.IsAllowed);
+            TogglingNoClip.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> toggles the NoClip mode.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerToggledNoclipEventArgs"/> instance.</param>
+        public static void OnToggledNoClip(PlayerToggledNoclipEventArgs labEv)
+        {
+            if (!ToggledNoClip.HasSubscribers)
+                return;
+
+            ToggledNoClip.InvokeSafely(new ToggledNoClipEventArgs(labEv.Player, labEv.IsNoclipping));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> toggles overwatch.
