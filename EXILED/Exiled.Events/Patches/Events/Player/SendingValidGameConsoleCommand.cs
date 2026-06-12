@@ -27,11 +27,9 @@ namespace Exiled.Events.Patches.Events.Player
 
     /// <summary>
     /// Patches <see cref="QueryProcessor.ProcessGameConsoleQuery(string)" />.
-    /// Adds the <see cref="Handlers.Player.SendingValidCommand" /> and
-    /// the <see cref="Handlers.Player.SentValidCommand" /> events.
+    /// Adds the <see cref="Handlers.Player.SendingValidCommand" /> event.
     /// </summary>
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.SendingValidCommand))]
-    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.SentValidCommand))]
     [HarmonyPatch(typeof(QueryProcessor), nameof(QueryProcessor.ProcessGameConsoleQuery))]
     internal static class SendingValidGameConsoleCommand
     {
@@ -129,38 +127,6 @@ namespace Exiled.Events.Patches.Events.Player
                    new(OpCodes.Ldloc_S, ev.LocalIndex),
                    new(OpCodes.Callvirt, PropertyGetter(typeof (SendingValidCommandEventArgs), nameof(SendingValidCommandEventArgs.Response))),
                    new(OpCodes.Stloc_S, 6),
-                });
-
-            offset = 1;
-            index = newInstructions.FindLastIndex(i => i.Calls(Method(typeof(GameConsoleTransmission), nameof(GameConsoleTransmission.SendToClient)))) + offset;
-            newInstructions.InsertRange(
-                index,
-                new CodeInstruction[]
-                {
-                    // Player.Get(sender)
-                    new(OpCodes.Ldloc_0),
-                    new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(CommandSender) })),
-
-                    // command
-                    new(OpCodes.Ldloc_S, 4),
-
-                    // CommandType.Client
-                    new (OpCodes.Ldc_I4_S, (sbyte)CommandType.Client),
-
-                    // query
-                    new(OpCodes.Ldarg_1),
-
-                    // response
-                    new(OpCodes.Ldloc_S, 6),
-
-                    // result
-                    new (OpCodes.Ldloc_S, 7),
-
-                    // new SentValidCommandEventArgs
-                    new (OpCodes.Newobj, GetDeclaredConstructors(typeof(SentValidCommandEventArgs))[0]),
-
-                    // OnSentValidCommand(ev)
-                    new (OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnSentValidCommand))),
                 });
 
             for (int z = 0; z < newInstructions.Count; z++)

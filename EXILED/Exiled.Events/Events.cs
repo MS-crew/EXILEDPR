@@ -151,6 +151,7 @@ namespace Exiled.Events
             LabApi.Events.Handlers.Scp127Events.GainingExperience += Handlers.Scp127.OnGainingExperience;
             LabApi.Events.Handlers.Scp127Events.GainExperience += Handlers.Scp127.OnGainedExperience;
 
+            LabApi.Events.Handlers.ServerEvents.CommandExecuted += Handlers.Player.OnSentValidCommand;
             LabApi.Events.Handlers.ServerEvents.ProjectileExploding += Handlers.Map.OnSpawningGrenadeEffect;
             LabApi.Events.Handlers.ServerEvents.SendingAdminChat += Handlers.Player.OnSendingAdminChatMessage;
 
@@ -248,6 +249,7 @@ namespace Exiled.Events
             LabApi.Events.Handlers.Scp127Events.GainingExperience -= Handlers.Scp127.OnGainingExperience;
             LabApi.Events.Handlers.Scp127Events.GainExperience -= Handlers.Scp127.OnGainedExperience;
 
+            LabApi.Events.Handlers.ServerEvents.CommandExecuted -= Handlers.Player.OnSentValidCommand;
             LabApi.Events.Handlers.ServerEvents.ProjectileExploding -= Handlers.Map.OnSpawningGrenadeEffect;
             LabApi.Events.Handlers.ServerEvents.SendingAdminChat -= Handlers.Player.OnSendingAdminChatMessage;
         }

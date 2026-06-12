@@ -2098,16 +2098,27 @@ namespace Exiled.Events.Handlers
         public static void OnChangingNickname(ChangingNicknameEventArgs ev) => ChangingNickname.InvokeSafely(ev);
 
         /// <summary>
-        /// Called before a <see cref="Player"/> sends valid command.
+        /// Called before a <see cref="API.Features.Player"/> sends a valid game console or Remote Admin command.
         /// </summary>
         /// <param name="ev">The <see cref="SendingValidCommandEventArgs"/> instance.</param>
         public static void OnSendingValidCommand(SendingValidCommandEventArgs ev) => SendingValidCommand.InvokeSafely(ev);
 
         /// <summary>
-        /// Called after a <see cref="Player"/> sends valid command.
+        /// Called after a <see cref="API.Features.Player"/> sends a valid game console or Remote Admin command.
         /// </summary>
-        /// <param name="ev">The <see cref="SentValidCommandEventArgs"/> instance.</param>
-        public static void OnSentValidCommand(SentValidCommandEventArgs ev) => SentValidCommand.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="CommandExecutedEventArgs"/> instance.</param>
+        public static void OnSentValidCommand(CommandExecutedEventArgs labEv)
+        {
+            if (!SentValidCommand.HasSubscribers)
+                return;
+
+            API.Features.Player player = API.Features.Player.Get(labEv.Sender);
+            if (player == null)
+                return;
+
+            string query = labEv.Command.Command + " " + string.Join(" ", labEv.Arguments);
+            SentValidCommand.InvokeSafely(new SentValidCommandEventArgs(player, labEv.Command, labEv.CommandType, query, labEv.Response, labEv.ExecutedSuccessfully));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/>'s rotates the revolver.
