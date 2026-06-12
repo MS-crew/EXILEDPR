@@ -456,9 +456,9 @@ namespace Exiled.Events.Handlers
         public static Event<UsingRadioEventArgs> UsingRadio { get; set; } = new();
 
         /// <summary>
-        /// Invoked before a user's radio battery charge is changed.
+        /// Invoked after a user's radio battery charge is changed.
         /// </summary>
-        public static Event<UsingRadioBatteryEventArgs> UsingRadioBattery { get; set; } = new();
+        public static Event<UsedRadioEventArgs> UsedRadio { get; set; } = new();
 
         /// <summary>
         /// Invoked before a user's radio preset is changed.
@@ -1453,7 +1453,7 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a player using radio.
         /// </summary>
-        /// <param name="labEv">The <see cref="LabApi.Events.Arguments.PlayerEvents.PlayerUsingRadioEventArgs"/> instance.</param>
+        /// <param name="labEv">The <see cref="PlayerUsingRadioEventArgs"/> instance.</param>
         public static void OnUsingRadio(PlayerUsingRadioEventArgs labEv)
         {
             if (!UsingRadio.HasSubscribers)
@@ -1464,6 +1464,18 @@ namespace Exiled.Events.Handlers
 
             labEv.IsAllowed = exiledEv.IsAllowed;
             labEv.Drain = exiledEv.Drain;
+        }
+
+        /// <summary>
+        /// Called after a player`s radio battery charge is changed.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerUsedRadioEventArgs"/> instance.</param>
+        public static void OnUsedRadio(PlayerUsedRadioEventArgs labEv)
+        {
+            if (!UsedRadio.HasSubscribers)
+                return;
+
+            UsedRadio.InvokeSafely(new UsedRadioEventArgs(labEv.Player, labEv.RadioItem.Base, labEv.Drain));
         }
 
         /// <summary>
