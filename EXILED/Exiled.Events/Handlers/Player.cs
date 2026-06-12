@@ -381,6 +381,11 @@ namespace Exiled.Events.Handlers
         public static Event<ChangingGroupEventArgs> ChangingGroup { get; set; } = new();
 
         /// <summary>
+        /// Invoked after changed a <see cref="API.Features.Player"/> group.
+        /// </summary>
+        public static Event<ChangedGroupEventArgs> ChangedGroup { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> interacts with a door.
         /// </summary>
         /// <seealso cref="Handlers.Item.KeycardInteracting"/>
@@ -1339,8 +1344,30 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before changing a <see cref="API.Features.Player"/> group.
         /// </summary>
-        /// <param name="ev">The <see cref="ChangingGroupEventArgs"/> instance.</param>
-        public static void OnChangingGroup(ChangingGroupEventArgs ev) => ChangingGroup.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerGroupChangingEventArgs"/> instance.</param>
+        public static void OnChangingGroup(PlayerGroupChangingEventArgs labEv)
+        {
+            if (!ChangingGroup.HasSubscribers)
+                return;
+
+            ChangingGroupEventArgs exiledEv = new(labEv.Player, labEv.Group, labEv.IsAllowed);
+            ChangingGroup.InvokeSafely(exiledEv);
+
+            labEv.Group = exiledEv.NewGroup;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after changed a <see cref="API.Features.Player"/> group.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerGroupChangedEventArgs"/> instance.</param>
+        public static void OnChangedGroup(PlayerGroupChangedEventArgs labEv)
+        {
+            if (!ChangedGroup.HasSubscribers)
+                return;
+
+            ChangedGroup.InvokeSafely(new ChangedGroupEventArgs(labEv.Player, labEv.Group));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> interacts with an elevator.
