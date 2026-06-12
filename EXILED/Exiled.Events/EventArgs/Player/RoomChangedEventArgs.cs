@@ -22,9 +22,9 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="player">The player whose room has changed.</param>
         /// <param name="oldRoom">The room identifier before the change.</param>
         /// <param name="newRoom">The room identifier after the change.</param>
-        public RoomChangedEventArgs(ReferenceHub player, RoomIdentifier oldRoom, RoomIdentifier newRoom)
+        public RoomChangedEventArgs(Player player, RoomIdentifier oldRoom, RoomIdentifier newRoom)
         {
-            Player = Player.Get(player);
+            Player = player;
             OldRoom = Room.Get(oldRoom);
             NewRoom = Room.Get(newRoom);
         }

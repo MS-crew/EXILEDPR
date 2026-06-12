@@ -921,7 +921,7 @@ namespace Exiled.Events.Handlers
             if (ChangedRole.HasSubscribers)
                 ChangedRole.InvokeSafely(new(labEv.Player, player.Role, labEv.OldRole, labEv.ChangeReason, labEv.SpawnFlags));
 
-            void ChangeInventory(ChangingRoleEventArgs ev)
+            static void ChangeInventory(ChangingRoleEventArgs ev)
             {
                 try
                 {
@@ -1082,7 +1082,7 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before handcuffing a <see cref="API.Features.Player"/>.
         /// </summary>
-        /// <param name="labEv">The <see cref="HandcuffingEventArgs"/> instance.</param>
+        /// <param name="labEv">The <see cref="PlayerCuffingEventArgs"/> instance.</param>
         public static void OnHandcuffing(PlayerCuffingEventArgs labEv)
         {
             if (!Handcuffing.HasSubscribers)
@@ -1121,20 +1121,27 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called when a <see cref="API.Features.Player"/> changes rooms.
         /// </summary>
-        /// <param name="ev">The <see cref="RoomChangedEventArgs"/> instance.</param>
-        public static void OnRoomChanged(RoomChangedEventArgs ev)
+        /// <param name="labEv">The <see cref="PlayerRoomChangedEventArgs"/> instance.</param>
+        public static void OnRoomChanged(PlayerRoomChangedEventArgs labEv)
         {
-            if (RoomChanged.HasSubscribers)
-                RoomChanged.InvokeSafely(ev);
+            bool roomFlag = RoomChanged.HasSubscribers;
+            bool zoneFlag = ZoneChanged.HasSubscribers;
 
-            if (!ZoneChanged.HasSubscribers)
+            if (!roomFlag && !zoneFlag)
                 return;
 
-            ZoneType oldZone = ev.OldRoom?.Zone ?? ZoneType.Unspecified;
-            ZoneType newZone = ev.NewRoom?.Zone ?? ZoneType.Unspecified;
+            RoomChangedEventArgs exiledEv = new(labEv.Player, labEv.OldRoom?.Base, labEv.NewRoom?.Base);
+            if (roomFlag)
+                RoomChanged.InvokeSafely(exiledEv);
+
+            if (!zoneFlag)
+                return;
+
+            ZoneType oldZone = exiledEv.OldRoom?.Zone ?? ZoneType.Unspecified;
+            ZoneType newZone = exiledEv.NewRoom?.Zone ?? ZoneType.Unspecified;
 
             if (oldZone != newZone)
-                OnZoneChanged(new ZoneChangedEventArgs(ev.Player, ev.OldRoom, ev.NewRoom, oldZone, newZone));
+                OnZoneChanged(new ZoneChangedEventArgs(exiledEv.Player, exiledEv.OldRoom, exiledEv.NewRoom, oldZone, newZone));
         }
 
         /// <summary>
