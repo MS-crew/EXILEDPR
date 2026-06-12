@@ -1153,8 +1153,19 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> escapes.
         /// </summary>
-        /// <param name="ev">The <see cref="EscapingEventArgs"/> instance.</param>
-        public static void OnEscaping(EscapingEventArgs ev) => Escaping.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerEscapingEventArgs"/> instance.</param>
+        public static void OnEscaping(PlayerEscapingEventArgs labEv)
+        {
+            if (!Escaping.HasSubscribers)
+                return;
+
+            EscapingEventArgs exiledEv = new(labEv.Player, labEv.NewRole, (EscapeScenario)labEv.EscapeScenario, labEv.EscapeZone, labEv.IsAllowed);
+            Escaping.InvokeSafely(exiledEv);
+
+            labEv.NewRole = exiledEv.NewRole;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+            labEv.EscapeScenario = (Escape.EscapeScenarioType)exiledEv.EscapeScenario;
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> escapes.

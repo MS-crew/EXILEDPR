@@ -14,6 +14,8 @@ namespace Exiled.Events.EventArgs.Player
 
     using PlayerRoles;
 
+    using UnityEngine;
+
     /// <summary>
     /// Contains all information before a player escapes.
     /// </summary>
@@ -22,20 +24,17 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="EscapingEventArgs" /> class.
         /// </summary>
-        /// <param name="referenceHub">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="newRole">
-        /// <inheritdoc cref="NewRole" />
-        /// </param>
-        /// <param name="escapeScenario">
-        /// <inheritdoc cref="EscapeScenario" />
-        /// </param>
-        public EscapingEventArgs(ReferenceHub referenceHub, RoleTypeId newRole, EscapeScenario escapeScenario)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="newRole"> <inheritdoc cref="NewRole"/> </param>
+        /// <param name="escapeScenario"> <inheritdoc cref="EscapeScenario"/> </param>
+        /// <param name="escapeBounds"> <inheritdoc cref="EscapeZone"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public EscapingEventArgs(Player player, RoleTypeId newRole, EscapeScenario escapeScenario, Bounds escapeBounds, bool isAllowed)
         {
-            Player = Player.Get(referenceHub);
+            Player = player;
             NewRole = newRole;
             EscapeScenario = escapeScenario;
+            EscapeZone = escapeBounds;
             IsAllowed = escapeScenario is not EscapeScenario.None;
         }
 
@@ -57,6 +56,11 @@ namespace Exiled.Events.EventArgs.Player
             get => (field is EscapeScenario.None && IsAllowed) ? EscapeScenario.CustomEscape : field;
             set;
         }
+
+        /// <summary>
+        ///  Gets the which escape bounds did player escaping from.
+        /// </summary>
+        public Bounds EscapeZone { get; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the player can escape.
