@@ -30,6 +30,7 @@ namespace Exiled.Events.Handlers
 
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp106Events;
+    using LabApi.Events.Arguments.ServerEvents;
     using LabApi.Events.Handlers;
 
     using PlayerRoles;
@@ -1797,16 +1798,28 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> searches a Pickup.
         /// </summary>
-        /// <param name="ev">The <see cref="SendingAdminChatMessageEventsArgs"/> instance.</param>
-        public static void OnSendingAdminChatMessage(SendingAdminChatMessageEventsArgs ev) => SendingAdminChatMessage.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="SendingAdminChatEventArgs"/> instance.</param>
+        public static void OnSendingAdminChatMessage(SendingAdminChatEventArgs labEv)
+        {
+            if (!SendingAdminChatMessage.HasSubscribers)
+                return;
+
+            API.Features.Player player = API.Features.Player.Get(labEv.Sender);
+
+            SendingAdminChatMessageEventsArgs exiledEv = new(player, labEv.Message, labEv.IsAllowed);
+            SendingAdminChatMessage.InvokeSafely(exiledEv);
+
+            labEv.Message = exiledEv.Message;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
-        /// Called after a <see cref="T:Exiled.API.Features.Player" /> has an item added to their inventory.
+        /// Called after a <see cref="Exiled.API.Features.Player" /> has an item added to their inventory.
         /// </summary>
         /// <param name="referenceHub">The <see cref="ReferenceHub"/> the item was added to.</param>
-        /// <param name="itemBase">The added <see cref="InventorySystem.Items.ItemBase"/>.</param>
-        /// <param name="pickupBase">The <see cref="InventorySystem.Items.Pickups.ItemPickupBase"/> the <see cref="InventorySystem.Items.ItemBase"/> originated from, or <see langword="null"/> if the item was not picked up.</param>
-        public static void OnItemAdded(ReferenceHub referenceHub, InventorySystem.Items.ItemBase itemBase, InventorySystem.Items.Pickups.ItemPickupBase pickupBase)
+        /// <param name="itemBase">The added <see cref="ItemBase"/>.</param>
+        /// <param name="pickupBase">The <see cref="ItemPickupBase"/> the <see cref="ItemBase"/> originated from, or <see langword="null"/> if the item was not picked up.</param>
+        public static void OnItemAdded(ReferenceHub referenceHub, ItemBase itemBase, ItemPickupBase pickupBase)
         {
             ItemAddedEventArgs ev = new(referenceHub, itemBase, pickupBase);
 
@@ -1818,12 +1831,12 @@ namespace Exiled.Events.Handlers
         }
 
         /// <summary>
-        /// Called after a <see cref="T:Exiled.API.Features.Player" /> has an item removed from their inventory.
+        /// Called after a <see cref="Exiled.API.Features.Player" /> has an item removed from their inventory.
         /// </summary>
         /// <param name="referenceHub">The <see cref="ReferenceHub"/> the item was removed from.</param>
-        /// <param name="itemBase">The removed <see cref="InventorySystem.Items.ItemBase"/>.</param>
-        /// <param name="pickupBase">The <see cref="InventorySystem.Items.Pickups.ItemPickupBase"/> the <see cref="InventorySystem.Items.ItemBase"/> originated from, or <see langword="null"/> if the item was not picked up.</param>
-        public static void OnItemRemoved(ReferenceHub referenceHub, InventorySystem.Items.ItemBase itemBase, InventorySystem.Items.Pickups.ItemPickupBase pickupBase)
+        /// <param name="itemBase">The removed <see cref="ItemBase"/>.</param>
+        /// <param name="pickupBase">The <see cref="ItemPickupBase"/> the <see cref="ItemBase"/> originated from, or <see langword="null"/> if the item was not picked up.</param>
+        public static void OnItemRemoved(ReferenceHub referenceHub, ItemBase itemBase, ItemPickupBase pickupBase)
         {
             ItemRemovedEventArgs ev = new(referenceHub, itemBase, pickupBase);
 
