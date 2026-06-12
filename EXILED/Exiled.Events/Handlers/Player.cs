@@ -436,6 +436,11 @@ namespace Exiled.Events.Handlers
         public static Event<ReceivingEffectEventArgs> ReceivingEffect { get; set; } = new();
 
         /// <summary>
+        /// Invoked after a <see cref="API.Features.Player"/> received a status effect.
+        /// </summary>
+        public static Event<ReceivedEffectEventArgs> ReceivedEffect { get; set; } = new();
+
+        /// <summary>
         /// Invoked before muting a user.
         /// </summary>
         public static Event<IssuingMuteEventArgs> IssuingMute { get; set; } = new();
@@ -1414,8 +1419,31 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> receives a status effect.
         /// </summary>
-        /// <param name="ev">The <see cref="ReceivingEffectEventArgs"/> instance.</param>
-        public static void OnReceivingEffect(ReceivingEffectEventArgs ev) => ReceivingEffect.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerEffectUpdatingEventArgs"/> instance.</param>
+        public static void OnReceivingEffect(PlayerEffectUpdatingEventArgs labEv)
+        {
+            if (!ReceivingEffect.HasSubscribers)
+                return;
+
+            ReceivingEffectEventArgs exiledEv = new(labEv.Player, labEv.Effect, labEv.Intensity, labEv.Effect.Intensity, labEv.Duration, labEv.IsAllowed);
+            ReceivingEffect.InvokeSafely(exiledEv);
+
+            labEv.Duration = exiledEv.Duration;
+            labEv.Intensity = exiledEv.Intensity;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> received a status effect.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerEffectUpdatingEventArgs"/> instance.</param>
+        public static void OnReceivedEffect(PlayerEffectUpdatedEventArgs labEv)
+        {
+            if (!ReceivedEffect.HasSubscribers)
+                return;
+
+            ReceivedEffect.InvokeSafely(new ReceivedEffectEventArgs(labEv.Player, labEv.Effect, labEv.Intensity, labEv.Duration));
+        }
 
         /// <summary>
         /// Called before a user's radio battery charge is changed.

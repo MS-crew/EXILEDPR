@@ -26,13 +26,15 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="intensity">The intensity the effect is being changed to.</param>
         /// <param name="currentIntensity"><inheritdoc cref="CurrentIntensity"/></param>
         /// <param name="duration"><inheritdoc cref="Duration"/></param>
-        public ReceivingEffectEventArgs(Player player, StatusEffectBase effect, byte intensity, byte currentIntensity, float duration)
+        /// <param name="isAllowed"><inheritdoc cref="IsAllowed"/></param>
+        public ReceivingEffectEventArgs(Player player, StatusEffectBase effect, byte intensity, byte currentIntensity, float duration, bool isAllowed)
         {
             Player = player;
             Effect = effect;
             Intensity = intensity;
             CurrentIntensity = currentIntensity;
             Duration = intensity is 0 ? 0 : duration;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -48,7 +50,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating how long the effect will last. If its value is 0, then it doesn't always reflect the real effect duration.
         /// </summary>
-        public float Duration { get; set; } = 0;
+        public float Duration { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the new intensity of the effect.
@@ -63,6 +65,6 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the effect will be applied.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
     }
 }

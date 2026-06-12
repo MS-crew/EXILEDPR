@@ -121,6 +121,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.GroupChanged += Handlers.Player.OnChangedGroup;
             LabApi.Events.Handlers.PlayerEvents.InteractingElevator += Handlers.Player.OnInteractingElevator;
             LabApi.Events.Handlers.PlayerEvents.InteractingLocker += Handlers.Player.OnInteractingLocker;
+            LabApi.Events.Handlers.PlayerEvents.UpdatingEffect += Handlers.Player.OnReceivingEffect;
+            LabApi.Events.Handlers.PlayerEvents.UpdatedEffect += Handlers.Player.OnReceivedEffect;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -193,6 +195,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.GroupChanged -= Handlers.Player.OnChangedGroup;
             LabApi.Events.Handlers.PlayerEvents.InteractingElevator -= Handlers.Player.OnInteractingElevator;
             LabApi.Events.Handlers.PlayerEvents.InteractingLocker -= Handlers.Player.OnInteractingLocker;
+            LabApi.Events.Handlers.PlayerEvents.UpdatingEffect -= Handlers.Player.OnReceivingEffect;
+            LabApi.Events.Handlers.PlayerEvents.UpdatedEffect -= Handlers.Player.OnReceivedEffect;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;
