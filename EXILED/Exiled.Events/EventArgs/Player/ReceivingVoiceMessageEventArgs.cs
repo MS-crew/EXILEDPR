@@ -26,12 +26,14 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="sender">The player sending the voice message.</param>
         /// <param name="voiceModule">The senders voice module.</param>
         /// <param name="voiceMessage">The voice message being sent.</param>
-        public ReceivingVoiceMessageEventArgs(Player receiver, Player sender, VoiceModuleBase voiceModule, VoiceMessage voiceMessage)
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/>.</param>
+        public ReceivingVoiceMessageEventArgs(Player receiver, Player sender, VoiceModuleBase voiceModule, VoiceMessage voiceMessage, bool isAllowed)
         {
             Sender = sender;
             Player = receiver;
             VoiceMessage = voiceMessage;
             VoiceModule = voiceModule;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -57,6 +59,6 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the player can receive the voice message.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
     }
 }

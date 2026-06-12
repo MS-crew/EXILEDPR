@@ -1612,16 +1612,75 @@ namespace Exiled.Events.Handlers
         public static void OnDryfiringWeapon(DryfiringWeaponEventArgs ev) => DryfiringWeapon.InvokeSafely(ev);
 
         /// <summary>
+        /// Called before a <see cref="API.Features.Player"/> dryfires a weapon.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerDryFiringWeaponEventArgs"/> instance.</param>
+        public static void OnDryfiringWeapon(PlayerDryFiringWeaponEventArgs labEv)
+        {
+            if (!DryfiringWeapon.HasSubscribers)
+                return;
+
+            DryfiringWeaponEventArgs exiledEv = new(labEv.Player, labEv.FirearmItem.Base, labEv.IsAllowed);
+            DryfiringWeapon.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
         /// Invoked after a <see cref="API.Features.Player"/> presses the voicechat key.
         /// </summary>
-        /// <param name="ev">The <see cref="VoiceChattingEventArgs"/> instance.</param>
-        public static void OnVoiceChatting(VoiceChattingEventArgs ev) => VoiceChatting.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerSendingVoiceMessageEventArgs"/> instance.</param>
+        public static void OnVoiceChatting(PlayerSendingVoiceMessageEventArgs labEv)
+        {
+            bool voiceChattingFlag = VoiceChatting.HasSubscribers;
+            bool transmittingFlag = Transmitting.HasSubscribers;
+
+            if (!voiceChattingFlag && !transmittingFlag)
+                return;
+
+            API.Features.Player player = labEv.Player;
+            if (player == null || player.Role is not API.Features.Roles.IVoiceRole voiceRole)
+                return;
+
+            if (voiceChattingFlag)
+            {
+                VoiceChattingEventArgs voiceEv = new(player, voiceRole.VoiceModule, labEv.Message, labEv.IsAllowed);
+                VoiceChatting.InvokeSafely(voiceEv);
+
+                labEv.Message = voiceEv.VoiceMessage;
+                labEv.IsAllowed = voiceEv.IsAllowed;
+            }
+
+            if (transmittingFlag && voiceRole.VoiceModule.CurrentChannel == VoiceChat.VoiceChatChannel.Radio)
+            {
+                TransmittingEventArgs transmittingEv = new(player, labEv.Message, voiceRole.VoiceModule, labEv.IsAllowed);
+                Transmitting.InvokeSafely(transmittingEv);
+
+                labEv.Message = transmittingEv.VoiceMessage;
+                labEv.IsAllowed = transmittingEv.IsAllowed;
+            }
+        }
 
         /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> receives a voice message.
         /// </summary>
-        /// <param name="ev">The <see cref="ReceivingVoiceMessageEventArgs"/> instance.</param>
-        public static void OnReceivingVoiceMessage(ReceivingVoiceMessageEventArgs ev) => ReceivingVoiceMessage.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerReceivingVoiceMessageEventArgs"/> instance.</param>
+        public static void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs labEv)
+        {
+            if (!ReceivingVoiceMessage.HasSubscribers)
+                return;
+
+            API.Features.Player sender = labEv.Sender;
+            API.Features.Player receiver = labEv.Player;
+            if (sender.Role is not IVoiceRole voiceRole)
+                return;
+
+            ReceivingVoiceMessageEventArgs exiledEv = new(receiver, sender, voiceRole.VoiceModule, labEv.Message, labEv.IsAllowed);
+            ReceivingVoiceMessage.InvokeSafely(exiledEv);
+
+            labEv.Message = exiledEv.VoiceMessage;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> makes noise.

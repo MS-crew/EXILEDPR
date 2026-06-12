@@ -22,19 +22,20 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="DryfiringWeaponEventArgs" /> class.
         /// </summary>
-        /// <param name="firearm">
-        /// <inheritdoc cref="Firearm" />
-        /// </param>
-        public DryfiringWeaponEventArgs(BaseFirearm firearm)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="firearm"> <inheritdoc cref="Firearm"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public DryfiringWeaponEventArgs(Player player, BaseFirearm firearm, bool isAllowed)
         {
+            Player = player;
             Firearm = Item.Get<Firearm>(firearm);
-            Player = Firearm.Owner;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
         /// Gets or sets a value indicating whether the weapon can be dryfired.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
 
         /// <summary>
         /// Gets the <see cref="API.Features.Items.Firearm" /> being dryfired.
