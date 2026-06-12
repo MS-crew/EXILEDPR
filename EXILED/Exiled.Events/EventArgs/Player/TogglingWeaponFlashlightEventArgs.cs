@@ -22,17 +22,24 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="TogglingWeaponFlashlightEventArgs" /> class.
         /// </summary>
+        /// <param name="player">
+        /// <inheritdoc cref="Player" />
+        /// </param>
         /// <param name="firearm">
         /// <inheritdoc cref="Firearm" />
         /// </param>
-        /// <param name="oldState">
+        /// <param name="newState">
         /// <inheritdoc cref="NewState" />
         /// </param>
-        public TogglingWeaponFlashlightEventArgs(BaseFirearm firearm, bool oldState)
+        /// <param name="isAllowed">
+        /// <inheritdoc cref="IsAllowed" />
+        /// </param>
+        public TogglingWeaponFlashlightEventArgs(Player player, BaseFirearm firearm, bool newState, bool isAllowed)
         {
+            Player = player;
             Firearm = Item.Get<Firearm>(firearm);
-            Player = Firearm.Owner;
-            NewState = !oldState;
+            NewState = newState;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>

@@ -35,8 +35,7 @@ namespace Exiled.Events.Patches.Events.Player
 
             LocalBuilder ads = generator.DeclareLocal(typeof(bool));
 
-            int offset = 0;
-            int index = newInstructions.FindIndex(x => x.StoresField(Field(typeof(LinearAdsModule), nameof(LinearAdsModule._userInput)))) + offset;
+            int index = newInstructions.FindIndex(x => x.StoresField(Field(typeof(LinearAdsModule), nameof(LinearAdsModule._userInput))));
 
             newInstructions.InsertRange(
                 index,

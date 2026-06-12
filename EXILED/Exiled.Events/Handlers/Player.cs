@@ -531,6 +531,11 @@ namespace Exiled.Events.Handlers
         public static Event<TogglingWeaponFlashlightEventArgs> TogglingWeaponFlashlight { get; set; } = new();
 
         /// <summary>
+        /// Invoked after a <see cref="API.Features.Player"/> toggles the weapon's flashlight.
+        /// </summary>
+        public static Event<ToggledWeaponFlashlightEventArgs> ToggledWeaponFlashlight { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> dryfires a weapon.
         /// </summary>
         public static Event<DryfiringWeaponEventArgs> DryfiringWeapon { get; set; } = new();
@@ -1538,8 +1543,18 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> toggles the flashlight.
         /// </summary>
-        /// <param name="ev">The <see cref="TogglingFlashlightEventArgs"/> instance.</param>
-        public static void OnTogglingFlashlight(TogglingFlashlightEventArgs ev) => TogglingFlashlight.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerTogglingFlashlightEventArgs"/> instance.</param>
+        public static void OnTogglingFlashlight(PlayerTogglingFlashlightEventArgs labEv)
+        {
+            if (!TogglingFlashlight.HasSubscribers)
+                return;
+
+            TogglingFlashlightEventArgs exiledEv = new(labEv.Player, labEv.LightItem.Base, labEv.NewState, labEv.IsAllowed);
+            TogglingFlashlight.InvokeSafely(exiledEv);
+
+            labEv.NewState = exiledEv.NewState;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> unloads a weapon.
@@ -1565,8 +1580,30 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> toggles the weapon's flashlight.
         /// </summary>
-        /// <param name="ev">The <see cref="TogglingWeaponFlashlightEventArgs"/> instance.</param>
-        public static void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => TogglingWeaponFlashlight.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerTogglingWeaponFlashlightEventArgs"/> instance.</param>
+        public static void OnTogglingWeaponFlashlight(PlayerTogglingWeaponFlashlightEventArgs labEv)
+        {
+            if (!TogglingWeaponFlashlight.HasSubscribers)
+                return;
+
+            TogglingWeaponFlashlightEventArgs exiledEv = new(labEv.Player, labEv.FirearmItem.Base, labEv.NewState, labEv.IsAllowed);
+            TogglingWeaponFlashlight.InvokeSafely(exiledEv);
+
+            labEv.NewState = exiledEv.NewState;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> toggles the weapon's flashlight.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerToggledWeaponFlashlightEventArgs"/> instance.</param>
+        public static void OnToggledWeaponFlashlight(PlayerToggledWeaponFlashlightEventArgs labEv)
+        {
+            if (!ToggledWeaponFlashlight.HasSubscribers)
+                return;
+
+            ToggledWeaponFlashlight.InvokeSafely(new ToggledWeaponFlashlightEventArgs(labEv.Player, labEv.FirearmItem.Base, labEv.NewState));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> dryfires a weapon.

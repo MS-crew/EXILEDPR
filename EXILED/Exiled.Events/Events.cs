@@ -127,6 +127,9 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.UsedRadio += Handlers.Player.OnUsedRadio;
             LabApi.Events.Handlers.PlayerEvents.FlippingCoin += Handlers.Player.OnFlippingCoin;
             LabApi.Events.Handlers.PlayerEvents.FlippedCoin += Handlers.Player.OnFlippedCoin;
+            LabApi.Events.Handlers.PlayerEvents.TogglingFlashlight += Handlers.Player.OnTogglingFlashlight;
+            LabApi.Events.Handlers.PlayerEvents.TogglingWeaponFlashlight += Handlers.Player.OnTogglingWeaponFlashlight;
+            LabApi.Events.Handlers.PlayerEvents.ToggledWeaponFlashlight += Handlers.Player.OnToggledWeaponFlashlight;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -205,6 +208,9 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.UsedRadio -= Handlers.Player.OnUsedRadio;
             LabApi.Events.Handlers.PlayerEvents.FlippingCoin -= Handlers.Player.OnFlippingCoin;
             LabApi.Events.Handlers.PlayerEvents.FlippedCoin -= Handlers.Player.OnFlippedCoin;
+            LabApi.Events.Handlers.PlayerEvents.TogglingFlashlight -= Handlers.Player.OnTogglingFlashlight;
+            LabApi.Events.Handlers.PlayerEvents.TogglingWeaponFlashlight -= Handlers.Player.OnTogglingWeaponFlashlight;
+            LabApi.Events.Handlers.PlayerEvents.ToggledWeaponFlashlight -= Handlers.Player.OnToggledWeaponFlashlight;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;

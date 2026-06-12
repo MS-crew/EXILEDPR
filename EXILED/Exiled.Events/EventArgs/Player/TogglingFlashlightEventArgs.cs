@@ -24,21 +24,17 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="TogglingFlashlightEventArgs" /> class.
         /// </summary>
-        /// <param name="hub">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="flashlight">
-        /// <inheritdoc cref="Flashlight" />
-        /// </param>
-        /// <param name="newState">
-        /// <inheritdoc cref="NewState" />
-        /// </param>
-        public TogglingFlashlightEventArgs(ReferenceHub hub, ToggleableLightItemBase flashlight, bool newState)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="flashlight"> <inheritdoc cref="Flashlight"/> </param>
+        /// <param name="newState"> <inheritdoc cref="NewState"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public TogglingFlashlightEventArgs(Player player, ToggleableLightItemBase flashlight, bool newState, bool isAllowed)
         {
-            Player = Player.Get(hub);
+            Player = player;
             Flashlight = Item.Get<Flashlight>(flashlight);
             initialState = newState;
             NewState = newState;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -57,11 +53,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the player can toggle the flashlight.
         /// </summary>
-        public bool IsAllowed
-        {
-            get => NewState == initialState;
-            set => NewState = value ? initialState : !initialState;
-        }
+        public bool IsAllowed { get; set; }
 
         /// <summary>
         /// Gets the player who's toggling the flashlight.
