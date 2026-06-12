@@ -453,6 +453,11 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Invoked before a user's radio battery charge is changed.
         /// </summary>
+        public static Event<UsingRadioEventArgs> UsingRadio { get; set; } = new();
+
+        /// <summary>
+        /// Invoked before a user's radio battery charge is changed.
+        /// </summary>
         public static Event<UsingRadioBatteryEventArgs> UsingRadioBattery { get; set; } = new();
 
         /// <summary>
@@ -1446,10 +1451,20 @@ namespace Exiled.Events.Handlers
         }
 
         /// <summary>
-        /// Called before a user's radio battery charge is changed.
+        /// Called before a player using radio.
         /// </summary>
-        /// <param name="ev">The <see cref="UsingRadioBatteryEventArgs"/> instance.</param>
-        public static void OnUsingRadioBattery(UsingRadioBatteryEventArgs ev) => UsingRadioBattery.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="LabApi.Events.Arguments.PlayerEvents.PlayerUsingRadioEventArgs"/> instance.</param>
+        public static void OnUsingRadio(PlayerUsingRadioEventArgs labEv)
+        {
+            if (!UsingRadio.HasSubscribers)
+                return;
+
+            UsingRadioEventArgs exiledEv = new(labEv.Player, labEv.RadioItem.Base, labEv.Drain, labEv.IsAllowed);
+            UsingRadio.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+            labEv.Drain = exiledEv.Drain;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> MicroHID state is changed.
