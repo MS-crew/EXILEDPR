@@ -29,6 +29,7 @@ namespace Exiled.Events.Handlers
     using InventorySystem.Items.Usables.Scp1344;
 
     using LabApi.Events.Arguments.PlayerEvents;
+    using LabApi.Events.Arguments.Scp106Events;
     using LabApi.Events.Handlers;
 
     using PlayerRoles;
@@ -322,6 +323,11 @@ namespace Exiled.Events.Handlers
         /// Invoked before a <see cref="API.Features.Player"/> enters the pocket dimension.
         /// </summary>
         public static Event<EnteringPocketDimensionEventArgs> EnteringPocketDimension { get; set; } = new();
+
+        /// <summary>
+        /// Invoked after a <see cref="API.Features.Player"/> enters the pocket dimension.
+        /// </summary>
+        public static Event<EnteredPocketDimensionEventArgs> EnteredPocketDimension { get; set; } = new();
 
         /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> escapes the pocket dimension.
@@ -1206,8 +1212,29 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> enters the pocket dimension.
         /// </summary>
-        /// <param name="ev">The <see cref="EnteringPocketDimensionEventArgs"/> instance.</param>
-        public static void OnEnteringPocketDimension(EnteringPocketDimensionEventArgs ev) => EnteringPocketDimension.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="Scp106TeleportingPlayerEvent"/> instance.</param>
+        public static void OnEnteringPocketDimension(Scp106TeleportingPlayerEvent labEv)
+        {
+            if (!EnteringPocketDimension.HasSubscribers)
+                return;
+
+            EnteringPocketDimensionEventArgs exiledEv = new(labEv.Target, labEv.Player, labEv.IsAllowed);
+            EnteringPocketDimension.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> successfully entered the pocket dimension.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerEnteredPocketDimensionEventArgs "/> instance.</param>
+        public static void OnEnteredPocketDimension(PlayerEnteredPocketDimensionEventArgs labEv)
+        {
+            if (!EnteredPocketDimension.HasSubscribers)
+                return;
+
+            EnteredPocketDimension.InvokeSafely(new EnteredPocketDimensionEventArgs(labEv.Player));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> escapes the pocket dimension.
