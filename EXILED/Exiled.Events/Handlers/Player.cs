@@ -8,25 +8,39 @@
 namespace Exiled.Events.Handlers
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using Exiled.API.Enums;
+    using Exiled.API.Features;
     using Exiled.API.Features.Items;
-
+    using Exiled.API.Features.Pools;
+    using Exiled.API.Features.Roles;
 #pragma warning disable IDE0079
 #pragma warning disable IDE0060
 #pragma warning disable SA1623 // Property summary documentation should match accessors
 
     using Exiled.Events.EventArgs.Player;
-
     using Exiled.Events.Features;
 
+    using InventorySystem;
+    using InventorySystem.Items;
+    using InventorySystem.Items.Pickups;
+    using InventorySystem.Items.Usables.Scp1344;
+
     using LabApi.Events.Arguments.PlayerEvents;
+    using LabApi.Events.Handlers;
+
+    using PlayerRoles;
 
     /// <summary>
     /// Player related events.
     /// </summary>
     public class Player
     {
+        /// <summary><inheritdoc/></summary>
+        internal static readonly Dictionary<API.Features.Player, ChangingRoleEventArgs> CachedRoleEvents = new();
+
         /// <summary>
         /// Invoked after a player triggers the attack as an SCP.
         /// </summary>
@@ -208,6 +222,11 @@ namespace Exiled.Events.Handlers
         /// </summary>
         /// <remarks>If <see cref="ChangingRoleEventArgs.IsAllowed"/> is set to <see langword="false"/> when Escape is <see langword="true"/>, tickets will still be given to the escapee's team even though they will 'fail' to escape. Use <see cref="Escaping"/> to block escapes instead.</remarks>
         public static Event<ChangingRoleEventArgs> ChangingRole { get; set; } = new();
+
+        /// <summary>
+        /// Invoked after changed a <see cref="API.Features.Player"/> role.
+        /// </summary>
+        public static Event<ChangedRoleEventArgs> ChangedRole { get; set; } = new();
 
         /// <summary>
         /// Invoked afer throwing an <see cref="API.Features.Items.Throwable"/>.
@@ -851,9 +870,37 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before changing a <see cref="API.Features.Player"/> role.
         /// </summary>
-        /// <param name="ev">The <see cref="ChangingRoleEventArgs"/> instance.</param>
+        /// <param name="labEv">The <see cref="PlayerChangingRoleEventArgs"/> instance.</param>
         /// <remarks>If <see cref="ChangingRoleEventArgs.IsAllowed"/> is set to <see langword="false"/> when Escape is <see langword="true"/>, tickets will still be given to the escapee's team even though they will 'fail' to escape. Use <see cref="Escaping"/> to block escapes instead.</remarks>
-        public static void OnChangingRole(ChangingRoleEventArgs ev) => ChangingRole.InvokeSafely(ev);
+        public static void OnChangingRole(PlayerChangingRoleEventArgs labEv)
+        {
+            API.Features.Player player = labEv.Player;
+            if (!player.IsVerified && !player.IsNPC)
+                return;
+
+            ChangingRoleEventArgs exiledEv = new(player, labEv.NewRole, labEv.ChangeReason, labEv.SpawnFlags);
+
+            ChangingRole.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+            labEv.NewRole = exiledEv.NewRole;
+            labEv.ChangeReason = (RoleChangeReason)exiledEv.Reason;
+            labEv.SpawnFlags = exiledEv.SpawnFlags;
+
+            CachedRoleEvents[player] = exiledEv;
+        }
+
+        /// <summary>
+        /// Called after changed a <see cref="API.Features.Player"/> role.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerChangedRoleEventArgs"/> instance.</param>
+        public static void OnChangedRole(PlayerChangedRoleEventArgs labEv)
+        {
+            if (!ChangedRole.Patched)
+                return;
+
+            ChangedRole.InvokeSafely(new(labEv.Player, labEv.NewRole, labEv.OldRole, labEv.ChangeReason, labEv.SpawnFlags));
+        }
 
         /// <summary>
         /// Called before throwing a grenade.
@@ -1029,14 +1076,99 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before spawning a <see cref="API.Features.Player"/>.
         /// </summary>
-        /// <param name="ev">The <see cref="SpawningEventArgs"/> instance.</param>
-        public static void OnSpawning(SpawningEventArgs ev) => Spawning.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerSpawningEventArgs"/> instance.</param>
+        public static void OnSpawning(PlayerSpawningEventArgs labEv)
+        {
+            if (!Spawning.Patched)
+                return;
+
+            SpawningEventArgs exiledEv = new(labEv.Player, labEv.SpawnLocation, labEv.HorizontalRotation, labEv.Role);
+            Spawning.InvokeSafely(exiledEv);
+
+            labEv.SpawnLocation = exiledEv.Position;
+            labEv.HorizontalRotation = exiledEv.HorizontalRotation;
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> has spawned.
         /// </summary>
-        /// <param name="ev">The <see cref="SpawnedEventArgs"/> instance.</param>
-        public static void OnSpawned(SpawnedEventArgs ev) => Spawned.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerSpawnedEventArgs"/> instance.</param>
+        public static void OnSpawned(PlayerSpawnedEventArgs labEv)
+        {
+            API.Features.Player player = labEv.Player;
+
+            player.Role = Role.Create(labEv.Role);
+
+            if (labEv.Role.RoleTypeId == RoleTypeId.Scp173)
+                Scp173Role.TurnedPlayers.Remove(player);
+
+            player.MaxHealth = default;
+
+            Spawned.InvokeSafely(new(labEv.Player, player.Role, labEv.UseSpawnPoint, labEv.SpawnLocation, labEv.HorizontalRotation));
+
+            if (CachedRoleEvents.TryGetValue(player, out ChangingRoleEventArgs cachedEv))
+            {
+                CachedRoleEvents.Remove(player);
+                ChangeInventory(cachedEv);
+            }
+
+            void ChangeInventory(ChangingRoleEventArgs ev)
+            {
+                try
+                {
+                    if (ev is null)
+                        return;
+
+                    if (ev.ShouldPreserveInventory || ev.Reason == SpawnReason.Destroyed)
+                        return;
+
+                    Inventory inventory = ev.Player.Inventory;
+                    if (InventoryItemProvider.KeepItemsAfterEscaping && ev.Reason == SpawnReason.Escaped)
+                    {
+                        List<ItemPickupBase> list = new();
+
+                        HashSet<ushort> hashSet = HashSetPool<ushort>.Pool.Get();
+                        foreach (KeyValuePair<ushort, ItemBase> item2 in inventory.UserInventory.Items)
+                        {
+                            if (item2.Value is Scp1344Item scp1344Item)
+                                scp1344Item.Status = Scp1344Status.Idle;
+                            else
+                                hashSet.Add(item2.Key);
+                        }
+
+                        foreach (ushort item in hashSet)
+                            list.Add(inventory.ServerDropItem(item));
+
+                        HashSetPool<ushort>.Pool.Return(hashSet);
+                        InventoryItemProvider.PreviousInventoryPickups[ev.Player.ReferenceHub] = list;
+                    }
+                    else
+                    {
+                        while (inventory.UserInventory.Items.Count > 0)
+                            inventory.ServerRemoveItem(inventory.UserInventory.Items.ElementAt(0).Key, null);
+
+                        inventory.UserInventory.ReserveAmmo.Clear();
+                        inventory.SendAmmoNextFrame = true;
+                    }
+
+                    foreach (KeyValuePair<ItemType, ushort> ammo in ev.Ammo)
+                        inventory.ServerAddAmmo(ammo.Key, ammo.Value);
+
+                    foreach (ItemType item in ev.Items)
+                    {
+                        ItemBase itemBase = inventory.ServerAddItem(item, ItemAddReason.StartingItem);
+                        InventoryItemProvider.OnItemProvided?.Invoke(ev.Player.ReferenceHub, itemBase);
+                    }
+
+                    PlayerEvents.OnReceivedLoadout(new PlayerReceivedLoadoutEventArgs(ev.Player.ReferenceHub, ev.Items, ev.Ammo, !ev.ShouldPreserveInventory));
+                    InventoryItemProvider.InventoriesToReplenish.Enqueue(ev.Player.ReferenceHub);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error($"{"ChangedRoleEvent"}.{nameof(ChangeInventory)}: {exception}");
+                }
+            }
+        }
 
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> held item changes.

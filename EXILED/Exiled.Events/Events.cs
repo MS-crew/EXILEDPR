@@ -98,6 +98,10 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.CancelledUsingItem += Handlers.Player.OnCancelledItemUse;
             LabApi.Events.Handlers.PlayerEvents.UnlockingWarheadButton += Handlers.Player.OnActivatingWarheadPanel;
             LabApi.Events.Handlers.PlayerEvents.Dying += Handlers.Player.OnDying;
+            LabApi.Events.Handlers.PlayerEvents.ChangingRole += Handlers.Player.OnChangingRole;
+            LabApi.Events.Handlers.PlayerEvents.ChangedRole += Handlers.Player.OnChangedRole;
+            LabApi.Events.Handlers.PlayerEvents.Spawned += Handlers.Player.OnSpawned;
+            LabApi.Events.Handlers.PlayerEvents.Spawning += Handlers.Player.OnSpawning;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon += Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon += Handlers.Player.OnUnloadingWeapon;
@@ -150,6 +154,10 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.CancelledUsingItem -= Handlers.Player.OnCancelledItemUse;
             LabApi.Events.Handlers.PlayerEvents.UnlockingWarheadButton -= Handlers.Player.OnActivatingWarheadPanel;
             LabApi.Events.Handlers.PlayerEvents.Dying -= Handlers.Player.OnDying;
+            LabApi.Events.Handlers.PlayerEvents.ChangingRole -= Handlers.Player.OnChangingRole;
+            LabApi.Events.Handlers.PlayerEvents.ChangedRole -= Handlers.Player.OnChangedRole;
+            LabApi.Events.Handlers.PlayerEvents.Spawned -= Handlers.Player.OnSpawned;
+            LabApi.Events.Handlers.PlayerEvents.Spawning -= Handlers.Player.OnSpawning;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon -= Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon -= Handlers.Player.OnUnloadingWeapon;

@@ -82,12 +82,14 @@ namespace Exiled.Events.Handlers.Internal
             TeslaGate.IgnoredTeams.Clear();
 
             API.Features.Round.IgnoredPlayers.Clear();
+
+            Handlers.Player.CachedRoleEvents.Clear();
         }
 
         /// <inheritdoc cref="Handlers.Server.OnRoundStarted" />
         public static void OnRoundStarted() => MultiAdminFeatures.CallEvent(MultiAdminFeatures.EventType.ROUND_START);
 
-        /// <inheritdoc cref="Handlers.Player.OnChangingRole(ChangingRoleEventArgs)" />
+        /// <inheritdoc cref="Handlers.Player.OnChangingRole(LabApi.Events.Arguments.PlayerEvents.PlayerChangingRoleEventArgs)" />
         public static void OnChangingRole(ChangingRoleEventArgs ev)
         {
             if (!ev.Player.IsHost && ev.NewRole == RoleTypeId.Spectator && ev.Reason is not SpawnReason.Destroyed && Events.Instance.Config.ShouldDropInventory)

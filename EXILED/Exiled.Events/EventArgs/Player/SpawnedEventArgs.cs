@@ -15,6 +15,8 @@ namespace Exiled.Events.EventArgs.Player
 
     using PlayerRoles;
 
+    using UnityEngine;
+
     /// <summary>
     /// Contains all information after spawning a player.
     /// </summary>
@@ -23,14 +25,20 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="SpawnedEventArgs" /> class.
         /// </summary>
-        /// <param name="player">the spawned player.</param>
-        /// <param name="oldRole">the spawned player's old <see cref="PlayerRoleBase">role</see>.</param>
-        public SpawnedEventArgs(Player player, PlayerRoleBase oldRole)
+        /// <param name="player">The spawned player.</param>
+        /// <param name="newRole">The spawned player's new <see cref="PlayerRoleBase">role</see>.</param>
+        /// <param name="useSpawnPoint">Indicates whether the player was spawned at the role's default spawn point.</param>
+        /// <param name="spawnLocation">The exact position where the player was spawned.</param>
+        /// <param name="horizontalRotation">The horizontal rotation of the player upon spawning.</param>
+        public SpawnedEventArgs(Player player, Role newRole, bool useSpawnPoint, Vector3 spawnLocation, float horizontalRotation)
         {
             Player = player;
-            OldRole = Role.Create(oldRole);
-            Reason = (SpawnReason)Player.Role.SpawnReason;
-            SpawnFlags = Player.Role.SpawnFlags;
+            NewRole = newRole;
+            UseSpawnPoint = useSpawnPoint;
+            SpawnLocation = spawnLocation;
+            HorizontalRotation = horizontalRotation;
+            Reason = (SpawnReason)NewRole.SpawnReason;
+            SpawnFlags = NewRole.SpawnFlags;
         }
 
         /// <summary>
@@ -39,9 +47,24 @@ namespace Exiled.Events.EventArgs.Player
         public Player Player { get; }
 
         /// <summary>
-        /// Gets the player's old <see cref="PlayerRoleBase">role</see>.
+        /// Gets the player's new <see cref="Role">role</see>.
         /// </summary>
-        public Role OldRole { get; }
+        public Role NewRole { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player was spawned at the role's default spawn point.
+        /// </summary>
+        public bool UseSpawnPoint { get; }
+
+        /// <summary>
+        /// Gets the exact position where the player was spawned.
+        /// </summary>
+        public Vector3 SpawnLocation { get; }
+
+        /// <summary>
+        /// Gets the horizontal rotation of the player upon spawning.
+        /// </summary>
+        public float HorizontalRotation { get; }
 
         /// <summary>
         /// Gets the reason for their class change.
