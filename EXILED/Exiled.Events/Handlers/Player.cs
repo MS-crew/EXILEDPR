@@ -1376,6 +1376,21 @@ namespace Exiled.Events.Handlers
         public static void OnInteractingElevator(InteractingElevatorEventArgs ev) => InteractingElevator.InvokeSafely(ev);
 
         /// <summary>
+        /// Called before a <see cref="API.Features.Player"/> interacts with an elevator.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerInteractingElevatorEventArgs"/> instance.</param>
+        public static void OnInteractingElevator(PlayerInteractingElevatorEventArgs labEv)
+        {
+            if (!InteractingElevator.HasSubscribers)
+                return;
+
+            InteractingElevatorEventArgs exiledEv = new(labEv.Player, labEv.Elevator.Base, true, labEv.IsAllowed);
+            InteractingElevator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
         /// Called before a <see cref="API.Features.Player"/> interacts with a locker.
         /// </summary>
         /// <param name="ev">The <see cref="InteractingLockerEventArgs"/> instance.</param>
