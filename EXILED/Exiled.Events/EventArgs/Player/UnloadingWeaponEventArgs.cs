@@ -20,23 +20,20 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="UnloadingWeaponEventArgs" /> class.
         /// </summary>
-        /// <param name="firearm">
-        /// The firearm being unloaded.
-        /// </param>
-        /// <param name="isAllowed">
-        /// Indicates whether the weapon unloading is allowed.
-        /// </param>
-        public UnloadingWeaponEventArgs(InventorySystem.Items.Firearms.Firearm firearm, bool isAllowed)
+        /// <param name="player">The player who is unloading weapon.</param>
+        /// <param name="firearm">The firearm being unloaded.</param>
+        /// <param name="isAllowed">Indicates whether the weapon unloading is allowed.</param>
+        public UnloadingWeaponEventArgs(Player player, InventorySystem.Items.Firearms.Firearm firearm, bool isAllowed)
         {
+            Player = player;
             Firearm = Item.Get<Firearm>(firearm);
-            Player = Firearm.Owner;
             IsAllowed = isAllowed;
         }
 
         /// <summary>
         /// Gets or sets a value indicating whether the weapon can be unloaded.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
 
         /// <summary>
         /// Gets the <see cref="API.Features.Items.Firearm" /> being unloaded.

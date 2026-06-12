@@ -39,7 +39,7 @@ namespace Exiled.Events.Handlers
     public class Player
     {
         /// <summary><inheritdoc/></summary>
-        internal static readonly Dictionary<API.Features.Player, ChangingRoleEventArgs> CachedRoleEvents = new();
+        internal static readonly Dictionary<API.Features.Player, ChangingRoleEventArgs> CachedChangingRoleEvents = new();
 
         /// <summary>
         /// Invoked after a player triggers the attack as an SCP.
@@ -710,7 +710,7 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="KickedEventArgs"/> instance.</param>
         public static void OnKicked(PlayerKickedEventArgs labEv)
         {
-            if (!Kicked.Patched)
+            if (!Kicked.HasSubscribers)
                 return;
 
             Kicked.InvokeSafely(new KickedEventArgs(labEv.Player, labEv.Issuer, labEv.Reason));
@@ -752,7 +752,7 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerItemUsageEffectsApplyingEventArgs"/> instance.</param>
         public static void OnUsingItemCompleted(PlayerItemUsageEffectsApplyingEventArgs labEv)
         {
-            if (!UsingItemCompleted.Patched)
+            if (!UsingItemCompleted.HasSubscribers)
                 return;
 
             Usable usable = API.Features.Items.Item.Get<Usable>(labEv.UsableItem.Serial);
@@ -782,10 +782,10 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerCancellingUsingItemEventArgs"/> instance.</param>
         public static void OnCancellingItemUse(PlayerCancellingUsingItemEventArgs labEv)
         {
-            if (!CancellingItemUse.Patched)
+            if (!CancellingItemUse.HasSubscribers)
                 return;
 
-            CancellingItemUseEventArgs exiledEv = new(labEv.Player, labEv.UsableItem.Base);
+            CancellingItemUseEventArgs exiledEv = new(labEv.Player, labEv.UsableItem.Base, labEv.IsAllowed);
 
             CancellingItemUse.InvokeSafely(exiledEv);
 
@@ -798,7 +798,7 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerCancelledUsingItemEventArgs"/> instance.</param>
         public static void OnCancelledItemUse(PlayerCancelledUsingItemEventArgs labEv)
         {
-            if (!CancelledItemUse.Patched)
+            if (!CancelledItemUse.HasSubscribers)
                 return;
 
             CancelledItemUse.InvokeSafely(new(labEv.Player, labEv.UsableItem.Base));
@@ -834,7 +834,7 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerUnlockingWarheadButtonEventArgs"/> instance.</param>
         public static void OnActivatingWarheadPanel(PlayerUnlockingWarheadButtonEventArgs labEv)
         {
-            if (!ActivatingWarheadPanel.Patched)
+            if (!ActivatingWarheadPanel.HasSubscribers)
                 return;
 
             ActivatingWarheadPanelEventArgs exiledEv = new(labEv.Player, labEv.IsAllowed);
@@ -878,7 +878,7 @@ namespace Exiled.Events.Handlers
             if (!player.IsVerified && !player.IsNPC)
                 return;
 
-            ChangingRoleEventArgs exiledEv = new(player, labEv.NewRole, labEv.ChangeReason, labEv.SpawnFlags);
+            ChangingRoleEventArgs exiledEv = new(player, labEv.NewRole, labEv.ChangeReason, labEv.SpawnFlags, labEv.IsAllowed);
 
             ChangingRole.InvokeSafely(exiledEv);
 
@@ -887,7 +887,7 @@ namespace Exiled.Events.Handlers
             labEv.ChangeReason = (RoleChangeReason)exiledEv.Reason;
             labEv.SpawnFlags = exiledEv.SpawnFlags;
 
-            CachedRoleEvents[player] = exiledEv;
+            CachedChangingRoleEvents[player] = exiledEv;
         }
 
         /// <summary>
@@ -896,8 +896,15 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerChangedRoleEventArgs"/> instance.</param>
         public static void OnChangedRole(PlayerChangedRoleEventArgs labEv)
         {
-            if (!ChangedRole.Patched)
+            if (!ChangedRole.HasSubscribers)
                 return;
+
+            API.Features.Player player = labEv.Player;
+
+            player.MaxHealth = default;
+
+            if (player.Role.Type == RoleTypeId.Scp173)
+                Scp173Role.TurnedPlayers.Remove(player);
 
             ChangedRole.InvokeSafely(new(labEv.Player, labEv.NewRole, labEv.OldRole, labEv.ChangeReason, labEv.SpawnFlags));
         }
@@ -917,14 +924,33 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before dropping an item.
         /// </summary>
-        /// <param name="ev">The <see cref="DroppingItemEventArgs"/> instance.</param>
-        public static void OnDroppingItem(DroppingItemEventArgs ev) => DroppingItem.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerDroppingItemEventArgs"/> instance.</param>
+        public static void OnDroppingItem(PlayerDroppingItemEventArgs labEv)
+        {
+            if (!DroppingItem.HasSubscribers)
+                return;
+
+            DroppingItemEventArgs exiledEv = new(labEv.Player, labEv.Item.Base, labEv.Throw, labEv.IsAllowed);
+            DroppingItem.InvokeSafely(exiledEv);
+
+            labEv.Throw = exiledEv.IsThrown;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called after dropping an item.
         /// </summary>
-        /// <param name="ev">The <see cref="DroppedItemEventArgs"/> instance.</param>
-        public static void OnDroppedItem(DroppedItemEventArgs ev) => DroppedItem.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerDroppedItemEventArgs"/> instance.</param>
+        public static void OnDroppedItem(PlayerDroppedItemEventArgs labEv)
+        {
+            if (!DroppedItem.HasSubscribers)
+                return;
+
+            DroppedItemEventArgs exiledEv = new(labEv.Player, labEv.Pickup.Base, labEv.Throw);
+            DroppedItem.InvokeSafely(exiledEv);
+
+            labEv.Throw = exiledEv.WasThrown;
+        }
 
         /// <summary>
         /// Called before dropping a null item.
@@ -968,10 +994,10 @@ namespace Exiled.Events.Handlers
         /// <param name="ev">The <see cref="RoomChangedEventArgs"/> instance.</param>
         public static void OnRoomChanged(RoomChangedEventArgs ev)
         {
-            if (RoomChanged.Patched)
+            if (RoomChanged.HasSubscribers)
                 RoomChanged.InvokeSafely(ev);
 
-            if (!ZoneChanged.Patched)
+            if (!ZoneChanged.HasSubscribers)
                 return;
 
             ZoneType oldZone = ev.OldRoom?.Zone ?? ZoneType.Unspecified;
@@ -1056,15 +1082,16 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> reloads a weapon.
         /// </summary>
-        /// <param name="ev">The <see cref="ReloadingWeaponEventArgs"/> instance.</param>
-        public static void OnReloadingWeapon(PlayerReloadingWeaponEventArgs ev)
+        /// <param name="labEv">The <see cref="ReloadingWeaponEventArgs"/> instance.</param>
+        public static void OnReloadingWeapon(PlayerReloadingWeaponEventArgs labEv)
         {
-            if (!ReloadingWeapon.Patched)
+            if (!ReloadingWeapon.HasSubscribers)
                 return;
 
-            ReloadingWeaponEventArgs exiledEv = new(ev.FirearmItem.Base, ev.IsAllowed);
+            ReloadingWeaponEventArgs exiledEv = new(labEv.Player, labEv.FirearmItem.Base, labEv.IsAllowed);
             ReloadingWeapon.InvokeSafely(exiledEv);
-            ev.IsAllowed = exiledEv.IsAllowed;
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
         }
 
         /// <summary>
@@ -1079,14 +1106,19 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerSpawningEventArgs"/> instance.</param>
         public static void OnSpawning(PlayerSpawningEventArgs labEv)
         {
-            if (!Spawning.Patched)
+            if (!Spawning.HasSubscribers)
                 return;
 
-            SpawningEventArgs exiledEv = new(labEv.Player, labEv.SpawnLocation, labEv.HorizontalRotation, labEv.Role);
+            API.Features.Player player = labEv.Player;
+            player.Role = Role.Create(labEv.Role);
+
+            SpawningEventArgs exiledEv = new(labEv.Player, labEv.SpawnLocation, labEv.HorizontalRotation, labEv.UseSpawnPoint, labEv.IsAllowed);
             Spawning.InvokeSafely(exiledEv);
 
+            labEv.UseSpawnPoint = exiledEv.UseSpawnPoint;
             labEv.SpawnLocation = exiledEv.Position;
             labEv.HorizontalRotation = exiledEv.HorizontalRotation;
+            labEv.IsAllowed = exiledEv.IsAllowed;
         }
 
         /// <summary>
@@ -1097,18 +1129,11 @@ namespace Exiled.Events.Handlers
         {
             API.Features.Player player = labEv.Player;
 
-            player.Role = Role.Create(labEv.Role);
-
-            if (labEv.Role.RoleTypeId == RoleTypeId.Scp173)
-                Scp173Role.TurnedPlayers.Remove(player);
-
-            player.MaxHealth = default;
-
             Spawned.InvokeSafely(new(labEv.Player, player.Role, labEv.UseSpawnPoint, labEv.SpawnLocation, labEv.HorizontalRotation));
 
-            if (CachedRoleEvents.TryGetValue(player, out ChangingRoleEventArgs cachedEv))
+            if (CachedChangingRoleEvents.TryGetValue(player, out ChangingRoleEventArgs cachedEv))
             {
-                CachedRoleEvents.Remove(player);
+                CachedChangingRoleEvents.Remove(player);
                 ChangeInventory(cachedEv);
             }
 
@@ -1257,15 +1282,16 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> unloads a weapon.
         /// </summary>
-        /// <param name="ev">The <see cref="UnloadingWeaponEventArgs"/> instance.</param>
-        public static void OnUnloadingWeapon(PlayerUnloadingWeaponEventArgs ev)
+        /// <param name="labEv">The <see cref="UnloadingWeaponEventArgs"/> instance.</param>
+        public static void OnUnloadingWeapon(PlayerUnloadingWeaponEventArgs labEv)
         {
-            if (!UnloadingWeapon.Patched)
+            if (!UnloadingWeapon.HasSubscribers)
                 return;
 
-            UnloadingWeaponEventArgs exiledEv = new(ev.FirearmItem.Base, ev.IsAllowed);
+            UnloadingWeaponEventArgs exiledEv = new(labEv.Player, labEv.FirearmItem.Base, labEv.IsAllowed);
             UnloadingWeapon.InvokeSafely(exiledEv);
-            ev.IsAllowed = exiledEv.IsAllowed;
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
         }
 
         /// <summary>
@@ -1536,12 +1562,13 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerDyingEventArgs"/> instance. </param>
         public static void OnDying(PlayerDyingEventArgs labEv)
         {
-            if (!Dying.Patched)
+            if (!Dying.HasSubscribers)
                 return;
 
-            DyingEventArgs exiledEv = new(labEv.Player, labEv.DamageHandler);
+            DyingEventArgs exiledEv = new(labEv.Player, labEv.DamageHandler, labEv.IsAllowed);
             Dying.InvokeSafely(exiledEv);
 
+            labEv.DamageHandler = exiledEv.DamageHandler;
             labEv.IsAllowed = exiledEv.IsAllowed;
         }
 

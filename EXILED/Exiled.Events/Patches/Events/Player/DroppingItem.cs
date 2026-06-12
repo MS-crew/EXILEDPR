@@ -25,9 +25,8 @@ namespace Exiled.Events.Patches.Events.Player
 
     /// <summary>
     /// Patches <see cref="Inventory.UserCode_CmdDropItem__UInt16__Boolean" />.
-    /// <br>Adds the <see cref="Player.DroppingItem" />, <see cref="Player.DroppingNothing" /> and <see cref="Player.DroppedItem"/> events.</br>
+    /// <br>Adds the <see cref="Player.DroppingNothing" /> and <see cref="Player.DroppedItem"/> events.</br>
     /// </summary>
-    [EventPatch(typeof(Player), nameof(Player.DroppingItem))]
     [EventPatch(typeof(Player), nameof(Player.DroppingNothing))]
     [EventPatch(typeof(Player), nameof(Player.DroppedItem))]
     [HarmonyPatch(typeof(Inventory), nameof(Inventory.UserCode_CmdDropItem__UInt16__Boolean))]
@@ -42,6 +41,8 @@ namespace Exiled.Events.Patches.Events.Player
 
             LocalBuilder item = generator.DeclareLocal(typeof(Item));
             LocalBuilder ev = generator.DeclareLocal(typeof(DroppingItemEventArgs));
+
+            newInstructions[0].labels.Add(notNullLabel);
 
             newInstructions.InsertRange(0, new CodeInstruction[]
             {
@@ -68,63 +69,6 @@ namespace Exiled.Events.Patches.Events.Player
 
                 // return
                 new(OpCodes.Br_S, returnLabel),
-
-                // notNulllabel:
-                //
-                // Player.Get(this._hub)
-                new CodeInstruction(OpCodes.Ldarg_0).WithLabels(notNullLabel),
-                new(OpCodes.Ldfld, Field(typeof(Inventory), nameof(Inventory._hub))),
-                new(OpCodes.Call, Method(typeof(API.Features.Player), nameof(API.Features.Player.Get), new[] { typeof(ReferenceHub) })),
-
-                // item.Base
-                new(OpCodes.Ldloc_S, item.LocalIndex),
-                new(OpCodes.Callvirt, PropertyGetter(typeof(Item), nameof(Item.Base))),
-
-                // tryThrow
-                new(OpCodes.Ldarg_2),
-
-                // true
-                new(OpCodes.Ldc_I4_1),
-
-                // DroppingItemEventArgs ev = new(Player, ItemBase, bool, bool)
-                new(OpCodes.Newobj, GetDeclaredConstructors(typeof(DroppingItemEventArgs))[0]),
-                new(OpCodes.Dup),
-                new(OpCodes.Dup),
-                new(OpCodes.Stloc_S, ev.LocalIndex),
-
-                // Player.OnDroppingItem(ev)
-                new(OpCodes.Call, Method(typeof(Player), nameof(Player.OnDroppingItem))),
-
-                // if (!ev.IsAllowed)
-                //    return;
-                new(OpCodes.Callvirt, PropertyGetter(typeof(DroppingItemEventArgs), nameof(DroppingItemEventArgs.IsAllowed))),
-                new(OpCodes.Brfalse, returnLabel),
-
-                // isThrown = ev.IsThrown;
-                new(OpCodes.Ldloc_S, ev.LocalIndex),
-                new(OpCodes.Callvirt, PropertyGetter(typeof(DroppingItemEventArgs), nameof(DroppingItemEventArgs.IsThrown))),
-                new(OpCodes.Starg_S, 2),
-            });
-
-            const int offset = 1;
-            int index = newInstructions.FindIndex(i => i.opcode == OpCodes.Stloc_2) + offset;
-
-            newInstructions.InsertRange(index, new CodeInstruction[]
-            {
-                // ev.Player
-                new(OpCodes.Ldloc_S, ev.LocalIndex),
-                new(OpCodes.Callvirt, PropertyGetter(typeof(DroppingItemEventArgs), nameof(DroppingItemEventArgs.Player))),
-
-                // ItemPickupBase
-                new(OpCodes.Ldloc_2),
-
-                // ev.IsThrown
-                new(OpCodes.Ldloc_S, ev.LocalIndex),
-                new(OpCodes.Callvirt, PropertyGetter(typeof(DroppingItemEventArgs), nameof(DroppingItemEventArgs.IsThrown))),
-
-                // Player::OnDroppedItem(new DroppedItemEventArgs(ev.Player, ItemPickupBase, ev.IsThrown))
-                new(OpCodes.Newobj, GetDeclaredConstructors(typeof(DroppedItemEventArgs))[0]),
-                new(OpCodes.Call, Method(typeof(Player), nameof(Player.OnDroppedItem))),
             });
 
             newInstructions[newInstructions.Count - 1].labels.Add(returnLabel);

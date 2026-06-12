@@ -22,23 +22,21 @@ namespace Exiled.Events.EventArgs.Player
     /// <summary>
     /// Contains all information before a player dies.
     /// </summary>
-    public class DyingEventArgs : IAttackerEvent, IDeniableEvent
+    public class DyingEventArgs : IPlayerEvent, IAttackerEvent, IDeniableEvent
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DyingEventArgs" /> class.
+        /// Initializes a new instance of the <see cref="DyingEventArgs"/> class.
         /// </summary>
-        /// <param name="target">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="damageHandler">
-        /// <inheritdoc cref="DamageHandler" />
-        /// </param>
-        public DyingEventArgs(Player target, DamageHandlerBase damageHandler)
+        /// <param name="target"> The player who is dying.</param>
+        /// <param name="damageHandler"> <inheritdoc cref="DamageHandler"/></param>
+        /// <param name="isAllowed"> <inheritdoc cref="IDeniableEvent.IsAllowed"/></param>
+        public DyingEventArgs(Player target, DamageHandlerBase damageHandler, bool isAllowed)
         {
             DamageHandler = new CustomDamageHandler(target, damageHandler);
             Player = target;
             ItemsToDrop = Player.Items.ToList();
             Attacker = DamageHandler.BaseIs(out CustomAttackerHandler attackerDamageHandler) ? attackerDamageHandler.Attacker : null;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the player can be killed.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
 
         /// <summary>
         /// Gets the killing player.

@@ -32,24 +32,18 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangingRoleEventArgs" /> class.
         /// </summary>
-        /// <param name="player">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="newRole">
-        /// <inheritdoc cref="NewRole" />
-        /// </param>
-        /// <param name="reason">
-        /// <inheritdoc cref="Reason" />
-        /// </param>
-        /// <param name="spawnFlags">
-        /// <inheritdoc cref="SpawnFlags" />
-        /// </param>
-        public ChangingRoleEventArgs(Player player, RoleTypeId newRole, RoleChangeReason reason, RoleSpawnFlags spawnFlags)
+        /// <param name="player"> <inheritdoc cref="IPlayerEvent.Player"/> </param>
+        /// <param name="newRole"> <inheritdoc cref="NewRole"/> </param>
+        /// <param name="reason"> <inheritdoc cref="Reason"/> </param>
+        /// <param name="spawnFlags"> <inheritdoc cref="SpawnFlags"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IDeniableEvent.IsAllowed"/> </param>
+        public ChangingRoleEventArgs(Player player, RoleTypeId newRole, RoleChangeReason reason, RoleSpawnFlags spawnFlags, bool isAllowed)
         {
             Player = player;
             NewRole = newRole;
             Reason = (SpawnReason)reason;
             SpawnFlags = spawnFlags;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -74,6 +68,8 @@ namespace Exiled.Events.EventArgs.Player
             get;
             set
             {
+                field = value;
+
                 InventoryRoleInfo inventory = value.GetInventory();
 
                 Items.Clear();
@@ -91,8 +87,6 @@ namespace Exiled.Events.EventArgs.Player
 
                 foreach (KeyValuePair<ItemType, ushort> ammoPair in playerReceivingLoadoutEventArgs.Ammo)
                     Ammo.Add(ammoPair.Key, ammoPair.Value);
-
-                field = value;
             }
         }
 
@@ -128,6 +122,6 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the event can continue.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; };
     }
 }

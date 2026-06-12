@@ -1,11 +1,11 @@
 // -----------------------------------------------------------------------
-// <copyright file="UsingItemCompleted.cs" company="ExMod Team">
+// <copyright file="UsingItemCompletedFix.cs" company="ExMod Team">
 // Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Exiled.Events.Patches.Events.Player
+namespace Exiled.Events.Patches.Fixes
 {
     using System.Collections.Generic;
     using System.Reflection.Emit;
@@ -29,9 +29,8 @@ namespace Exiled.Events.Patches.Events.Player
     /// Patches <see cref="UsableItemsController.Update" />
     /// Fix the <see cref="Handlers.Player.UsingItemCompleted" /> event client visual logic.
     /// </summary>
-    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.UsingItemCompleted))]
     [HarmonyPatch(typeof(UsableItemsController), nameof(UsableItemsController.Update))]
-    internal static class UsingItemCompleted
+    internal static class UsingItemCompletedFix
     {
         internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {

@@ -36,11 +36,10 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="isAllowed">
         /// <inheritdoc cref="IsAllowed" />
         /// </param>
-        public DroppingItemEventArgs(Player player, ItemBase item, bool isThrown, bool isAllowed = true)
+        public DroppingItemEventArgs(Player player, ItemBase item, bool isThrown, bool isAllowed)
         {
             Player = player;
             Item = Item.Get(item);
-            IsAllowed = isAllowed;
             IsThrown = isThrown;
             IsAllowed = isAllowed;
         }
@@ -60,6 +59,7 @@ namespace Exiled.Events.EventArgs.Player
             {
                 if (Player.Role == RoleTypeId.Spectator)
                     return;
+
                 field = value;
             }
         }

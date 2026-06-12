@@ -7,8 +7,6 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
-    using System;
-
     using Exiled.API.Features;
     using Exiled.API.Features.Roles;
     using Exiled.Events.EventArgs.Interfaces;
@@ -20,29 +18,24 @@ namespace Exiled.Events.EventArgs.Player
     /// <summary>
     /// Contains all information before spawning a player.
     /// </summary>
-    public class SpawningEventArgs : IPlayerEvent
+    public class SpawningEventArgs : IPlayerEvent, IDeniableEvent
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SpawningEventArgs" /> class.
         /// </summary>
-        /// <param name="player">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="position">
-        /// <inheritdoc cref="Position" />
-        /// </param>
-        /// <param name="rotation">
-        /// <inheritdoc cref="HorizontalRotation" />
-        /// </param>
-        /// <param name="newRole">
-        /// the spawned player's new <see cref="PlayerRoleBase">role</see>.
-        /// </param>
-        public SpawningEventArgs(Player player, Vector3 position, float rotation, PlayerRoleBase newRole)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="position"> <inheritdoc cref="Position"/> </param>
+        /// <param name="rotation"> <inheritdoc cref="HorizontalRotation"/> </param>
+        /// <param name="useSpawnPoint"> <inheritdoc cref="UseSpawnPoint"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public SpawningEventArgs(Player player, Vector3 position, float rotation, bool useSpawnPoint, bool isAllowed)
         {
             Player = player;
             Position = position;
             HorizontalRotation = rotation;
-            NewRole = Role.Create(newRole);
+            NewRole = player.Role;
+            UseSpawnPoint = useSpawnPoint;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -67,14 +60,16 @@ namespace Exiled.Events.EventArgs.Player
         public float HorizontalRotation { get; set; }
 
         /// <summary>
-        /// Gets the player's old <see cref="PlayerRoleBase">role</see>.
+        /// Gets or sets a value indicating whether the will the spawn point be used when the player spawns, or will they spawn in place.
         /// </summary>
-        [Obsolete("Removed because the method is no longer provide OldRole since version 14.0. Use Player.Role instead")]
-        public Role OldRole => Player.Role;
+        public bool UseSpawnPoint { get; set; }
 
         /// <summary>
         /// Gets the player's new <see cref="PlayerRoleBase">role</see>.
         /// </summary>
         public Role NewRole { get; }
+
+        /// <inheritdoc/>
+        public bool IsAllowed { get; set; }
     }
 }

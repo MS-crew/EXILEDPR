@@ -21,16 +21,14 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="CancellingItemUseEventArgs" /> class.
         /// </summary>
-        /// <param name="player">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="item">
-        /// <inheritdoc cref="UsedItemEventArgs.Item" />
-        /// </param>
-        public CancellingItemUseEventArgs(Player player, UsableItem item)
+        /// <param name="player"><inheritdoc cref="Player" /></param>
+        /// <param name="item"><inheritdoc cref="UsedItemEventArgs.Item" /></param>
+        /// <param name="isAllowed"><inheritdoc cref="IDeniableEvent.IsAllowed" /></param>
+        public CancellingItemUseEventArgs(Player player, UsableItem item, bool isAllowed)
         {
             Player = player;
             Usable = Item.Get<Usable>(item);
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
@@ -49,6 +47,6 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets or sets a value indicating whether the player can cancelling the use of item.
         /// </summary>
-        public bool IsAllowed { get; set; } = true;
+        public bool IsAllowed { get; set; }
     }
 }

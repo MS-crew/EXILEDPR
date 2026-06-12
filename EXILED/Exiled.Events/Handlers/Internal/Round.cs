@@ -83,7 +83,7 @@ namespace Exiled.Events.Handlers.Internal
 
             API.Features.Round.IgnoredPlayers.Clear();
 
-            Handlers.Player.CachedRoleEvents.Clear();
+            Handlers.Player.CachedChangingRoleEvents.Clear();
         }
 
         /// <inheritdoc cref="Handlers.Server.OnRoundStarted" />

@@ -61,6 +61,11 @@ namespace Exiled.Events.Features
         public static IReadOnlyDictionary<Type, Event<T>> Dictionary => TypeToEvent;
 
         /// <summary>
+        /// Gets a value indicating whether this event has any active subscribers.
+        /// </summary>
+        public bool HasSubscribers => innerEvent.Count > 0 || innerAsyncEvent.Count > 0;
+
+        /// <summary>
         /// Gets a value indicating whether the Harmony patch for this event has been applied.
         /// </summary>
         public bool Patched { get; private set; } = !Events.Instance.Config.UseDynamicPatching;
