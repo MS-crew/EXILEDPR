@@ -135,6 +135,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage += Handlers.Player.OnReceivingVoiceMessage;
             LabApi.Events.Handlers.PlayerEvents.TogglingNoclip += Handlers.Player.OnTogglingNoClip;
             LabApi.Events.Handlers.PlayerEvents.ToggledNoclip += Handlers.Player.OnToggledNoClip;
+            LabApi.Events.Handlers.PlayerEvents.TogglingRadio += Handlers.Player.OnTogglingRadio;
+            LabApi.Events.Handlers.PlayerEvents.ToggledRadio += Handlers.Player.OnToggledRadio;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -221,6 +223,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.ReceivingVoiceMessage -= Handlers.Player.OnReceivingVoiceMessage;
             LabApi.Events.Handlers.PlayerEvents.TogglingNoclip -= Handlers.Player.OnTogglingNoClip;
             LabApi.Events.Handlers.PlayerEvents.ToggledNoclip -= Handlers.Player.OnToggledNoClip;
+            LabApi.Events.Handlers.PlayerEvents.TogglingRadio -= Handlers.Player.OnTogglingRadio;
+            LabApi.Events.Handlers.PlayerEvents.ToggledRadio -= Handlers.Player.OnToggledRadio;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;

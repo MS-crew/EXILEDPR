@@ -34,7 +34,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="isAllowed">
         ///     <inheritdoc cref="IsAllowed" />
         /// </param>
-        public TogglingRadioEventArgs(Player player, RadioItem radio, bool newState, bool isAllowed = true)
+        public TogglingRadioEventArgs(Player player, RadioItem radio, bool newState, bool isAllowed)
         {
             Player = player;
             Radio = Item.Get<Radio>(radio);

@@ -611,6 +611,11 @@ namespace Exiled.Events.Handlers
         public static Event<TogglingRadioEventArgs> TogglingRadio { get; set; } = new();
 
         /// <summary>
+        /// Invoked after turning the <see cref="API.Features.Items.Radio" /> on/off.
+        /// </summary>
+        public static Event<ToggledRadioEventArgs> ToggledRadio { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> searches a Pickup.
         /// </summary>
         public static Event<SearchingPickupEventArgs> SearchingPickup { get; set; } = new();
@@ -1759,8 +1764,29 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before turning the radio on/off.
         /// </summary>
-        /// <param name="ev">The <see cref="TogglingRadioEventArgs"/> instance.</param>
-        public static void OnTogglingRadio(TogglingRadioEventArgs ev) => TogglingRadio.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerTogglingRadioEventArgs"/> instance.</param>
+        public static void OnTogglingRadio(PlayerTogglingRadioEventArgs labEv)
+        {
+            if (!TogglingRadio.HasSubscribers)
+                return;
+
+            TogglingRadioEventArgs exiledEv = new(labEv.Player, labEv.RadioItem.Base, labEv.NewState, labEv.IsAllowed);
+            TogglingRadio.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after turning the <see cref="Radio" /> on/off.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerToggledRadioEventArgs"/> instance.</param>
+        public static void OnToggledRadio(PlayerToggledRadioEventArgs labEv)
+        {
+            if (!ToggledRadio.HasSubscribers)
+                return;
+
+            ToggledRadio.InvokeSafely(new ToggledRadioEventArgs(labEv.Player, labEv.RadioItem.Base, labEv.NewState));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> searches a Pickup.
