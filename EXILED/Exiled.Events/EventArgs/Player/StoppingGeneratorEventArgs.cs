@@ -22,11 +22,12 @@ namespace Exiled.Events.EventArgs.Player
         /// </summary>
         /// <param name="player">The player who's flipping the switch.</param>
         /// <param name="generator">The <see cref="Scp079Generator" /> instance.</param>
-        public StoppingGeneratorEventArgs(Player player, Scp079Generator generator)
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public StoppingGeneratorEventArgs(Player player, Scp079Generator generator, bool isAllowed)
         {
             Player = player;
             Generator = Generator.Get(generator);
-            IsAllowed = true;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>

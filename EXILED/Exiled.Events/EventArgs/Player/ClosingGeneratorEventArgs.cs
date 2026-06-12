@@ -21,12 +21,13 @@ namespace Exiled.Events.EventArgs.Player
         /// Initializes a new instance of the <see cref="ClosingGeneratorEventArgs" /> class.
         /// </summary>
         /// <param name="player">The player who's closing the generator.</param>
-        /// <param name="generator">The <see cref="Scp079Generator" /> instance.</param>
-        public ClosingGeneratorEventArgs(Player player, Scp079Generator generator)
+        /// <param name="generator">The <see cref="Scp079Generator"/> instance.</param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public ClosingGeneratorEventArgs(Player player, Scp079Generator generator, bool isAllowed)
         {
             Player = player;
             Generator = Generator.Get(generator);
-            IsAllowed = true;
+            IsAllowed = isAllowed;
         }
 
         /// <summary>

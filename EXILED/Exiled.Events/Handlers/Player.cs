@@ -1880,32 +1880,77 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> unlocks a generator.
         /// </summary>
-        /// <param name="ev">The <see cref="UnlockingGeneratorEventArgs"/> instance. </param>
-        public static void OnUnlockingGenerator(UnlockingGeneratorEventArgs ev) => UnlockingGenerator.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerUnlockingGeneratorEventArgs"/> instance.</param>
+        public static void OnUnlockingGenerator(PlayerUnlockingGeneratorEventArgs labEv)
+        {
+            if (!UnlockingGenerator.HasSubscribers)
+                return;
+
+            UnlockingGeneratorEventArgs exiledEv = new(labEv.Player, labEv.Generator.Base, labEv.IsAllowed);
+            UnlockingGenerator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> opens a generator.
         /// </summary>
-        /// <param name="ev">The <see cref="OpeningGeneratorEventArgs"/> instance. </param>
-        public static void OnOpeningGenerator(OpeningGeneratorEventArgs ev) => OpeningGenerator.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerOpeningGeneratorEventArgs"/> instance.</param>
+        public static void OnOpeningGenerator(PlayerOpeningGeneratorEventArgs labEv)
+        {
+            if (!OpeningGenerator.HasSubscribers)
+                return;
+
+            OpeningGeneratorEventArgs exiledEv = new(labEv.Player, labEv.Generator.Base, labEv.IsAllowed);
+            OpeningGenerator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> closes a generator.
         /// </summary>
-        /// <param name="ev">The <see cref="ClosingGeneratorEventArgs"/> instance. </param>
-        public static void OnClosingGenerator(ClosingGeneratorEventArgs ev) => ClosingGenerator.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerClosingGeneratorEventArgs"/> instance.</param>
+        public static void OnClosingGenerator(PlayerClosingGeneratorEventArgs labEv)
+        {
+            if (!ClosingGenerator.HasSubscribers)
+                return;
+
+            ClosingGeneratorEventArgs exiledEv = new(labEv.Player, labEv.Generator.Base, labEv.IsAllowed);
+            ClosingGenerator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> turns on the generator by switching lever.
         /// </summary>
-        /// <param name="ev">The <see cref="ActivatingGeneratorEventArgs"/> instance. </param>
-        public static void OnActivatingGenerator(ActivatingGeneratorEventArgs ev) => ActivatingGenerator.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerActivatingGeneratorEventArgs"/> instance.</param>
+        public static void OnActivatingGenerator(PlayerActivatingGeneratorEventArgs labEv)
+        {
+            if (!ActivatingGenerator.HasSubscribers)
+                return;
+
+            ActivatingGeneratorEventArgs exiledEv = new(labEv.Player, labEv.Generator.Base, labEv.IsAllowed);
+            ActivatingGenerator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> turns off the generator by switching lever.
         /// </summary>
-        /// <param name="ev">The <see cref="StoppingGeneratorEventArgs"/> instance. </param>
-        public static void OnStoppingGenerator(StoppingGeneratorEventArgs ev) => StoppingGenerator.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerDeactivatingGeneratorEventArgs"/> instance.</param>
+        public static void OnStoppingGenerator(PlayerDeactivatingGeneratorEventArgs labEv)
+        {
+            if (!StoppingGenerator.HasSubscribers)
+                return;
+
+            StoppingGeneratorEventArgs exiledEv = new(labEv.Player, labEv.Generator.Base, labEv.IsAllowed);
+            StoppingGenerator.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> interacts with a door.
