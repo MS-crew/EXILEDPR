@@ -20,13 +20,12 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="UnloadedWeaponEventArgs" /> class.
         /// </summary>
-        /// <param name="firearm">
-        /// <inheritdoc cref="Firearm" />
-        /// </param>
-        public UnloadedWeaponEventArgs(InventorySystem.Items.Firearms.Firearm firearm)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="firearm"> <inheritdoc cref="Firearm"/> </param>
+        public UnloadedWeaponEventArgs(Player player, InventorySystem.Items.Firearms.Firearm firearm)
         {
+            Player = player;
             Firearm = Item.Get<Firearm>(firearm);
-            Player = Firearm.Owner;
         }
 
         /// <summary>

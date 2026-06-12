@@ -10,6 +10,7 @@ namespace Exiled.Events.Handlers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection.Emit;
 
     using Exiled.API.Enums;
     using Exiled.API.Features;
@@ -1272,8 +1273,26 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called after a <see cref="API.Features.Player"/> reloads a weapon.
         /// </summary>
-        /// <param name="ev">The <see cref="ReloadedWeaponEventArgs"/> instance.</param>
-        public static void OnReloadedWeapon(ReloadedWeaponEventArgs ev) => ReloadedWeapon.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerReloadedWeaponEventArgs"/> instance.</param>
+        public static void OnReloadedWeapon(PlayerReloadedWeaponEventArgs labEv)
+        {
+            if (!ReloadedWeapon.HasSubscribers)
+                return;
+
+            ReloadedWeapon.InvokeSafely(new ReloadedWeaponEventArgs(labEv.Player, labEv.FirearmItem.Base));
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> unloads a weapon.
+        /// </summary>
+        /// <param name="labEv">The <see cref="UnloadedWeaponEventArgs"/> instance.</param>
+        public static void OnUnloadedWeapon(PlayerUnloadedWeaponEventArgs labEv)
+        {
+            if (!UnloadingWeapon.HasSubscribers)
+                return;
+
+            UnloadedWeapon.InvokeSafely(new UnloadedWeaponEventArgs(labEv.Player, labEv.FirearmItem.Base));
+        }
 
         /// <summary>
         /// Called before spawning a <see cref="API.Features.Player"/>.
@@ -1403,12 +1422,6 @@ namespace Exiled.Events.Handlers
 
             labEv.IsAllowed = exiledEv.IsAllowed;
         }
-
-        /// <summary>
-        /// Called after a <see cref="API.Features.Player"/> unloads a weapon.
-        /// </summary>
-        /// <param name="ev">The <see cref="UnloadedWeaponEventArgs"/> instance.</param>
-        public static void OnUnloadedWeapon(UnloadedWeaponEventArgs ev) => UnloadedWeapon.InvokeSafely(ev);
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> triggers an aim action.

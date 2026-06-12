@@ -113,6 +113,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.Escaping += Handlers.Player.OnEscaping;
             LabApi.Events.Handlers.Scp106Events.TeleportingPlayer += Handlers.Player.OnEnteringPocketDimension;
             LabApi.Events.Handlers.PlayerEvents.EnteredPocketDimension += Handlers.Player.OnEnteredPocketDimension;
+            LabApi.Events.Handlers.PlayerEvents.ReloadedWeapon += Handlers.Player.OnReloadedWeapon;
+            LabApi.Events.Handlers.PlayerEvents.UnloadedWeapon += Handlers.Player.OnUnloadedWeapon;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon += Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon += Handlers.Player.OnUnloadingWeapon;
@@ -180,6 +182,8 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.Escaping -= Handlers.Player.OnEscaping;
             LabApi.Events.Handlers.Scp106Events.TeleportingPlayer -= Handlers.Player.OnEnteringPocketDimension;
             LabApi.Events.Handlers.PlayerEvents.EnteredPocketDimension -= Handlers.Player.OnEnteredPocketDimension;
+            LabApi.Events.Handlers.PlayerEvents.ReloadedWeapon -= Handlers.Player.OnReloadedWeapon;
+            LabApi.Events.Handlers.PlayerEvents.UnloadedWeapon -= Handlers.Player.OnUnloadedWeapon;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon -= Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon -= Handlers.Player.OnUnloadingWeapon;
