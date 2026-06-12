@@ -40,7 +40,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="isAllowed">
         /// <inheritdoc cref="IsAllowed" />
         /// </param>
-        public ChangingRadioPresetEventArgs(Player player, RadioItem item, RadioRangeLevel oldValue, RadioRangeLevel newValue, bool isAllowed = true)
+        public ChangingRadioPresetEventArgs(Player player, RadioItem item, RadioRangeLevel oldValue, RadioRangeLevel newValue, bool isAllowed)
         {
             Player = player;
             Radio = Item.Get<Radio>(item);

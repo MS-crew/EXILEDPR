@@ -35,6 +35,8 @@ namespace Exiled.Events.Handlers
 
     using PlayerRoles;
 
+    using static InventorySystem.Items.Radio.RadioMessages;
+
     /// <summary>
     /// Player related events.
     /// </summary>
@@ -465,6 +467,11 @@ namespace Exiled.Events.Handlers
         /// Invoked before a user's radio preset is changed.
         /// </summary>
         public static Event<ChangingRadioPresetEventArgs> ChangingRadioPreset { get; set; } = new();
+
+        /// <summary>
+        /// Invoked after a user's radio preset is changed.
+        /// </summary>
+        public static Event<ChangedRadioPresetEventArgs> ChangedRadioPreset { get; set; } = new();
 
         /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> MicroHID state is changed.
@@ -1985,8 +1992,30 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a user's radio preset is changed.
         /// </summary>
-        /// <param name="ev">The <see cref="ChangingRadioPresetEventArgs"/> instance. </param>
-        public static void OnChangingRadioPreset(ChangingRadioPresetEventArgs ev) => ChangingRadioPreset.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerChangingRadioRangeEventArgs"/> instance.</param>
+        public static void OnChangingRadioPreset(PlayerChangingRadioRangeEventArgs labEv)
+        {
+            if (!ChangingRadioPreset.HasSubscribers)
+                return;
+
+            ChangingRadioPresetEventArgs exiledEv = new(labEv.Player, labEv.RadioItem.Base, labEv.RadioItem.RangeLevel, labEv.Range, labEv.IsAllowed);
+            ChangingRadioPreset.InvokeSafely(exiledEv);
+
+            labEv.Range = (RadioRangeLevel)exiledEv.NewValue;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a user's radio preset is changed.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerChangedRadioRangeEventArgs"/> instance.</param>
+        public static void OnChangedRadioPreset(PlayerChangedRadioRangeEventArgs labEv)
+        {
+            if (!ChangedRadioPreset.HasSubscribers)
+                return;
+
+            ChangedRadioPreset.InvokeSafely(new ChangedRadioPresetEventArgs(labEv.Player, labEv.RadioItem.Base, labEv.Range));
+        }
 
         /// <summary>
         /// Called before hurting a player.
