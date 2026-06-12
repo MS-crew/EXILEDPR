@@ -10,7 +10,6 @@ namespace Exiled.Events.Handlers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection.Emit;
 
     using Exiled.API.Enums;
     using Exiled.API.Features;
@@ -1393,8 +1392,18 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> interacts with a locker.
         /// </summary>
-        /// <param name="ev">The <see cref="InteractingLockerEventArgs"/> instance.</param>
-        public static void OnInteractingLocker(InteractingLockerEventArgs ev) => InteractingLocker.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerInteractingLockerEventArgs"/> instance.</param>
+        public static void OnInteractingLocker(PlayerInteractingLockerEventArgs labEv)
+        {
+            if (!InteractingLocker.HasSubscribers)
+                return;
+
+            InteractingLockerEventArgs exiledEv = new(labEv.Player, labEv.Locker.Base, labEv.Chamber.Base, labEv.CanOpen, labEv.IsAllowed);
+            InteractingLocker.InvokeSafely(exiledEv);
+
+            labEv.CanOpen = exiledEv.CanOpen;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> triggers a tesla.
