@@ -501,6 +501,11 @@ namespace Exiled.Events.Handlers
         public static Event<FlippingCoinEventArgs> FlippingCoin { get; set; } = new();
 
         /// <summary>
+        /// Invoked after a <see cref="API.Features.Player"/> flips a coin.
+        /// </summary>
+        public static Event<FlippedCoinEventArgs> FlippedCoin { get; set; } = new();
+
+        /// <summary>
         /// Invoked before a <see cref="API.Features.Player"/> toggles the flashlight.
         /// </summary>
         public static Event<TogglingFlashlightEventArgs> TogglingFlashlight { get; set; } = new();
@@ -1462,8 +1467,8 @@ namespace Exiled.Events.Handlers
             UsingRadioEventArgs exiledEv = new(labEv.Player, labEv.RadioItem.Base, labEv.Drain, labEv.IsAllowed);
             UsingRadio.InvokeSafely(exiledEv);
 
-            labEv.IsAllowed = exiledEv.IsAllowed;
             labEv.Drain = exiledEv.Drain;
+            labEv.IsAllowed = exiledEv.IsAllowed;
         }
 
         /// <summary>
@@ -1505,8 +1510,30 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> flips a coin.
         /// </summary>
-        /// <param name="ev">The <see cref="FlippingCoinEventArgs"/> instance.</param>
-        public static void OnFlippingCoin(FlippingCoinEventArgs ev) => FlippingCoin.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerFlippingCoinEventArgs"/> instance.</param>
+        public static void OnFlippingCoin(PlayerFlippingCoinEventArgs labEv)
+        {
+            if (!FlippingCoin.HasSubscribers)
+                return;
+
+            FlippingCoinEventArgs exiledEv = new(labEv.Player, labEv.CoinItem.Base, labEv.IsTails, labEv.IsAllowed);
+            FlippingCoin.InvokeSafely(exiledEv);
+
+            labEv.IsTails = exiledEv.IsTails;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after a <see cref="API.Features.Player"/> flips a coin.
+        /// </summary>
+        /// <param name="labEv">The <see cref="LabApi.Events.Arguments.PlayerEvents.PlayerFlippedCoinEventArgs"/> instance.</param>
+        public static void OnFlippedCoin(PlayerFlippedCoinEventArgs labEv)
+        {
+            if (!FlippedCoin.HasSubscribers)
+                return;
+
+            FlippedCoin.InvokeSafely(new FlippedCoinEventArgs(labEv.Player, labEv.CoinItem.Base, labEv.IsTails));
+        }
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> toggles the flashlight.
