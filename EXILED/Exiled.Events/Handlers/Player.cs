@@ -269,6 +269,11 @@ namespace Exiled.Events.Handlers
         public static Event<HandcuffingEventArgs> Handcuffing { get; set; } = new();
 
         /// <summary>
+        /// Invoked after hand cuffed a <see cref="API.Features.Player"/>.
+        /// </summary>
+        public static Event<HandCuffedEventArgs> HandCuffed { get; set; } = new();
+
+        /// <summary>
         /// Invoked before freeing a handcuffed <see cref="API.Features.Player"/>.
         /// </summary>
         public static Event<RemovingHandcuffsEventArgs> RemovingHandcuffs { get; set; } = new();
@@ -875,17 +880,20 @@ namespace Exiled.Events.Handlers
         public static void OnChangingRole(PlayerChangingRoleEventArgs labEv)
         {
             API.Features.Player player = labEv.Player;
-            if (!player.IsVerified && !player.IsNPC)
+            if (player == null || (!player.IsVerified && !player.IsNPC))
                 return;
 
             ChangingRoleEventArgs exiledEv = new(player, labEv.NewRole, labEv.ChangeReason, labEv.SpawnFlags, labEv.IsAllowed);
 
-            ChangingRole.InvokeSafely(exiledEv);
+            if (ChangingRole.HasSubscribers)
+            {
+                ChangingRole.InvokeSafely(exiledEv);
 
-            labEv.IsAllowed = exiledEv.IsAllowed;
-            labEv.NewRole = exiledEv.NewRole;
-            labEv.ChangeReason = (RoleChangeReason)exiledEv.Reason;
-            labEv.SpawnFlags = exiledEv.SpawnFlags;
+                labEv.IsAllowed = exiledEv.IsAllowed;
+                labEv.NewRole = exiledEv.NewRole;
+                labEv.ChangeReason = (RoleChangeReason)exiledEv.Reason;
+                labEv.SpawnFlags = exiledEv.SpawnFlags;
+            }
 
             CachedChangingRoleEvents[player] = exiledEv;
         }
@@ -896,17 +904,79 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerChangedRoleEventArgs"/> instance.</param>
         public static void OnChangedRole(PlayerChangedRoleEventArgs labEv)
         {
-            if (!ChangedRole.HasSubscribers)
-                return;
-
             API.Features.Player player = labEv.Player;
 
+            player.Role = Role.Create(labEv.NewRole);
             player.MaxHealth = default;
 
             if (player.Role.Type == RoleTypeId.Scp173)
                 Scp173Role.TurnedPlayers.Remove(player);
 
-            ChangedRole.InvokeSafely(new(labEv.Player, labEv.NewRole, labEv.OldRole, labEv.ChangeReason, labEv.SpawnFlags));
+            if (CachedChangingRoleEvents.TryGetValue(player, out ChangingRoleEventArgs cachedEv))
+            {
+                CachedChangingRoleEvents.Remove(player);
+                ChangeInventory(cachedEv);
+            }
+
+            if (ChangedRole.HasSubscribers)
+                ChangedRole.InvokeSafely(new(labEv.Player, player.Role, labEv.OldRole, labEv.ChangeReason, labEv.SpawnFlags));
+
+            void ChangeInventory(ChangingRoleEventArgs ev)
+            {
+                try
+                {
+                    if (ev is null)
+                        return;
+
+                    if (ev.ShouldPreserveInventory || ev.Reason == SpawnReason.Destroyed)
+                        return;
+
+                    Inventory inventory = ev.Player.Inventory;
+                    if (InventoryItemProvider.KeepItemsAfterEscaping && ev.Reason == SpawnReason.Escaped)
+                    {
+                        List<ItemPickupBase> list = new();
+
+                        HashSet<ushort> hashSet = HashSetPool<ushort>.Pool.Get();
+                        foreach (KeyValuePair<ushort, ItemBase> item2 in inventory.UserInventory.Items)
+                        {
+                            if (item2.Value is Scp1344Item scp1344Item)
+                                scp1344Item.Status = Scp1344Status.Idle;
+                            else
+                                hashSet.Add(item2.Key);
+                        }
+
+                        foreach (ushort item in hashSet)
+                            list.Add(inventory.ServerDropItem(item));
+
+                        HashSetPool<ushort>.Pool.Return(hashSet);
+                        InventoryItemProvider.PreviousInventoryPickups[ev.Player.ReferenceHub] = list;
+                    }
+                    else
+                    {
+                        while (inventory.UserInventory.Items.Count > 0)
+                            inventory.ServerRemoveItem(inventory.UserInventory.Items.ElementAt(0).Key, null);
+
+                        inventory.UserInventory.ReserveAmmo.Clear();
+                        inventory.SendAmmoNextFrame = true;
+                    }
+
+                    foreach (KeyValuePair<ItemType, ushort> ammo in ev.Ammo)
+                        inventory.ServerAddAmmo(ammo.Key, ammo.Value);
+
+                    foreach (ItemType item in ev.Items)
+                    {
+                        ItemBase itemBase = inventory.ServerAddItem(item, ItemAddReason.StartingItem);
+                        InventoryItemProvider.OnItemProvided?.Invoke(ev.Player.ReferenceHub, itemBase);
+                    }
+
+                    PlayerEvents.OnReceivedLoadout(new PlayerReceivedLoadoutEventArgs(ev.Player.ReferenceHub, ev.Items, ev.Ammo, !ev.ShouldPreserveInventory));
+                    InventoryItemProvider.InventoriesToReplenish.Enqueue(ev.Player.ReferenceHub);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error($"{"ChangedRoleEvent"}.{nameof(ChangeInventory)}: {exception}");
+                }
+            }
         }
 
         /// <summary>
@@ -967,14 +1037,74 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> picks up an item.
         /// </summary>
-        /// <param name="ev">The <see cref="PickingUpItemEventArgs"/> instance.</param>
-        public static void OnPickingUpItem(PickingUpItemEventArgs ev) => PickingUpItem.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PickingUpItemEventArgs"/> instance.</param>
+        public static void OnPickingUpItem(PlayerPickingUpItemEventArgs labEv)
+        {
+            if (!PickingUpItem.HasSubscribers)
+                return;
+
+            PickingUpItemEventArgs exiledEv = new(labEv.Player, labEv.Pickup.Base, labEv.IsAllowed);
+            PickingUpItem.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called before a <see cref="API.Features.Player"/> picks up an item.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PickingUpItemEventArgs"/> instance.</param>
+        public static void OnPickingUpItemAmmo(PlayerPickingUpAmmoEventArgs labEv)
+        {
+            if (!PickingUpItem.HasSubscribers)
+                return;
+
+            PickingUpItemEventArgs exiledEv = new(labEv.Player, labEv.AmmoPickup.Base, labEv.IsAllowed);
+            PickingUpItem.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called before a <see cref="API.Features.Player"/> picks up an item.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerPickingUpArmorEventArgs"/> instance.</param>
+        public static void OnPickingUpItemArmor(PlayerPickingUpArmorEventArgs labEv)
+        {
+            if (!PickingUpItem.HasSubscribers)
+                return;
+
+            PickingUpItemEventArgs exiledEv = new(labEv.Player, labEv.BodyArmorPickup.Base, labEv.IsAllowed);
+            PickingUpItem.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
         /// Called before handcuffing a <see cref="API.Features.Player"/>.
         /// </summary>
-        /// <param name="ev">The <see cref="HandcuffingEventArgs"/> instance.</param>
-        public static void OnHandcuffing(HandcuffingEventArgs ev) => Handcuffing.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="HandcuffingEventArgs"/> instance.</param>
+        public static void OnHandcuffing(PlayerCuffingEventArgs labEv)
+        {
+            if (!Handcuffing.HasSubscribers)
+                return;
+
+            HandcuffingEventArgs exiledEv = new(labEv.Player, labEv.Target, labEv.IsAllowed);
+            Handcuffing.InvokeSafely(exiledEv);
+
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
+
+        /// <summary>
+        /// Called after hand cuffed a <see cref="API.Features.Player"/>.
+        /// </summary>
+        /// <param name="labEv">The <see cref="PlayerCuffedEventArgs"/> instance.</param>
+        public static void OnHandCuffed(PlayerCuffedEventArgs labEv)
+        {
+            if (!HandCuffed.HasSubscribers)
+                return;
+
+            HandCuffed.InvokeSafely(new(labEv.Player, labEv.Target));
+        }
 
         /// <summary>
         /// Called before freeing a handcuffed <see cref="API.Features.Player"/>.
@@ -1109,9 +1239,6 @@ namespace Exiled.Events.Handlers
             if (!Spawning.HasSubscribers)
                 return;
 
-            API.Features.Player player = labEv.Player;
-            player.Role = Role.Create(labEv.Role);
-
             SpawningEventArgs exiledEv = new(labEv.Player, labEv.SpawnLocation, labEv.HorizontalRotation, labEv.UseSpawnPoint, labEv.IsAllowed);
             Spawning.InvokeSafely(exiledEv);
 
@@ -1127,72 +1254,10 @@ namespace Exiled.Events.Handlers
         /// <param name="labEv">The <see cref="PlayerSpawnedEventArgs"/> instance.</param>
         public static void OnSpawned(PlayerSpawnedEventArgs labEv)
         {
-            API.Features.Player player = labEv.Player;
+            if (!Spawned.HasSubscribers)
+                return;
 
-            Spawned.InvokeSafely(new(labEv.Player, player.Role, labEv.UseSpawnPoint, labEv.SpawnLocation, labEv.HorizontalRotation));
-
-            if (CachedChangingRoleEvents.TryGetValue(player, out ChangingRoleEventArgs cachedEv))
-            {
-                CachedChangingRoleEvents.Remove(player);
-                ChangeInventory(cachedEv);
-            }
-
-            void ChangeInventory(ChangingRoleEventArgs ev)
-            {
-                try
-                {
-                    if (ev is null)
-                        return;
-
-                    if (ev.ShouldPreserveInventory || ev.Reason == SpawnReason.Destroyed)
-                        return;
-
-                    Inventory inventory = ev.Player.Inventory;
-                    if (InventoryItemProvider.KeepItemsAfterEscaping && ev.Reason == SpawnReason.Escaped)
-                    {
-                        List<ItemPickupBase> list = new();
-
-                        HashSet<ushort> hashSet = HashSetPool<ushort>.Pool.Get();
-                        foreach (KeyValuePair<ushort, ItemBase> item2 in inventory.UserInventory.Items)
-                        {
-                            if (item2.Value is Scp1344Item scp1344Item)
-                                scp1344Item.Status = Scp1344Status.Idle;
-                            else
-                                hashSet.Add(item2.Key);
-                        }
-
-                        foreach (ushort item in hashSet)
-                            list.Add(inventory.ServerDropItem(item));
-
-                        HashSetPool<ushort>.Pool.Return(hashSet);
-                        InventoryItemProvider.PreviousInventoryPickups[ev.Player.ReferenceHub] = list;
-                    }
-                    else
-                    {
-                        while (inventory.UserInventory.Items.Count > 0)
-                            inventory.ServerRemoveItem(inventory.UserInventory.Items.ElementAt(0).Key, null);
-
-                        inventory.UserInventory.ReserveAmmo.Clear();
-                        inventory.SendAmmoNextFrame = true;
-                    }
-
-                    foreach (KeyValuePair<ItemType, ushort> ammo in ev.Ammo)
-                        inventory.ServerAddAmmo(ammo.Key, ammo.Value);
-
-                    foreach (ItemType item in ev.Items)
-                    {
-                        ItemBase itemBase = inventory.ServerAddItem(item, ItemAddReason.StartingItem);
-                        InventoryItemProvider.OnItemProvided?.Invoke(ev.Player.ReferenceHub, itemBase);
-                    }
-
-                    PlayerEvents.OnReceivedLoadout(new PlayerReceivedLoadoutEventArgs(ev.Player.ReferenceHub, ev.Items, ev.Ammo, !ev.ShouldPreserveInventory));
-                    InventoryItemProvider.InventoriesToReplenish.Enqueue(ev.Player.ReferenceHub);
-                }
-                catch (Exception exception)
-                {
-                    Log.Error($"{"ChangedRoleEvent"}.{nameof(ChangeInventory)}: {exception}");
-                }
-            }
+            Spawned.InvokeSafely(new(labEv.Player, labEv.Role, labEv.UseSpawnPoint, labEv.SpawnLocation, labEv.HorizontalRotation));
         }
 
         /// <summary>

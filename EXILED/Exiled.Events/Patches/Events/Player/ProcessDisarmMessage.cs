@@ -27,7 +27,6 @@ namespace Exiled.Events.Patches.Events.Player
     /// Patches <see cref="DisarmingHandlers.ServerProcessDisarmMessage" />.
     /// Adds the <see cref="Handlers.Player.Handcuffing" />, <see cref="Handlers.Player.RemovingHandcuffs" />, and <see cref="Handlers.Player.RemovedHandcuffs" /> events.
     /// </summary>
-    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.Handcuffing))]
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.RemovingHandcuffs))]
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.RemovedHandcuffs))]
     [HarmonyPatch(typeof(DisarmingHandlers), nameof(DisarmingHandlers.ServerProcessDisarmMessage))]
@@ -92,40 +91,6 @@ namespace Exiled.Events.Patches.Events.Player
 
                     // Handlers.Player.OnRemovedHandcuffs(ev)
                     new(OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnRemovedHandcuffs))),
-                });
-
-            offset = -3;
-            index = newInstructions.FindLastIndex(
-                instruction => instruction.opcode == OpCodes.Newobj && (ConstructorInfo)instruction.operand == GetDeclaredConstructors(typeof(LabApi.Events.Arguments.PlayerEvents.PlayerCuffingEventArgs))[0]) + offset;
-
-            newInstructions.InsertRange(
-                index,
-                new[]
-                {
-                    // Invoking Handcuffing event
-                    // Player.Get(referenceHub)
-                    new CodeInstruction(OpCodes.Ldloc_0).MoveLabelsFrom(newInstructions[index]),
-                    new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
-
-                    // Player.Get(msg.PlayerToDisarm)
-                    new(OpCodes.Ldarg_1),
-                    new(OpCodes.Ldfld, Field(typeof(DisarmMessage), nameof(DisarmMessage.PlayerToDisarm))),
-                    new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
-
-                    // true
-                    new(OpCodes.Ldc_I4_1),
-
-                    // HandcuffingEventArgs evHandcuffing = new(Player, Player, bool)
-                    new(OpCodes.Newobj, GetDeclaredConstructors(typeof(HandcuffingEventArgs))[0]),
-                    new(OpCodes.Dup),
-
-                    // Handlers.Player.OnHandcuffing(evHandcuffing)
-                    new(OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnHandcuffing))),
-
-                    // if (!evHandcuffing.IsAllowed)
-                    //    return;
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(HandcuffingEventArgs), nameof(HandcuffingEventArgs.IsAllowed))),
-                    new(OpCodes.Brfalse_S, returnLabel),
                 });
 
             newInstructions[newInstructions.Count - 1].WithLabels(returnLabel);

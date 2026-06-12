@@ -30,15 +30,15 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="useSpawnPoint">Indicates whether the player was spawned at the role's default spawn point.</param>
         /// <param name="spawnLocation">The exact position where the player was spawned.</param>
         /// <param name="horizontalRotation">The horizontal rotation of the player upon spawning.</param>
-        public SpawnedEventArgs(Player player, Role newRole, bool useSpawnPoint, Vector3 spawnLocation, float horizontalRotation)
+        public SpawnedEventArgs(Player player, PlayerRoleBase newRole, bool useSpawnPoint, Vector3 spawnLocation, float horizontalRotation)
         {
             Player = player;
             NewRole = newRole;
             UseSpawnPoint = useSpawnPoint;
             SpawnLocation = spawnLocation;
             HorizontalRotation = horizontalRotation;
-            Reason = (SpawnReason)NewRole.SpawnReason;
-            SpawnFlags = NewRole.SpawnFlags;
+            Reason = (SpawnReason)newRole.ServerSpawnReason;
+            SpawnFlags = newRole.ServerSpawnFlags;
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets the player's new <see cref="Role">role</see>.
         /// </summary>
-        public Role NewRole { get; }
+        public PlayerRoleBase NewRole { get; }
 
         /// <summary>
         /// Gets a value indicating whether the player was spawned at the role's default spawn point.

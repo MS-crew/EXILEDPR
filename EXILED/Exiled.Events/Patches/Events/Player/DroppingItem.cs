@@ -25,10 +25,9 @@ namespace Exiled.Events.Patches.Events.Player
 
     /// <summary>
     /// Patches <see cref="Inventory.UserCode_CmdDropItem__UInt16__Boolean" />.
-    /// <br>Adds the <see cref="Player.DroppingNothing" /> and <see cref="Player.DroppedItem"/> events.</br>
+    /// <br>Adds the <see cref="Player.DroppingNothing" /> event.</br>
     /// </summary>
     [EventPatch(typeof(Player), nameof(Player.DroppingNothing))]
-    [EventPatch(typeof(Player), nameof(Player.DroppedItem))]
     [HarmonyPatch(typeof(Inventory), nameof(Inventory.UserCode_CmdDropItem__UInt16__Boolean))]
     internal static class DroppingItem
     {
@@ -40,7 +39,6 @@ namespace Exiled.Events.Patches.Events.Player
             Label notNullLabel = generator.DefineLabel();
 
             LocalBuilder item = generator.DeclareLocal(typeof(Item));
-            LocalBuilder ev = generator.DeclareLocal(typeof(DroppingItemEventArgs));
 
             newInstructions[0].labels.Add(notNullLabel);
 

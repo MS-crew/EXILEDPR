@@ -9,6 +9,7 @@ namespace Exiled.Events.EventArgs.Player
 {
     using Exiled.API.Enums;
     using Exiled.API.Features;
+    using Exiled.API.Features.Roles;
 
     using Interfaces;
 
@@ -37,7 +38,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="spawnFlags">
         /// <inheritdoc cref="SpawnFlags" />
         /// </param>
-        public ChangedRoleEventArgs(Player player, PlayerRoleBase newRole, RoleTypeId oldRole, RoleChangeReason reason, RoleSpawnFlags spawnFlags)
+        public ChangedRoleEventArgs(Player player, Role newRole, RoleTypeId oldRole, RoleChangeReason reason, RoleSpawnFlags spawnFlags)
         {
             Player = player;
             NewRole = newRole;
@@ -54,7 +55,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Gets the new role object of the player.
         /// </summary>
-        public PlayerRoleBase NewRole { get; }
+        public Role NewRole { get; }
 
         /// <summary>
         /// Gets the player's old role.

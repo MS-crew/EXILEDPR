@@ -21,26 +21,20 @@ namespace Exiled.Events.EventArgs.Player
         /// <summary>
         /// Initializes a new instance of the <see cref="PickingUpItemEventArgs" /> class.
         /// </summary>
-        /// <param name="referenceHub">
-        /// <inheritdoc cref="Player" />
-        /// </param>
-        /// <param name="pickup">
-        /// <inheritdoc cref="Pickup" />
-        /// </param>
-        /// <param name="isAllowed">
-        /// <inheritdoc cref="IsAllowed" />
-        /// </param>
-        public PickingUpItemEventArgs(ReferenceHub referenceHub, ItemPickupBase pickup, bool isAllowed = true)
+        /// <param name="player"> <inheritdoc cref="Player"/> </param>
+        /// <param name="pickup"> <inheritdoc cref="Pickup"/> </param>
+        /// <param name="isAllowed"> <inheritdoc cref="IsAllowed"/> </param>
+        public PickingUpItemEventArgs(Player player, ItemPickupBase pickup, bool isAllowed)
         {
-            IsAllowed = isAllowed;
-            Player = Player.Get(referenceHub);
+            Player = player;
             Pickup = Pickup.Get(pickup);
+            IsAllowed = isAllowed;
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the item can be picked up.
+        /// Gets the player who's picking up an item.
         /// </summary>
-        public bool IsAllowed { get; set; }
+        public Player Player { get; }
 
         /// <summary>
         /// Gets the pickup that's being picked up.
@@ -48,8 +42,8 @@ namespace Exiled.Events.EventArgs.Player
         public Pickup Pickup { get; }
 
         /// <summary>
-        /// Gets the player who's picking up an item.
+        /// Gets or sets a value indicating whether the item can be picked up.
         /// </summary>
-        public Player Player { get; }
+        public bool IsAllowed { get; set; }
     }
 }

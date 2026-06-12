@@ -104,6 +104,11 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.Spawning += Handlers.Player.OnSpawning;
             LabApi.Events.Handlers.PlayerEvents.DroppingItem += Handlers.Player.OnDroppingItem;
             LabApi.Events.Handlers.PlayerEvents.DroppedItem += Handlers.Player.OnDroppedItem;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpItem += Handlers.Player.OnPickingUpItem;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpAmmo += Handlers.Player.OnPickingUpItemAmmo;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpArmor += Handlers.Player.OnPickingUpItemArmor;
+            LabApi.Events.Handlers.PlayerEvents.Cuffing += Handlers.Player.OnHandcuffing;
+            LabApi.Events.Handlers.PlayerEvents.Cuffed += Handlers.Player.OnHandCuffed;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon += Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon += Handlers.Player.OnUnloadingWeapon;
@@ -162,6 +167,11 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.Spawning -= Handlers.Player.OnSpawning;
             LabApi.Events.Handlers.PlayerEvents.DroppingItem -= Handlers.Player.OnDroppingItem;
             LabApi.Events.Handlers.PlayerEvents.DroppedItem -= Handlers.Player.OnDroppedItem;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpItem -= Handlers.Player.OnPickingUpItem;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpAmmo -= Handlers.Player.OnPickingUpItemAmmo;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpArmor -= Handlers.Player.OnPickingUpItemArmor;
+            LabApi.Events.Handlers.PlayerEvents.Cuffing -= Handlers.Player.OnHandcuffing;
+            LabApi.Events.Handlers.PlayerEvents.Cuffed -= Handlers.Player.OnHandCuffed;
 
             LabApi.Events.Handlers.PlayerEvents.ReloadingWeapon -= Handlers.Player.OnReloadingWeapon;
             LabApi.Events.Handlers.PlayerEvents.UnloadingWeapon -= Handlers.Player.OnUnloadingWeapon;
