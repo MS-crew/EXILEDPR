@@ -20,55 +20,20 @@ namespace Exiled.Events.Patches.Events.Player
 
     using static HarmonyLib.AccessTools;
 
-    using Player = API.Features.Player;
-
     /// <summary>
     /// Patches <see cref="PlayerStats.DealDamage(DamageHandlerBase)" />.
-    /// Adds the <see cref="Handlers.Player.Hurting" /> event and <see cref="Handlers.Player.Hurt" /> event.
+    /// Adds the <see cref="Handlers.Player.Hurt" /> event.
     /// </summary>
-    [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.Hurting))]
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.Hurt))]
     [HarmonyPatch(typeof(PlayerStats), nameof(PlayerStats.DealDamage))]
     internal static class Hurting
     {
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Pool.Get(instructions);
 
-            Label jump = generator.DefineLabel();
-            int offset = 1;
-            int index = newInstructions.FindIndex(instruction => instruction.opcode == OpCodes.Ret) + offset;
-
-            newInstructions.InsertRange(
-                index,
-                new[]
-                {
-                    // this._hub
-                    new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
-                    new(OpCodes.Ldfld, Field(typeof(PlayerStats), nameof(PlayerStats._hub))),
-                    new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
-
-                    // handler
-                    new(OpCodes.Ldarg_1),
-
-                    // HurtingEventArgs ev = new(ReferenceHub, handler)
-                    new(OpCodes.Newobj, GetDeclaredConstructors(typeof(HurtingEventArgs))[0]),
-                    new(OpCodes.Dup),
-
-                    // Handlers.Player.OnHurting(ev);
-                    new(OpCodes.Call, Method(typeof(Handlers.Player), nameof(Handlers.Player.OnHurting))),
-
-                    // if (!ev.IsAllowed)
-                    //  return false;
-                    new(OpCodes.Callvirt, PropertyGetter(typeof(HurtingEventArgs), nameof(HurtingEventArgs.IsAllowed))),
-                    new(OpCodes.Brtrue, jump),
-                    new(OpCodes.Ldc_I4_0),
-                    new(OpCodes.Ret),
-                    new CodeInstruction(OpCodes.Nop).WithLabels(jump),
-                });
-
-            offset = 2;
-            index = newInstructions.FindIndex(instruction => instruction.operand == (object)Method(typeof(DamageHandlerBase), nameof(DamageHandlerBase.ApplyDamage))) + offset;
+            int offset = 2;
+            int index = newInstructions.FindIndex(instruction => instruction.operand == (object)Method(typeof(DamageHandlerBase), nameof(DamageHandlerBase.ApplyDamage))) + offset;
 
             newInstructions.InsertRange(
                 index,

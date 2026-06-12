@@ -2020,14 +2020,24 @@ namespace Exiled.Events.Handlers
         /// <summary>
         /// Called before hurting a player.
         /// </summary>
-        /// <param name="ev">The <see cref="HurtingEventArgs"/> instance. </param>
-        public static void OnHurting(HurtingEventArgs ev) => Hurting.InvokeSafely(ev);
+        /// <param name="labEv">The <see cref="PlayerHurtingEventArgs"/> instance.</param>
+        public static void OnHurting(PlayerHurtingEventArgs labEv)
+        {
+            if (!Hurting.HasSubscribers)
+                return;
+
+            HurtingEventArgs exiledEv = new(labEv.Player, labEv.DamageHandler, labEv.IsAllowed);
+            Hurting.InvokeSafely(exiledEv);
+
+            labEv.DamageHandler = exiledEv.DamageHandler.Base;
+            labEv.IsAllowed = exiledEv.IsAllowed;
+        }
 
         /// <summary>
-        /// Called ater a <see cref="API.Features.Player"/> being hurt.
+        /// Called after a <see cref="API.Features.Player"/> being hurt.
         /// </summary>
-        /// <param name="ev">The <see cref="HurtingEventArgs"/> instance. </param>
-        public static void OnHurt(HurtEventArgs ev) => Hurt.InvokeSafely(ev);
+        /// <param name="ev">The <see cref="HurtingEventArgs"/> instance.</param>
+        public static void OnHurt(HurtingEventArgs ev) => Hurting.InvokeSafely(ev);
 
         /// <summary>
         /// Called before a <see cref="API.Features.Player"/> is healed.

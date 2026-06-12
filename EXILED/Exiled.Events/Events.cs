@@ -144,6 +144,7 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.DeactivatingGenerator += Handlers.Player.OnStoppingGenerator;
             LabApi.Events.Handlers.PlayerEvents.ChangingRadioRange += Handlers.Player.OnChangingRadioPreset;
             LabApi.Events.Handlers.PlayerEvents.ChangedRadioRange += Handlers.Player.OnChangedRadioPreset;
+            LabApi.Events.Handlers.PlayerEvents.Hurting += Handlers.Player.OnHurting;
 
             LabApi.Events.Handlers.Scp127Events.Talking += Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked += Handlers.Scp127.OnTalked;
@@ -240,6 +241,7 @@ namespace Exiled.Events
             LabApi.Events.Handlers.PlayerEvents.DeactivatingGenerator -= Handlers.Player.OnStoppingGenerator;
             LabApi.Events.Handlers.PlayerEvents.ChangingRadioRange -= Handlers.Player.OnChangingRadioPreset;
             LabApi.Events.Handlers.PlayerEvents.ChangedRadioRange -= Handlers.Player.OnChangedRadioPreset;
+            LabApi.Events.Handlers.PlayerEvents.Hurting -= Handlers.Player.OnHurting;
 
             LabApi.Events.Handlers.Scp127Events.Talking -= Handlers.Scp127.OnTalking;
             LabApi.Events.Handlers.Scp127Events.Talked -= Handlers.Scp127.OnTalked;

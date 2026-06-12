@@ -31,11 +31,14 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="damageHandler">
         /// <inheritdoc cref="DamageHandler" />
         /// </param>
-        public HurtingEventArgs(Player target, DamageHandlerBase damageHandler)
+        /// <param name="isAllowed">
+        /// <inheritdoc cref="IsAllowed" />
+        /// </param>
+        public HurtingEventArgs(Player target, DamageHandlerBase damageHandler, bool isAllowed)
         {
-            DamageHandler = new CustomDamageHandler(target, damageHandler);
-
             Player = target;
+            DamageHandler = new CustomDamageHandler(target, damageHandler);
+            IsAllowed = isAllowed;
 
             if (DamageHandler.BaseIs(out CustomAttackerHandler attackerDamageHandler))
                 Attacker = attackerDamageHandler.Attacker;
