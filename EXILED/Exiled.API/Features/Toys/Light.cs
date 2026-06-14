@@ -7,6 +7,7 @@
 
 namespace Exiled.API.Features.Toys
 {
+    using System;
     using System.Linq;
 
     using AdminToys;
@@ -96,6 +97,16 @@ namespace Exiled.API.Features.Toys
         {
             get => Base.NetworkLightColor;
             set => Base.NetworkLightColor = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the shape that the Light emits.
+        /// </summary>
+        [Obsolete("This property has been deprecated. Use LightType.Spot, LightType.Pyramid, or LightType.Box instead.")]
+        public LightShape LightShape
+        {
+            get => Base.NetworkLightShape;
+            set => Base.NetworkLightShape = value;
         }
 
         /// <summary>

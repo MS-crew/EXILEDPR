@@ -7,6 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Player
 {
+    using System;
+
     using Exiled.API.Features;
     using Exiled.API.Features.Roles;
     using Exiled.Events.EventArgs.Interfaces;
@@ -63,6 +65,12 @@ namespace Exiled.Events.EventArgs.Player
         /// Rotation will apply only for <see cref="FpcRole"/>.
         /// </remarks>
         public float HorizontalRotation { get; set; }
+
+        /// <summary>
+        /// Gets the player's old <see cref="PlayerRoleBase">role</see>.
+        /// </summary>
+        [Obsolete("Removed because the method is no longer provide OldRole since version 14.0. Use Player.Role instead")]
+        public Role OldRole => Player.Role;
 
         /// <summary>
         /// Gets the player's new <see cref="PlayerRoleBase">role</see>.

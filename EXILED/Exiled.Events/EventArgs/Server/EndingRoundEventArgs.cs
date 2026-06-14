@@ -7,6 +7,8 @@
 
 namespace Exiled.Events.EventArgs.Server
 {
+    using System;
+
     using Exiled.API.Enums;
 
     using Interfaces;
@@ -44,6 +46,16 @@ namespace Exiled.Events.EventArgs.Server
         /// Gets or sets the leading team.
         /// </summary>
         public LeadingTeam LeadingTeam { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the round is ended by API call.
+        /// </summary>
+        [Obsolete("This event is now call only when it's haven't been force eneded")]
+        public bool IsForceEnded
+        {
+            get => false; // This event is now call only when ForceEnd method haven't been called
+            set => IsAllowed = value;
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the round is going to finish or not.

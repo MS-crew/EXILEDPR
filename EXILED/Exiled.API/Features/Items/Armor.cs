@@ -7,6 +7,7 @@
 
 namespace Exiled.API.Features.Items
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -62,6 +63,16 @@ namespace Exiled.API.Features.Items
         /// Gets a value indicating whether this is a worn item.
         /// </summary>
         public bool IsWorn => Base.IsWorn;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether excess ammo should be removed when the armor is dropped.
+        /// </summary>
+        [Obsolete("Not functional anymore", true)]
+        public bool RemoveExcessOnDrop
+        {
+            get => false;
+            set => _ = value;
+        }
 
         /// <summary>
         /// Gets or sets the Weight of the armor.

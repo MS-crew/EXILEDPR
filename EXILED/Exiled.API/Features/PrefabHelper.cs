@@ -56,7 +56,9 @@ namespace Exiled.API.Features
         /// <returns>Returns the <see cref="GameObject"/>.</returns>
         public static GameObject GetPrefab(PrefabType prefabType)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             if (prefabType is PrefabType.HCZOneSided or PrefabType.HCZTwoSided)
+#pragma warning restore CS0618 // Type or member is obsolete
             {
                 prefabType = PrefabType.HCZBreakableDoor;
             }
@@ -116,6 +118,7 @@ namespace Exiled.API.Features
                 positionSync.Network_rotationY = (sbyte)Mathf.RoundToInt(rotation.Value.eulerAngles.y / 5.625F);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (prefabType is PrefabType.HCZOneSided or PrefabType.HCZTwoSided or PrefabType.HCZBreakableDoor)
             {
                 newGameObject.GetComponent<WallableSmallNodeRoomConnector>().Network_syncBitmask = prefabType switch
@@ -126,6 +129,7 @@ namespace Exiled.API.Features
                     _ => 0,
                 };
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             NetworkServer.Spawn(newGameObject);
 
